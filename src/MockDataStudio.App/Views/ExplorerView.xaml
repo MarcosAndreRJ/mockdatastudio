@@ -47,7 +47,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
                         <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Command="{Binding RefreshCommand}" ToolTip="Atualizar" />
                         <TextBlock Text="Database Explorer" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
                     </DockPanel>
 
@@ -62,8 +62,8 @@
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="PostgreSQL" FontWeight="SemiBold" />
-                                <TextBlock Text="shopdb • localhost:5432" Style="{StaticResource MutedText}" />
+                                <TextBlock Text="{Binding ConnectionTitle}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ConnectionSubtitle}" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
                             </StackPanel>
                             <TextBlock Grid.Column="2" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
                         </Grid>
@@ -78,7 +78,14 @@
                                 Content="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="13" />
                     </Grid>
 
-                    <TreeView x:Name="ObjectTree" ItemsSource="{Binding ExplorerTree}">
+                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding StatusText}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0" />
+
+                    <TreeView x:Name="ObjectTree" ItemsSource="{Binding Nodes}" SelectedItemChanged="ObjectTree_SelectedItemChanged">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            </Style>
+                        </TreeView.ItemContainerStyle>
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -116,8 +123,8 @@
                                 <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="cliente" FontWeight="SemiBold" FontSize="15" />
-                                <TextBlock Text="public.cliente" Style="{StaticResource MutedText}" />
+                                <TextBlock Text="{Binding SelectedTableName}" FontWeight="SemiBold" FontSize="15" />
+                                <TextBlock Text="{Binding SelectedTableQualified}" Style="{StaticResource MutedText}" />
                             </StackPanel>
                         </DockPanel>
 
@@ -132,7 +139,7 @@
                             </StackPanel>
                         </Border>
 
-                        <DataGrid ItemsSource="{Binding ClienteColumns}" FontSize="12">
+                        <DataGrid ItemsSource="{Binding SelectedColumns}" FontSize="12">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Column" Binding="{Binding Name}" Width="*" />
                                 <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto" />

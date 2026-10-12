@@ -12,32 +12,6 @@ public sealed class HomeViewModel(IDesignDataSource data)
     public IReadOnlyList<ActivityItem> RecentActivity { get; } = data.RecentActivity;
 }
 
-public sealed class ExplorerViewModel(IDesignDataSource data, SqlEditorViewModel sqlEditor, SqlResultsViewModel sqlResults)
-{
-    public IReadOnlyList<TreeNode> ExplorerTree { get; } = data.ExplorerTree;
-    public IReadOnlyList<ColumnRow> ClienteColumns { get; } = data.ClienteColumns;
-    public SqlEditorViewModel SqlEditor { get; } = sqlEditor;
-    public SqlResultsViewModel SqlResults { get; } = sqlResults;
-}
-
-public sealed class SqlEditorViewModel(IDesignDataSource data)
-{
-    public string Title { get; } = "Query - shopdb";
-    public string DatabaseName { get; } = "shopdb (PostgreSQL)";
-    public string QueryText { get; } = data.ExplorerQuery;
-}
-
-public sealed class SqlResultsViewModel(IDesignDataSource data)
-{
-    public IReadOnlyList<CustomerRow> Rows { get; } = data.QueryResults;
-}
-
-public sealed class SqlEditorPageViewModel(SqlEditorViewModel editor, SqlResultsViewModel results)
-{
-    public SqlEditorViewModel Editor { get; } = editor;
-    public SqlResultsViewModel Results { get; } = results;
-}
-
 public sealed class SchemaDigestViewModel(IDesignDataSource data)
 {
     public IReadOnlyList<StatTile> DigestStats { get; } = data.DigestStats;

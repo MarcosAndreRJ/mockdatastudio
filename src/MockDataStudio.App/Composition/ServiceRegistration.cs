@@ -30,15 +30,19 @@ public static class ServiceRegistration
         // Serviços de Aplicação
         builder.Services.AddSingleton<IConnectionService, MockDataStudio.Application.ConnectionService>();
 
+        builder.Services.AddSingleton<ActiveConnectionSession>();
+        builder.Services.AddSingleton<MockDataStudio.App.Services.ShellNavigator>();
+        builder.Services.AddSingleton<MockDataStudio.SqlTooling.Splitter.ISqlScriptSplitter, MockDataStudio.SqlTooling.Splitter.SqlScriptSplitter>();
+
         builder.Services.AddSingleton<ShellViewModel>();
         builder.Services.AddSingleton<MainWindow>();
 
         builder.Services.AddTransient<HomeViewModel>();
         builder.Services.AddTransient<ConnectionsViewModel>();
-        builder.Services.AddTransient<ExplorerViewModel>();
-        builder.Services.AddTransient<SqlEditorViewModel>();
-        builder.Services.AddTransient<SqlResultsViewModel>();
-        builder.Services.AddTransient<SqlEditorPageViewModel>();
+        builder.Services.AddSingleton<ExplorerViewModel>();
+        builder.Services.AddSingleton<SqlEditorViewModel>();
+        builder.Services.AddSingleton<SqlResultsViewModel>();
+        builder.Services.AddSingleton<SqlEditorPageViewModel>();
         builder.Services.AddTransient<SchemaDigestViewModel>();
         builder.Services.AddTransient<TemplatesViewModel>();
         builder.Services.AddTransient<MappingViewModel>();

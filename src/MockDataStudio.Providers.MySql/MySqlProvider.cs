@@ -17,6 +17,9 @@ public sealed class MySqlProvider : IDatabaseProvider
     public DatabaseEngine Engine => DatabaseEngine.MySql;
 
     public string DisplayName => "MySQL";
+    public int? DefaultPort => 3306;
+    public string? DefaultUser => "root";
+    public bool RequiresDatabase => false;
 
     public IReadOnlyList<ConnectionSettingDefinition> ExtraSettings { get; } =
     [
@@ -91,6 +94,22 @@ public sealed class MySqlProvider : IDatabaseProvider
         return connection;
     }
 
+
+    public async Task<IReadOnlyList<string>> ListDatabasesAsync(DbConnection connection, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT schema_name FROM information_schema.schemata " +
+            "WHERE schema_name NOT IN ('information_schema','mysql','performance_schema','sys') ORDER BY schema_name;";
+        var names = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            names.Add(reader.GetString(0));
+        }
+
+        return names;
+    }
     public async Task<bool> ApplySessionReadOnlyAsync(DbConnection connection, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(connection);

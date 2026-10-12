@@ -17,6 +17,8 @@ public sealed class FirebirdProvider : IDatabaseProvider
     public DatabaseEngine Engine => DatabaseEngine.Firebird;
 
     public string DisplayName => "Firebird";
+    public int? DefaultPort => 3050;
+    public string? DefaultUser => "SYSDBA";
     public string? LogoResourceName => "firebird";
 
     public IReadOnlyList<ConnectionSettingDefinition> ExtraSettings { get; } =

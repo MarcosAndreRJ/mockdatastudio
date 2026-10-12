@@ -415,13 +415,22 @@
 
                                 <!-- Database / Path -->
                                 <StackPanel Grid.Row="2" Margin="0,0,0,12">
-                                    <TextBlock Style="{StaticResource LabelText}" Margin="0,0,0,4"><Run Text="Database / Path" /><Run Text=" *" Foreground="{StaticResource DangerBrush}" /></TextBlock>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Style="{StaticResource LabelText}" Text="Database / Path" />
+                                        <TextBlock Style="{StaticResource LabelText}" Text=" *" Foreground="{StaticResource DangerBrush}"
+                                                   Visibility="{Binding RequiresDatabase, Converter={StaticResource BoolToVisibility}}" />
+                                    </StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBox Text="{Binding FormDatabase, UpdateSourceTrigger=PropertyChanged}" Height="36" />
+                                        <!-- Servidores: combo editável com os bancos listados após testar a conexão -->
+                                        <ComboBox IsEditable="True" Height="36" ItemsSource="{Binding AvailableDatabases}"
+                                                  Text="{Binding FormDatabase, UpdateSourceTrigger=PropertyChanged}"
+                                                  Visibility="{Binding IsNetworkDatabase, Converter={StaticResource BoolToVisibility}}" />
+                                        <TextBox Text="{Binding FormDatabase, UpdateSourceTrigger=PropertyChanged}" Height="36"
+                                                 Visibility="{Binding IsSqlite, Converter={StaticResource BoolToVisibility}}" />
                                         <Button Grid.Column="1" Content="Browse..." Margin="6,0,0,0" Height="36" Padding="10,0"
                                                 Style="{StaticResource SecondaryButton}"
                                                 Visibility="{Binding IsSqlite, Converter={StaticResource BoolToVisibility}}"
@@ -446,7 +455,7 @@
                                 </StackPanel>
 
                                 <!-- SSL Mode -->
-                                <StackPanel Grid.Row="3" Grid.Column="2" Margin="0,0,0,12" Visibility="{Binding RequiresCredentials, Converter={StaticResource BoolToVisibility}}">
+                                <StackPanel Grid.Row="3" Grid.Column="2" Margin="0,0,0,12" Visibility="{Binding HasSslMode, Converter={StaticResource BoolToVisibility}}">
                                     <TextBlock Text="SSL Mode" Style="{StaticResource LabelText}" Margin="0,0,0,4" />
                                     <ComboBox ItemsSource="{Binding AvailableSslModes}" SelectedItem="{Binding FormSslMode, Mode=TwoWay}" Height="36" />
                                 </StackPanel>

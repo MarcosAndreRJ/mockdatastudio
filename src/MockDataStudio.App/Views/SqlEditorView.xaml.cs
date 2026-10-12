@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -8,18 +9,44 @@ namespace MockDataStudio.App.Views;
 
 public partial class SqlEditorView : UserControl
 {
+    private SqlEditorViewModel? _viewModel;
+
     public SqlEditorView()
     {
         InitializeComponent();
 
         QueryEditor.SyntaxHighlighting = LoadSqlHighlighting();
-        DataContextChanged += (_, _) =>
+        QueryEditor.TextChanged += (_, _) =>
         {
-            if (DataContext is SqlEditorViewModel viewModel)
+            if (_viewModel is not null && _viewModel.QueryText != QueryEditor.Text)
             {
-                QueryEditor.Text = viewModel.QueryText;
+                _viewModel.QueryText = QueryEditor.Text;
             }
         };
+
+        DataContextChanged += (_, _) =>
+        {
+            if (_viewModel is not null)
+            {
+                _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            }
+
+            _viewModel = DataContext as SqlEditorViewModel;
+            if (_viewModel is not null)
+            {
+                QueryEditor.Text = _viewModel.QueryText;
+                _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            }
+        };
+    }
+
+    // O texto pode mudar fora do editor (ex.: seleção de tabela no Explorer gera um SELECT).
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SqlEditorViewModel.QueryText) && _viewModel is not null && QueryEditor.Text != _viewModel.QueryText)
+        {
+            QueryEditor.Text = _viewModel.QueryText;
+        }
     }
 
     private static IHighlightingDefinition LoadSqlHighlighting()

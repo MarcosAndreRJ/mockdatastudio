@@ -18,5 +18,8 @@ public interface IConnectionService
 
     Task<Result<ServerInfo>> TestAsync(ConnectionProfile profile, string? passwordOverride, CancellationToken ct = default);
 
+    /// <summary>Conecta com o perfil (banco opcional quando o provedor permite) e lista os bancos visíveis ao usuário.</summary>
+    Task<Result<IReadOnlyList<string>>> ListDatabasesAsync(ConnectionProfile profile, string? passwordOverride, CancellationToken ct = default);
+
     Task<Result<OpenedConnection>> OpenAsync(Guid profileId, ConnectionPurpose purpose, CancellationToken ct = default);
 }

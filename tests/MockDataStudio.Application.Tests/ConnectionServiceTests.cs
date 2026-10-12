@@ -270,6 +270,43 @@ public sealed class ConnectionServiceTests
         );
     }
 
+    [Fact]
+    public async Task SaveAsync_ShouldAcceptEmptyDatabase_WhenProviderDoesNotRequireIt()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var registry = new ProviderRegistry([new StubDatabaseProvider(DatabaseEngine.PostgreSql, requiresDatabase: false)]);
+        var service = new ConnectionService(new InMemoryConnectionProfileStore(), new InMemorySecretStore(), registry);
+        var profile = CreateSampleProfile("Sem banco", DatabaseEngine.PostgreSql);
+        profile = profile with { Settings = profile.Settings with { Database = string.Empty } };
+
+        (await service.SaveAsync(profile, null, ct)).IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task SaveAsync_ShouldRejectEmptyDatabase_WhenProviderRequiresIt()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var registry = new ProviderRegistry([new StubDatabaseProvider(DatabaseEngine.PostgreSql, requiresDatabase: true)]);
+        var service = new ConnectionService(new InMemoryConnectionProfileStore(), new InMemorySecretStore(), registry);
+        var profile = CreateSampleProfile("Sem banco", DatabaseEngine.PostgreSql);
+        profile = profile with { Settings = profile.Settings with { Database = string.Empty } };
+
+        (await service.SaveAsync(profile, null, ct)).IsSuccess.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ListDatabasesAsync_ShouldReturnDatabasesFromProvider()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var registry = new ProviderRegistry([new StubDatabaseProvider(DatabaseEngine.PostgreSql, requiresDatabase: false)]);
+        var service = new ConnectionService(new InMemoryConnectionProfileStore(), new InMemorySecretStore(), registry);
+
+        var result = await service.ListDatabasesAsync(CreateSampleProfile("Dev", DatabaseEngine.PostgreSql), "pwd", ct);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBe(["alpha", "beta"]);
+    }
+
     // --- Helpers / Stubs ---
 
     private sealed class InMemoryConnectionProfileStore : IConnectionProfileStore
@@ -329,17 +366,21 @@ public sealed class ConnectionServiceTests
         private readonly bool _supportsSessionReadOnly;
         private readonly int _delayMs;
 
-        public StubDatabaseProvider(DatabaseEngine engine, bool requiresHostPort = true, bool supportsSessionReadOnly = false, int delayMs = 0)
+        public StubDatabaseProvider(DatabaseEngine engine, bool requiresHostPort = true, bool supportsSessionReadOnly = false, int delayMs = 0, bool requiresDatabase = true)
         {
             Engine = engine;
             _requiresHostPort = requiresHostPort;
             _supportsSessionReadOnly = supportsSessionReadOnly;
             _delayMs = delayMs;
+            RequiresDatabase = requiresDatabase;
         }
 
         public DatabaseEngine Engine { get; }
         public string DisplayName => Engine.ToString();
         public bool RequiresHostPort => _requiresHostPort;
+        public bool RequiresDatabase { get; }
+        public Task<IReadOnlyList<string>> ListDatabasesAsync(DbConnection connection, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<string>>(["alpha", "beta"]);
         public IReadOnlyList<ConnectionSettingDefinition> ExtraSettings => [];
 
         public ProviderCapabilities GetCapabilities(string serverVersion) =>

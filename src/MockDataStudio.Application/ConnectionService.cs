@@ -154,6 +154,62 @@ public sealed class ConnectionService : IConnectionService
         }
     }
 
+    public async Task<Result<IReadOnlyList<string>>> ListDatabasesAsync(ConnectionProfile profile, string? passwordOverride, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        IDatabaseProvider provider;
+        try
+        {
+            provider = _providerRegistry.Get(profile.Engine);
+        }
+        catch (Exception ex)
+        {
+            return Result<IReadOnlyList<string>>.Fail(ErrorCodes.PrvUnsupportedVersion, ex.Message);
+        }
+
+        string? password = passwordOverride;
+        if (password == null && !profile.PromptPassword)
+        {
+            try
+            {
+                var record = await _store.GetAsync(profile.Id, ct);
+                if (record?.ProtectedSecret != null)
+                {
+                    password = _secretStore.Unprotect(record.ProtectedSecret);
+                }
+            }
+            catch (CryptographicException)
+            {
+                return Result<IReadOnlyList<string>>.Fail(ErrorCodes.SecNoAuthorization, "Não foi possível recuperar a credencial protegida por DPAPI nesta máquina.");
+            }
+        }
+
+        var timeoutSec = profile.Settings.ConnectTimeoutSec > 0 ? profile.Settings.ConnectTimeoutSec : 15;
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
+        try
+        {
+            await using var connection = await provider.OpenConnectionAsync(profile.Settings, password, linkedCts.Token);
+            var names = await provider.ListDatabasesAsync(connection, linkedCts.Token);
+            return Result<IReadOnlyList<string>>.Ok(names);
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            return Result<IReadOnlyList<string>>.Fail(ErrorCodes.PrvTimeout, $"A listagem de bancos excedeu o tempo limite ({timeoutSec} segundos).");
+        }
+        catch (OperationCanceledException)
+        {
+            return Result<IReadOnlyList<string>>.Fail(ErrorCodes.PrvCancelled, "Operação cancelada pelo usuário.");
+        }
+        catch (Exception ex)
+        {
+            var mdsError = provider.ErrorTranslator.Translate(ex);
+            return Result<IReadOnlyList<string>>.Fail(mdsError.Code, mdsError.Message);
+        }
+    }
+
     public async Task<Result<OpenedConnection>> OpenAsync(Guid profileId, ConnectionPurpose purpose, CancellationToken ct = default)
     {
         var record = await _store.GetAsync(profileId, ct);
@@ -233,7 +289,17 @@ public sealed class ConnectionService : IConnectionService
             return Result<bool>.Fail(ErrorCodes.PrvConnFailed, "O nome da conexão é obrigatório.");
         }
 
-        if (string.IsNullOrWhiteSpace(profile.Settings.Database))
+        var requiresDatabase = true;
+        try
+        {
+            requiresDatabase = _providerRegistry.Get(profile.Engine).RequiresDatabase;
+        }
+        catch
+        {
+            // Provedor desconhecido: mantém a exigência conservadora do banco.
+        }
+
+        if (requiresDatabase && string.IsNullOrWhiteSpace(profile.Settings.Database))
         {
             return Result<bool>.Fail(ErrorCodes.PrvConnFailed, "O banco de dados / caminho do arquivo é obrigatório.");
         }

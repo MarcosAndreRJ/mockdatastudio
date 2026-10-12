@@ -1,5 +1,6 @@
+using System.Windows;
 using System.Windows.Controls;
-using MockDataStudio.App.Controls;
+using MockDataStudio.App.ViewModels;
 
 namespace MockDataStudio.App.Views;
 
@@ -8,11 +9,13 @@ public partial class ExplorerView : UserControl
     public ExplorerView()
     {
         InitializeComponent();
+    }
 
-        Loaded += (_, _) =>
+    private async void ObjectTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (DataContext is ExplorerViewModel viewModel && e.NewValue is ExplorerNode node)
         {
-            ObjectTree.UpdateLayout();
-            ObjectTree.ApplyInitialExpansion();
-        };
+            await viewModel.SelectNodeAsync(node);
+        }
     }
 }

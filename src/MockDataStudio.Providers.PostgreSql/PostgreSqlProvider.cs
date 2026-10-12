@@ -17,6 +17,9 @@ public sealed class PostgreSqlProvider : IDatabaseProvider
     public DatabaseEngine Engine => DatabaseEngine.PostgreSql;
 
     public string DisplayName => "PostgreSQL";
+    public int? DefaultPort => 5432;
+    public string? DefaultUser => "postgres";
+    public bool RequiresDatabase => false;
     public string? LogoResourceName => "postgresql";
 
     public IReadOnlyList<ConnectionSettingDefinition> ExtraSettings { get; } =
@@ -51,7 +54,7 @@ public sealed class PostgreSqlProvider : IDatabaseProvider
         {
             Host = string.IsNullOrWhiteSpace(settings.Host) ? "localhost" : settings.Host,
             Port = settings.Port ?? 5432,
-            Database = settings.Database,
+            Database = string.IsNullOrWhiteSpace(settings.Database) ? "postgres" : settings.Database,
             Username = settings.User,
             Timeout = settings.ConnectTimeoutSec > 0 ? settings.ConnectTimeoutSec : 15,
             CommandTimeout = settings.CommandTimeoutSec,
@@ -91,6 +94,22 @@ public sealed class PostgreSqlProvider : IDatabaseProvider
         var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(ct);
         return connection;
+    }
+
+
+    public async Task<IReadOnlyList<string>> ListDatabasesAsync(DbConnection connection, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT datname FROM pg_database WHERE NOT datistemplate AND datallowconn ORDER BY datname;";
+        var names = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            names.Add(reader.GetString(0));
+        }
+
+        return names;
     }
 
     public async Task<bool> ApplySessionReadOnlyAsync(DbConnection connection, CancellationToken ct)

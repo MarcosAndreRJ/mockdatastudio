@@ -125,6 +125,8 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
 {
     private readonly IConnectionService _connectionService;
     private readonly IProviderRegistry _providerRegistry;
+    private readonly ActiveConnectionSession _session;
+    private readonly MockDataStudio.App.Services.ShellNavigator _navigator;
 
     private ObservableCollection<ConnectionProfileItemViewModel> _savedConnections = [];
     private ConnectionProfileItemViewModel? _selectedConnection;
@@ -166,10 +168,14 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
 
     public ConnectionsViewModel(
         IConnectionService connectionService,
-        IProviderRegistry providerRegistry)
+        IProviderRegistry providerRegistry,
+        ActiveConnectionSession session,
+        MockDataStudio.App.Services.ShellNavigator navigator)
     {
         _connectionService = connectionService ?? throw new ArgumentNullException(nameof(connectionService));
         _providerRegistry = providerRegistry ?? throw new ArgumentNullException(nameof(providerRegistry));
+        _session = session ?? throw new ArgumentNullException(nameof(session));
+        _navigator = navigator ?? throw new ArgumentNullException(nameof(navigator));
 
         // Inicializar coleções e comandos
         AvailableEngines = [DatabaseEngine.PostgreSql, DatabaseEngine.MySql, DatabaseEngine.Sqlite, DatabaseEngine.Firebird];
@@ -242,16 +248,45 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         get => _formEngine;
         set
         {
+            var previous = _formEngine;
             if (SetProperty(ref _formEngine, value))
             {
+                ApplyEngineDefaults(previous, value);
                 OnPropertyChanged(nameof(RequiresHostPort));
                 OnPropertyChanged(nameof(RequiresCredentials));
+                OnPropertyChanged(nameof(RequiresDatabase));
                 OnPropertyChanged(nameof(IsSqlite));
+                OnPropertyChanged(nameof(IsNetworkDatabase));
                 OnPropertyChanged(nameof(CurrentProviderDisplayName));
                 OnPropertyChanged(nameof(EngineLogo));
                 InvalidateTestState();
             }
         }
+    }
+
+    // Ao trocar o provedor, porta e usuário acompanham os padrões do novo SGBD, sem sobrescrever valores personalizados.
+    private void ApplyEngineDefaults(DatabaseEngine previous, DatabaseEngine current)
+    {
+        var oldProvider = _providerRegistry.Get(previous);
+        var newProvider = _providerRegistry.Get(current);
+
+        var oldPort = oldProvider.DefaultPort?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (string.IsNullOrWhiteSpace(_formPort) || _formPort == oldPort || !newProvider.RequiresHostPort)
+        {
+            FormPort = newProvider.DefaultPort?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        if (string.IsNullOrWhiteSpace(_formUsername) || _formUsername == oldProvider.DefaultUser || !newProvider.RequiresHostPort)
+        {
+            FormUsername = newProvider.DefaultUser ?? string.Empty;
+        }
+
+        // O valor de database de um SGBD (nome ou caminho de arquivo) não vale para outro.
+        FormDatabase = string.Empty;
+        AvailableDatabases.Clear();
+        OnPropertyChanged(nameof(AvailableSslModes));
+        OnPropertyChanged(nameof(HasSslMode));
+        FormSslMode = newProvider.ExtraSettings.FirstOrDefault(s => s.Key == "sslMode")?.Default ?? string.Empty;
     }
 
     public string FormHost
@@ -293,7 +328,7 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
     public string FormSslMode
     {
         get => _formSslMode;
-        set { if (SetProperty(ref _formSslMode, value)) InvalidateTestState(); }
+        set { if (value is not null && SetProperty(ref _formSslMode, value)) InvalidateTestState(); }
     }
 
     public string FormTimeoutSec
@@ -341,7 +376,20 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
 
     public bool RequiresCredentials => _providerRegistry.Get(FormEngine).RequiresHostPort;
 
+    public bool RequiresDatabase => _providerRegistry.Get(FormEngine).RequiresDatabase;
+
+    public ObservableCollection<string> AvailableDatabases { get; } = [];
+
+    private ConnectionSettingDefinition? SslDefinition =>
+        _providerRegistry.Get(FormEngine).ExtraSettings.FirstOrDefault(s => s.Key == "sslMode");
+
+    public IReadOnlyList<string> AvailableSslModes => SslDefinition?.Options ?? [];
+
+    public bool HasSslMode => SslDefinition is not null;
+
     public bool IsSqlite => !RequiresHostPort;
+
+    public bool IsNetworkDatabase => RequiresHostPort;
 
     public string CurrentProviderDisplayName => _providerRegistry.Get(FormEngine).DisplayName;
 
@@ -496,7 +544,6 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         FormUsername = "postgres";
         FormPassword = string.Empty;
         FormPromptPassword = false;
-        FormSslMode = "Prefer";
         FormTimeoutSec = "15";
         FormEnvironment = ConnectionEnvironment.Unknown;
         FormIsReadOnly = true;
@@ -542,9 +589,13 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(FormNotes));
         OnPropertyChanged(nameof(FormCharset));
         OnPropertyChanged(nameof(FormSslMode));
+        OnPropertyChanged(nameof(AvailableSslModes));
+        OnPropertyChanged(nameof(HasSslMode));
+        OnPropertyChanged(nameof(RequiresDatabase));
         OnPropertyChanged(nameof(RequiresHostPort));
         OnPropertyChanged(nameof(RequiresCredentials));
         OnPropertyChanged(nameof(IsSqlite));
+        OnPropertyChanged(nameof(IsNetworkDatabase));
         OnPropertyChanged(nameof(CurrentProviderDisplayName));
         OnPropertyChanged(nameof(EngineLogo));
 
@@ -629,6 +680,8 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
                 AddTestRecord("Success", HexBrush("#15803D"), HexBrush("#DCFCE7"), $"{latencyMs} ms", "Conexão bem-sucedida");
                 AddActivity($"Conexão testada com sucesso (\"{profile.Name}\")", $"Latência: {latencyMs} ms • {serverInfo.Product}", HexBrush("#16A34A"));
                 UpdateHeaderIndicators();
+
+                await LoadDatabasesAsync(profile, passwordParam);
             }
             else
             {
@@ -658,6 +711,31 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         }
     }
 
+    // Depois de conectar, lista os bancos visíveis ao usuário para que ele escolha um (quando o provedor permite).
+    private async Task LoadDatabasesAsync(ConnectionProfile profile, string? password)
+    {
+        AvailableDatabases.Clear();
+        if (RequiresDatabase)
+            return;
+
+        var result = await _connectionService.ListDatabasesAsync(profile, password);
+        if (!result.IsSuccess)
+        {
+            TestResultMessage += $" Não foi possível listar os bancos: {result.Error!.Message}";
+            return;
+        }
+
+        foreach (var name in result.Value!)
+        {
+            AvailableDatabases.Add(name);
+        }
+
+        if (AvailableDatabases.Count > 0 && string.IsNullOrWhiteSpace(FormDatabase))
+        {
+            TestResultMessage += $" {AvailableDatabases.Count} banco(s) disponível(is): selecione um em Database.";
+        }
+    }
+
     public void CancelTest()
     {
         _activeTestCts?.Cancel();
@@ -683,12 +761,24 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         if (_formId == Guid.Empty)
             return;
 
+        // O Explorer abre o perfil salvo (com a senha protegida): salva antes se for novo ou se houver senha digitada.
+        if (SavedConnections.All(c => c.Id != _formId) || !string.IsNullOrEmpty(FormPassword))
+        {
+            await SaveConnectionAsync();
+            if (TestState == ConnectionTestState.Failed)
+                return;
+        }
+
+        TestState = ConnectionTestState.Testing;
+        TestResultMessage = "Abrindo conexão para o Explorer...";
+
         var result = await _connectionService.OpenAsync(_formId, ConnectionPurpose.Explore);
         if (result.IsSuccess)
         {
-            await using var opened = result.Value!;
+            _session.Set(result.Value!);
             TestState = ConnectionTestState.Success;
-            TestResultMessage = $"Conexão aberta com sucesso para Explorer. Versão: {opened.Server.Version}";
+            TestResultMessage = $"Conexão aberta para o Explorer ({result.Value!.Server.Product} {result.Value.Server.Version}).";
+            _navigator.NavigateTo("explorer");
         }
         else
         {
@@ -736,7 +826,7 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
             Port: RequiresHostPort ? port : null,
             Database: FormDatabase,
             User: RequiresCredentials ? FormUsername : null,
-            UseSsl: FormSslMode.Equals("Require", StringComparison.OrdinalIgnoreCase),
+            UseSsl: FormSslMode.StartsWith("Require", StringComparison.OrdinalIgnoreCase),
             Charset: FormCharset,
             ConnectTimeoutSec: timeout,
             CommandTimeoutSec: 0,

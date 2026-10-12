@@ -31,14 +31,14 @@
 
                         <DockPanel DockPanel.Dock="Top" Margin="12,10">
                             <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Margin="0,0,1,0">
+                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Margin="0,0,1,0" Command="{Binding RunCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
                                         <TextBlock Text="Run" VerticalAlignment="Center" />
                                         <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9" VerticalAlignment="Center" Margin="10,0,0,0" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" IsEnabled="False">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding StopCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextMutedBrush}" />
                                         <TextBlock Text="Stop" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />

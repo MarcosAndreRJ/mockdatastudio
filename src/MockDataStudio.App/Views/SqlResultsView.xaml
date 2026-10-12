@@ -35,7 +35,7 @@
                                 <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource SuccessSoftBrush}" Margin="0,0,8,0">
                                     <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
-                                <TextBlock Text="100 rows returned (36 ms)" FontWeight="Medium" />
+                                <TextBlock Text="{Binding StatusText}" FontWeight="Medium" />
                             </StackPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <controls:SearchField Placeholder="Search results..." Width="230" />
@@ -52,16 +52,10 @@
                             </StackPanel>
                         </DockPanel>
 
-                        <DataGrid ItemsSource="{Binding Rows}" FontSize="12">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="cliente_id" Binding="{Binding ClienteId}" Width="110" />
-                                <DataGridTextColumn Header="nome" Binding="{Binding Nome}" Width="*" />
-                                <DataGridTextColumn Header="email" Binding="{Binding Email}" Width="2*" />
-                                <DataGridTextColumn Header="total_pedidos" Binding="{Binding TotalPedidos}" Width="*" />
-                                <DataGridTextColumn Header="valor_total" Binding="{Binding ValorTotal}" Width="*" />
-                                <DataGridTextColumn Header="ultimo_pedido" Binding="{Binding UltimoPedido}" Width="*" />
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Bottom" Text="{Binding MessagesText, Mode=OneWay}" IsReadOnly="True" BorderThickness="0,1,0,0" Padding="12,6" TextWrapping="Wrap" MaxHeight="90" VerticalScrollBarVisibility="Auto" />
+                            <DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="True" IsReadOnly="True" FontSize="12" />
+                        </DockPanel>
                     </DockPanel>
                 </Border>
 

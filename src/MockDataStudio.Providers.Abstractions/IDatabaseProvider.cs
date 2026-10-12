@@ -16,6 +16,22 @@ public interface IDatabaseProvider
     /// Indica se o provedor opera sobre rede (host/porta) ou arquivo local (SQLite).
     /// </summary>
     bool RequiresHostPort => true;
+
+    /// <summary>Porta padrão do SGBD (null para provedores baseados em arquivo).</summary>
+    int? DefaultPort => null;
+
+    /// <summary>Usuário administrativo padrão sugerido no formulário de conexão.</summary>
+    string? DefaultUser => null;
+
+    /// <summary>
+    /// Indica se o campo database é obrigatório para conectar. Falso quando o servidor aceita conexão sem banco
+    /// e permite listar os bancos disponíveis (<see cref="ListDatabasesAsync"/>).
+    /// </summary>
+    bool RequiresDatabase => true;
+
+    /// <summary>Lista os bancos visíveis ao usuário na conexão aberta. Vazio quando o SGBD não suporta.</summary>
+    Task<IReadOnlyList<string>> ListDatabasesAsync(DbConnection connection, CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<string>>([]);
     string? LogoResourceName => null;
     IReadOnlyList<ConnectionSettingDefinition> ExtraSettings { get; }
     ProviderCapabilities GetCapabilities(string serverVersion);

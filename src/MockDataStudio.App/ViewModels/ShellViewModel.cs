@@ -15,7 +15,7 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty]
     private object? _currentPage;
 
-    public ShellViewModel(IServiceProvider services)
+    public ShellViewModel(IServiceProvider services, MockDataStudio.App.Services.ShellNavigator navigator)
     {
         _services = services;
 
@@ -34,6 +34,12 @@ public sealed partial class ShellViewModel : ObservableObject
         ];
 
         SelectedNav = NavItems[0];
+        navigator.Requested += key =>
+        {
+            var target = NavItems.FirstOrDefault(n => n.Key == key);
+            if (target is not null)
+                SelectedNav = target;
+        };
     }
 
     public IReadOnlyList<NavEntry> NavItems { get; }
