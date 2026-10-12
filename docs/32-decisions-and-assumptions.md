@@ -182,7 +182,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 |---|---|---|---|---|
 | PV-100 | `IGenerationEngine.RunAsync(GenerationPlan, …)` e `IRowSink`/`RowBatch` (C06) ainda não existem: o motor continua com a API por tabela (DA-052). Output (A3) precisa consumir o plano, então exige coordenação com a trilha A na própria A3 | Implementar A2.5 e revisar com A3 | Manter a API por tabela até A3 e registrar a divergência no relatório | A2 / A3 |
 | PV-101 | Snapshots de plano para os 4 digests de `docs/examples` (T-REL-PLAN-001) não foram feitos: falta importar os digests para `SchemaModel` na suíte de testes | Importar `digest-*.json` (Core.Digest) e gerar o plano de `loja` por SGBD | Registrar snapshot parcial só para PostgreSQL e manter o restante pendente | A2 |
-| PV-102 | Smoke de UI (`App.UiTests`) falhou uma vez na suíte completa (timeout em 13 s, sem mensagem capturada) e passou em todas as execuções isoladas. Causa provável: `Thread.Sleep(1200)` fixo e início lento do app sob carga. O teste é da trilha C | Repetir a suíte completa e capturar a mensagem; trocar o sleep por espera pelo marcador | Não marcar o smoke como verde sem a captura; trilha C decide a correção | Trilha C (C1) |
+| PV-102 | Smoke de UI (`App.UiTests`) falhou em rodadas completas da solução (rodadas de 2026-10-12, com a A2): `Saved Connections (` não foi encontrado na tela Connections após `Thread.Sleep(1200)`. Passa em execuções isoladas. Não é causado por código da A2 (a sprint só altera Generation) | Repetir a suíte completa e capturar a mensagem; trocar o sleep fixo por espera pelo marcador | Não marcar o smoke como verde sem captura; a correção é da Trilha C | Trilha C (C1) |
 
 ### 5.2 Trilha B (PV-200..299)
 
