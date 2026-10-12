@@ -119,30 +119,88 @@ internal sealed class SequenceIntGenerator(long start, long step) : IIndexableGe
     public object? ValueAt(long index) => unchecked(start + index * step);
 }
 
-// core.random.int (distribuição uniforme). Domínio [min, max] enumerável.
-internal sealed class RandomIntGenerator(long min, long max) : IIndexableGenerator
+// core.random.int (uniforme, normal ou zipf).
+internal sealed class RandomIntGenerator : IIndexableGenerator
 {
-    public ValueDomain Domain { get; } = new(max - min + 1, true);
+    private readonly long _min;
+    private readonly long _max;
+    private readonly string _distribution;
+    private readonly double _mean;
+    private readonly double _stddev;
+    private readonly ZipfSampler? _zipf;
+
+    public RandomIntGenerator(long min, long max, string distribution = "uniform", double? mean = null, double? stddev = null, double zipfS = 1.0)
+    {
+        _min = min;
+        _max = max;
+        _distribution = distribution.ToLowerInvariant();
+        _mean = mean ?? ((double)min + max) / 2.0;
+        _stddev = stddev ?? Math.Max(1.0, ((double)max - min) / 6.0);
+        var count = max - min + 1;
+        if (_distribution == "zipf")
+        {
+            _zipf = new ZipfSampler(count, zipfS > 0 ? zipfS : 1.0);
+        }
+
+        Domain = new ValueDomain(count, _distribution == "uniform");
+    }
+
+    public ValueDomain Domain { get; }
 
     public IReadOnlyList<string> DependsOnColumns { get; } = [];
 
-    public object? Generate(ref GenerationCell cell) => cell.Rng.NextInt64(min, max + 1);
+    public object? Generate(ref GenerationCell cell)
+    {
+        return _distribution switch
+        {
+            "normal" => (long)Math.Round(cell.Rng.NextNormal(_mean, _stddev, _min, _max)),
+            "zipf" when _zipf is not null => _min + _zipf.Sample(ref cell.Rng),
+            _ => cell.Rng.NextInt64(_min, _max + 1)
+        };
+    }
 
-    public object? ValueAt(long index) => min + index;
+    public object? ValueAt(long index) => _min + index;
 }
 
-// core.random.decimal (uniforme, escala fixa). Domínio = unidades inteiras em [0, (max-min)·10^scale].
-internal sealed class RandomDecimalGenerator(decimal min, decimal max, int scale) : IIndexableGenerator
+// core.random.decimal (uniforme ou normal, escala fixa).
+internal sealed class RandomDecimalGenerator : IIndexableGenerator
 {
-    private readonly decimal _factor = (decimal)Math.Pow(10, scale);
+    private readonly decimal _min;
+    private readonly decimal _max;
+    private readonly int _scale;
+    private readonly decimal _factor;
+    private readonly string _distribution;
+    private readonly double _mean;
+    private readonly double _stddev;
 
-    public ValueDomain Domain { get; } = new(DomainSize(min, max, scale), true);
+    public RandomDecimalGenerator(decimal min, decimal max, int scale, string distribution = "uniform", double? mean = null, double? stddev = null)
+    {
+        _min = min;
+        _max = max;
+        _scale = scale;
+        _factor = (decimal)Math.Pow(10, scale);
+        _distribution = distribution.ToLowerInvariant();
+        _mean = mean ?? (double)((min + max) / 2m);
+        _stddev = stddev ?? Math.Max(0.01, (double)((max - min) / 6m));
+        Domain = new ValueDomain(DomainSize(min, max, scale), _distribution == "uniform");
+    }
+
+    public ValueDomain Domain { get; }
 
     public IReadOnlyList<string> DependsOnColumns { get; } = [];
 
-    public object? Generate(ref GenerationCell cell) => cell.Rng.NextDecimal(min, max, scale);
+    public object? Generate(ref GenerationCell cell)
+    {
+        if (_distribution == "normal")
+        {
+            var raw = cell.Rng.NextNormal(_mean, _stddev, (double)_min, (double)_max);
+            return Math.Round((decimal)raw, _scale, MidpointRounding.ToEven);
+        }
 
-    public object? ValueAt(long index) => min + index / _factor;
+        return cell.Rng.NextDecimal(_min, _max, _scale);
+    }
+
+    public object? ValueAt(long index) => _min + index / _factor;
 
     private static long? DomainSize(decimal min, decimal max, int scale)
     {

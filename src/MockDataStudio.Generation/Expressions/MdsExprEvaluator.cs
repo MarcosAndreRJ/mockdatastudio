@@ -26,6 +26,7 @@ public sealed class CompiledExpr
         ["pick"] = (1, 64), ["rand_int"] = (2, 2), ["rand_decimal"] = (3, 3), ["template"] = (1, 1),
         ["field"] = (2, 3), ["ref_now"] = (0, 0), ["date_add"] = (2, 2), ["date_diff_days"] = (2, 2),
         ["format_date"] = (2, 2), ["year"] = (1, 1), ["month"] = (1, 1), ["day"] = (1, 1),
+        ["cpf"] = (0, 1), ["cnpj"] = (0, 2),
     };
 
     private readonly ExprNode _root;
@@ -263,6 +264,19 @@ public sealed class CompiledExpr
             case "year": return (long)Date(args[0]).Year;
             case "month": return (long)Date(args[0]).Month;
             case "day": return (long)Date(args[0]).Day;
+            case "cpf":
+            {
+                var formatted = args.Length > 0 && args[0] is bool b && b;
+                var idx = cell.Rng.NextInt64(0, CpfGenerator.Cardinality);
+                return new CpfGenerator(formatted).ValueAt(idx);
+            }
+            case "cnpj":
+            {
+                var formatted = args.Length > 0 && args[0] is bool b && b;
+                var branch = args.Length > 1 && args[1] is not null ? (int)Int(args[1]) : 1;
+                var idx = cell.Rng.NextInt64(0, CnpjGenerator.Cardinality);
+                return new CnpjGenerator(formatted, branch).ValueAt(idx);
+            }
             default: throw new ExprRuntimeException(ErrorCodes.GenExprUnknownFn, $"Função '{name}' desconhecida.");
         }
     }

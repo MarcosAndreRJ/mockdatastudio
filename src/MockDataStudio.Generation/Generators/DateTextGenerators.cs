@@ -9,11 +9,14 @@ namespace MockDataStudio.Generation.Generators;
 internal sealed class DateRangeGenerator : IIndexableGenerator
 {
     private readonly DateTime _start;
+    private readonly DateTime _end;
     private readonly long _unitTicks;
     private readonly long _count;
     private readonly bool _dayGranularity;
+    private readonly HashSet<int>? _weekdays;
+    private readonly (int Start, int End)? _hoursRange;
 
-    public DateRangeGenerator(DateTime start, DateTime end, string granularity)
+    public DateRangeGenerator(DateTime start, DateTime end, string granularity, IReadOnlyList<int>? weekdays = null, string? hours = null)
     {
         _unitTicks = granularity switch
         {
@@ -25,22 +28,108 @@ internal sealed class DateRangeGenerator : IIndexableGenerator
         };
         _dayGranularity = granularity == "day";
         _start = _dayGranularity ? start.Date : start;
+        _end = end;
         _count = (end - _start).Ticks / _unitTicks + 1;
-        Domain = new ValueDomain(_count, _dayGranularity);
+
+        if (weekdays is { Count: > 0 })
+        {
+            _weekdays = [.. weekdays];
+        }
+
+        if (!string.IsNullOrWhiteSpace(hours))
+        {
+            var parts = hours.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var sh) && int.TryParse(parts[1], out var eh))
+            {
+                _hoursRange = (Math.Clamp(sh, 0, 23), Math.Clamp(eh, 0, 23));
+            }
+        }
+
+        Domain = new ValueDomain(_count, _dayGranularity && _weekdays is null && _hoursRange is null);
     }
 
     public ValueDomain Domain { get; }
 
     public IReadOnlyList<string> DependsOnColumns { get; } = [];
 
-    public object? Generate(ref GenerationCell cell) =>
-        _start.AddTicks(cell.Rng.NextInt64(0, _count) * _unitTicks);
+    public object? Generate(ref GenerationCell cell)
+    {
+        if (_weekdays is null && _hoursRange is null)
+        {
+            return _start.AddTicks(cell.Rng.NextInt64(0, _count) * _unitTicks);
+        }
+
+        for (var attempt = 0; attempt < 32; attempt++)
+        {
+            var candidate = _start.AddTicks(cell.Rng.NextInt64(0, _count) * _unitTicks);
+            if (Matches(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        var fallback = _start.AddTicks(cell.Rng.NextInt64(0, _count) * _unitTicks);
+        return Adjust(fallback);
+    }
 
     public object? ValueAt(long index) => _start.AddTicks(index * _unitTicks);
+
+    private bool Matches(DateTime dt)
+    {
+        if (_weekdays is not null)
+        {
+            var isoWeekday = dt.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)dt.DayOfWeek;
+            if (!_weekdays.Contains(isoWeekday))
+            {
+                return false;
+            }
+        }
+
+        if (_hoursRange is { } range)
+        {
+            if (dt.Hour < range.Start || dt.Hour > range.End)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private DateTime Adjust(DateTime dt)
+    {
+        var result = dt;
+        if (_weekdays is not null)
+        {
+            for (var i = 0; i < 7; i++)
+            {
+                var iso = result.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)result.DayOfWeek;
+                if (_weekdays.Contains(iso))
+                {
+                    break;
+                }
+
+                result = result.AddDays(1);
+            }
+        }
+
+        if (_hoursRange is { } range)
+        {
+            var h = Math.Clamp(result.Hour, range.Start, range.End);
+            result = result.Date.AddHours(h).AddMinutes(result.Minute).AddSeconds(result.Second);
+        }
+
+        if (result > _end)
+        {
+            result = _end;
+        }
+
+        return result;
+    }
 }
 
-// core.date.sequence: start + row·(dias + tempo). Passos com anos/meses não são suportados nesta versão.
-internal sealed class DateSequenceGenerator(DateTime start, long days, TimeSpan time) : IIndexableGenerator
+// core.date.sequence: start + row·step (anos, meses, dias e tempo via IsoDuration).
+internal sealed class DateSequenceGenerator(DateTime start, IsoDuration step) : IIndexableGenerator
 {
     public ValueDomain Domain { get; } = new(null, true);
 
@@ -48,7 +137,32 @@ internal sealed class DateSequenceGenerator(DateTime start, long days, TimeSpan 
 
     public object? Generate(ref GenerationCell cell) => ValueAt(cell.RowIndex);
 
-    public object? ValueAt(long index) => start.AddDays(checked(index * days)).Add(TimeSpan.FromTicks(checked(index * time.Ticks)));
+    public object? ValueAt(long index)
+    {
+        var dt = start;
+        if (step.Years != 0)
+        {
+            dt = dt.AddYears(checked((int)(index * step.Sign * step.Years)));
+        }
+
+        if (step.Months != 0)
+        {
+            dt = dt.AddMonths(checked((int)(index * step.Sign * step.Months)));
+        }
+
+        if (step.Days != 0)
+        {
+            dt = dt.AddDays(checked(index * step.Sign * step.Days));
+        }
+
+        if (step.Time != TimeSpan.Zero)
+        {
+            var ticks = checked(index * (step.Sign < 0 ? -step.Time.Ticks : step.Time.Ticks));
+            dt = dt.AddTicks(ticks);
+        }
+
+        return dt;
+    }
 }
 
 // core.random.string: comprimento uniforme em [min, max]; charset alpha|alnum|numeric|hex.
@@ -65,6 +179,10 @@ internal sealed class RandomStringGenerator(int minLength, int maxLength, string
         "hex" => Hex,
         _ => Alpha + Numeric,
     };
+
+    public int MinLength => minLength;
+
+    public int MaxLength => maxLength;
 
     public ValueDomain Domain { get; } = new(null, false);
 

@@ -87,6 +87,38 @@ public struct DeterministicRandom
         return min + pick / factor;
     }
 
+    // Box-Muller para distribuição normal em [min, max] (docs/15 §6).
+    // Até 16 tentativas por rejeição; depois clamp.
+    public double NextNormal(double mean, double stddev, double min, double max)
+    {
+        for (var attempt = 0; attempt < 16; attempt++)
+        {
+            var u1 = NextDouble();
+            while (u1 <= 0.0)
+            {
+                u1 = NextDouble();
+            }
+
+            var u2 = NextDouble();
+            var z0 = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
+            var val = mean + z0 * stddev;
+            if (val >= min && val <= max)
+            {
+                return val;
+            }
+        }
+
+        var lastU1 = NextDouble();
+        while (lastU1 <= 0.0)
+        {
+            lastU1 = NextDouble();
+        }
+
+        var lastU2 = NextDouble();
+        var lastZ0 = Math.Sqrt(-2.0 * Math.Log(lastU1)) * Math.Cos(2.0 * Math.PI * lastU2);
+        return Math.Clamp(mean + lastZ0 * stddev, min, max);
+    }
+
     public int NextWeightedIndex(WeightedIndex table)
     {
         ArgumentNullException.ThrowIfNull(table);

@@ -9,17 +9,40 @@ using MockDataStudio.Generation.Generators;
 using MockDataStudio.Generation.Random;
 using MockDataStudio.Generation.Unique;
 
+using MockDataStudio.Generation.Planning;
+
 namespace MockDataStudio.Generation.Engine;
 
-// Motor de geração em lotes (docs/15 §2–§3). Não conhece SQL: emite valores canônicos para um IRowSink.
+// Motor de geração em lotes (docs/15 §2–§3, C06). Não conhece SQL: emite valores canônicos para um IRowSink.
 // Lotes saem em ordem crescente de índice; a saída não depende do grau de paralelismo (T-GEN-DET-001).
 
+public sealed record RowBatch(ObjectName Table, long FirstRowIndex, IReadOnlyList<string> Columns, object?[][] Rows);
+
+public sealed record DeferredUpdateBatch(
+    ObjectName Table,
+    string ForeignKeyName,
+    IReadOnlyList<string> KeyColumns,
+    IReadOnlyList<string> FkColumns,
+    object?[][] KeyValues,
+    object?[][] FkValues);
+
+public sealed record RunProgress(string Phase, ObjectName? Table, long RowsDone, long RowsTotal, double RowsPerSecond);
+
+public sealed record KeyRangeResult(string Column, long? First, long? Last, IReadOnlyList<object?[]>? CapturedKeys = null);
+
+public sealed record TableRunResult(ObjectName Table, long RowsWritten, IReadOnlyList<KeyRangeResult> KeyRanges);
+
+/// Destino das linhas geradas. Definido em Generation; MockDataStudio.Output implementa (IOutputWriter : IRowSink).
 public interface IRowSink
 {
-    Task WriteBatchAsync(RowBatch batch, CancellationToken ct);
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Contrato normativo C06 define ExecuteSessionStepAsync(PlanStep step, CancellationToken ct).")]
+    Task ExecuteSessionStepAsync(PlanStep step, CancellationToken ct) => Task.CompletedTask;
+    Task BeginTableAsync(TablePlan table, CancellationToken ct) => Task.CompletedTask;
+    /// Retorna chaves capturadas (somente inserção direta com KeyStrategy.Captured); senão null.
+    Task<IReadOnlyList<object?[]>?> WriteBatchAsync(RowBatch batch, CancellationToken ct);
+    Task EndTableAsync(TableRunResult result, CancellationToken ct) => Task.CompletedTask;
+    Task WriteDeferredUpdatesAsync(DeferredUpdateBatch batch, CancellationToken ct) => Task.CompletedTask;
 }
-
-public sealed record RowBatch(ObjectName Table, long StartRow, IReadOnlyList<string> Columns, IReadOnlyList<object?[]> Rows);
 
 // Erro de geração com contexto (tabela, coluna, linha). O código é um GEN-* do catálogo de erros.
 public sealed class GenerationException(string code, string message) : Exception(message)
@@ -28,13 +51,16 @@ public sealed class GenerationException(string code, string message) : Exception
 }
 
 // Coluna do plano: coluna do modelo, gerador já resolvido, taxa de nulos e exigência de unicidade.
-public sealed record ColumnPlan(ColumnModel Column, GeneratorSpec Generator, double NullRate, bool Unique);
+public sealed record ColumnPlan(
+    ColumnModel Column, GeneratorSpec Generator, double NullRate, bool Unique,
+    string? UniqueStrategy = null);
 
 public sealed record TablePlan(
     ObjectName Table, IReadOnlyList<ColumnPlan> Columns, long RowCount,
     ulong Seed, DateTimeOffset ReferenceInstant, TimeZoneInfo TimeZone,
     IReadOnlyDictionary<string, TemplateDataSet> Templates,
-    int BatchSize = 1000, int MaxDegreeOfParallelism = 1);
+    int BatchSize = 1000, int MaxDegreeOfParallelism = 1,
+    IReadOnlyList<IReadOnlyList<string>>? CompositeUniques = null);
 
 public sealed class GenerationEngine(IGeneratorRegistry registry)
 {
@@ -60,6 +86,8 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
         var sequential = table.Steps.Any(s => s.Attempts);
         long written = 0;
 
+        await sink.BeginTableAsync(plan, ct).ConfigureAwait(false);
+
         try
         {
             for (long start = 0; start < plan.RowCount;)
@@ -81,10 +109,12 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
                     Parallel.For(0, count, options, i => rows[i] = table.EvaluateRow(first + i));
                 }
 
-                await sink.WriteBatchAsync(new RowBatch(plan.Table, start, columnNames, rows), ct);
+                await sink.WriteBatchAsync(new RowBatch(plan.Table, start, columnNames, rows), ct).ConfigureAwait(false);
                 start += count;
                 written += count;
             }
+
+            await sink.EndTableAsync(new TableRunResult(plan.Table, written, []), ct).ConfigureAwait(false);
         }
         catch (GenerationException ex)
         {
@@ -116,14 +146,20 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
                     $"Gerador '{column.Generator.GeneratorId}' não está registrado.");
             }
 
-            var ctx = new GeneratorCreateContext(plan.Seed, plan.Table, column.Column, plan.Templates, plan.ReferenceInstant, plan.TimeZone);
+            var ctx = new GeneratorCreateContext(plan.Seed, plan.Table, column.Column, plan.Templates, plan.ReferenceInstant, plan.TimeZone, registry);
             var created = factory.Create(column.Generator, ctx);
             if (!created.IsSuccess)
             {
                 return Result<PreparedTable>.Fail(created.Error);
             }
 
-            steps.Add(new Step(column.Column, column.NullRate, column.Unique, column.Generator.GeneratorId, created.Value));
+            var uniqueStrat = column.UniqueStrategy;
+            if (string.IsNullOrEmpty(uniqueStrat) && column.Generator.Parameters.TryGetPropertyValue("uniqueStrategy", out var usNode))
+            {
+                uniqueStrat = usNode?.GetValue<string>();
+            }
+
+            steps.Add(new Step(column.Column, column.NullRate, column.Unique, column.Generator.GeneratorId, created.Value, uniqueStrat));
         }
 
         var ordered = EvaluationOrder(steps);
@@ -144,11 +180,64 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
             planned.Add(uniqueness.Value);
         }
 
+        List<CompositeUniquePlan>? compositePlans = null;
+        if (plan.CompositeUniques is { Count: > 0 })
+        {
+            compositePlans = [];
+            foreach (var cols in plan.CompositeUniques)
+            {
+                var compSteps = cols.Select(c => planned.FirstOrDefault(s => string.Equals(s.Model.Name, c, StringComparison.Ordinal)))
+                    .ToList();
+                if (compSteps.Any(s => s is null))
+                {
+                    return Result<PreparedTable>.Fail(ErrorCodes.DigPkCol, "Coluna do UNIQUE composto não encontrada.");
+                }
+
+                var radices = new List<long>();
+                var generators = new List<IIndexableGenerator>();
+                foreach (var cs in compSteps)
+                {
+                    if (cs!.Generator is not IIndexableGenerator idx || !idx.Domain.SupportsIndexing || idx.Domain.Cardinality is null)
+                    {
+                        return Result<PreparedTable>.Fail(ErrorCodes.GenUnsupported,
+                            $"Coluna '{cs.Model.Name}' do UNIQUE composto não é indexável.");
+                    }
+
+                    radices.Add(idx.Domain.Cardinality.Value);
+                    generators.Add(idx);
+                }
+
+                long capacity = 1;
+                foreach (var r in radices)
+                {
+                    try
+                    {
+                        capacity = checked(capacity * r);
+                    }
+                    catch (OverflowException)
+                    {
+                        capacity = long.MaxValue;
+                        break;
+                    }
+                }
+
+                if (capacity < plan.RowCount)
+                {
+                    return Result<PreparedTable>.Fail(ErrorCodes.PlnUniqueCapacity,
+                        $"UNIQUE composto [{string.Join(", ", cols)}] tem capacidade {capacity} inferior a {plan.RowCount} linhas.");
+                }
+
+                var key = StreamKey.Derive(plan.Seed, plan.Table.CanonicalId + "." + string.Join("+", cols), "comp_perm");
+                var perm = new FeistelPermutation((ulong)plan.RowCount, key.Value);
+                compositePlans.Add(new CompositeUniquePlan(cols, generators, radices, perm));
+            }
+        }
+
         var insert = planned
             .Where(s => s.Generator is not SkipGenerator)
             .OrderBy(s => s.Model.Ordinal)
             .ToList();
-        return Result<PreparedTable>.Ok(new PreparedTable(plan, planned, insert));
+        return Result<PreparedTable>.Ok(new PreparedTable(plan, planned, insert, compositePlans));
     }
 
     // Ordem topológica por DependsOnColumns, com desempate pelo ordinal da coluna (15 §2.1).
@@ -194,6 +283,28 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
             return Result<Step>.Ok(step);
         }
 
+        var isSuffix = string.Equals(step.UniqueStrategy, "suffix", StringComparison.OrdinalIgnoreCase);
+        if (isSuffix)
+        {
+            var maxRow = plan.RowCount > 0 ? plan.RowCount - 1 : 0;
+            var suffixLen = SuffixDecorator.SuffixLength(maxRow);
+            var colMaxLen = step.Model.Type.Length;
+
+            var baseLen = 0;
+            if (step.Generator is RandomStringGenerator rsg)
+            {
+                baseLen = rsg.MaxLength;
+            }
+
+            if (colMaxLen is not null && baseLen + suffixLen > colMaxLen.Value)
+            {
+                return Result<Step>.Fail(ErrorCodes.ValLen,
+                    $"Coluna '{step.Model.Name}' tem tamanho máximo {colMaxLen.Value}, mas valor base ({baseLen}) + sufixo ({suffixLen}) requer {baseLen + suffixLen} caracteres para {plan.RowCount} linhas.");
+            }
+
+            return Result<Step>.Ok(step with { Suffix = true });
+        }
+
         if (step.Generator is IIndexableGenerator indexable && indexable.Domain.SupportsIndexing)
         {
             var cardinality = indexable.Domain.Cardinality;
@@ -224,16 +335,28 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
 
     private static string ColumnScope(ObjectName table, string column) => table.CanonicalId + "." + column;
 
-    private sealed record Step(ColumnModel Model, double NullRate, bool Unique, string GeneratorId, IValueGenerator Generator)
+    private sealed record Step(
+        ColumnModel Model, double NullRate, bool Unique, string GeneratorId,
+        IValueGenerator Generator, string? UniqueStrategy = null)
     {
         public IIndexableGenerator? Indexable { get; init; }
 
         public FeistelPermutation? Permutation { get; init; }
 
         public bool Attempts { get; init; }
+
+        public bool Suffix { get; init; }
     }
 
-    private sealed record PreparedTable(TablePlan Plan, IReadOnlyList<Step> Steps, IReadOnlyList<Step> Insert)
+    private sealed record CompositeUniquePlan(
+        IReadOnlyList<string> Columns,
+        IReadOnlyList<IIndexableGenerator> Generators,
+        IReadOnlyList<long> Radices,
+        FeistelPermutation Permutation);
+
+    private sealed record PreparedTable(
+        TablePlan Plan, IReadOnlyList<Step> Steps, IReadOnlyList<Step> Insert,
+        IReadOnlyList<CompositeUniquePlan>? CompositePlans = null)
     {
         // Valores já vistos por coluna na estratégia de tentativas (executada sequencialmente).
         private readonly Dictionary<string, HashSet<object?>> _seen = new(StringComparer.Ordinal);
@@ -241,9 +364,25 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
         public object?[] EvaluateRow(long row)
         {
             var context = new RowContext(row);
+            if (CompositePlans is { Count: > 0 })
+            {
+                foreach (var cp in CompositePlans)
+                {
+                    var p = cp.Permutation.Map((ulong)row);
+                    var indices = MixedRadixDecomposer.Decompose(p, cp.Radices);
+                    for (var k = 0; k < cp.Columns.Count; k++)
+                    {
+                        context.Set(cp.Columns[k], cp.Generators[k].ValueAt(indices[k]));
+                    }
+                }
+            }
+
             foreach (var step in Steps)
             {
-                context.Set(step.Model.Name, EvaluateCell(step, row, context));
+                if (!context.TryGet(step.Model.Name, out _))
+                {
+                    context.Set(step.Model.Name, EvaluateCell(step, row, context));
+                }
             }
 
             var values = new object?[Insert.Count];
@@ -315,7 +454,13 @@ public sealed class GenerationEngine(IGeneratorRegistry registry)
                 var purpose = attempt == 0 ? "value" : "retry:" + attempt;
                 var rng = DeterministicRandom.For(StreamKey.Derive(Plan.Seed, scope, purpose), row);
                 var cell = new GenerationCell(row, rng, context);
-                return step.Generator.Generate(ref cell);
+                var value = step.Generator.Generate(ref cell);
+                if (step.Suffix)
+                {
+                    return SuffixDecorator.Decorate(value?.ToString() ?? string.Empty, row);
+                }
+
+                return value;
             }
             catch (ExprRuntimeException ex)
             {

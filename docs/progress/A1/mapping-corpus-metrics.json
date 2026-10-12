@@ -1,0 +1,12 @@
+{
+  "linhasAvaliadas": 2724,
+  "colunasPositivas": 2436,
+  "coberturaHigh": 0.4811,
+  "coberturaHighSemPrefixo": 0.8621,
+  "positivasSemPrefixo": 1044,
+  "highTotal": 1172,
+  "precisaoHigh": 1.0000,
+  "violacoesTipo": 0,
+  "timestampUtc": "2026-10-12T18:07:12Z",
+  "metaAtendida": true
+}

@@ -107,4 +107,31 @@ public sealed class EngineTests
         result.IsSuccess.ShouldBeTrue(result.IsSuccess ? string.Empty : result.Error.Message);
         return sink.Rows.Select(r => string.Join("|", r.Select(Text))).ToList();
     }
+
+    [Fact]
+    [Trait("Category", "Contract")]
+    [Trait("Id", "T-GEN-SINK-001")]
+    public async Task IRowSink_CicloDeVidaDeTabelaInvocado()
+    {
+        var table = Table("cliente", [Plan(Col("id", "integer", ordinal: 1), "core.sequence.int", Obj(("start", 1L)))], rows: 100);
+        var sink = new MemorySink();
+
+        var result = await new GenerationEngine(Registry()).RunAsync(table, sink, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        sink.BeganTable.ShouldBeTrue();
+        sink.EndedTable.ShouldBeTrue();
+        sink.BatchStarts.ShouldBe([0L]);
+    }
+
+    [Fact]
+    public void PlanSteps_InstanciamComOrdemCorreta()
+    {
+        var setup = new MockDataStudio.Generation.Planning.SessionSetupStep(1, ["SET foreign_key_checks = 0;"]);
+        setup.Order.ShouldBe(1);
+        setup.Statements.Count.ShouldBe(1);
+
+        var teardown = new MockDataStudio.Generation.Planning.SessionTeardownStep(2, ["SET foreign_key_checks = 1;"]);
+        teardown.Order.ShouldBe(2);
+    }
 }

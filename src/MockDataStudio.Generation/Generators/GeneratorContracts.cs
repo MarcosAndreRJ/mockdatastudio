@@ -112,4 +112,5 @@ public sealed record GeneratorCreateContext(
     ulong Seed, ObjectName Table, ColumnModel Column,
     IReadOnlyDictionary<string, TemplateDataSet> Templates,
     DateTimeOffset ReferenceInstant,
-    TimeZoneInfo TimeZone);
+    TimeZoneInfo TimeZone,
+    IGeneratorRegistry? Registry = null);
