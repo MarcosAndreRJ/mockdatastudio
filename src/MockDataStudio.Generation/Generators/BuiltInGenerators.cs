@@ -18,6 +18,7 @@ internal static class BuiltInGenerators
     private const string DateTimeKind = "datetime";
     private const string ListKind = "stringList";
     private const string DoubleListKind = "doubleList";
+    private const string BoolKind = "bool";
 
     private static readonly string[] Granularities = ["day", "hour", "minute", "second", "millisecond"];
 
@@ -48,15 +49,24 @@ internal static class BuiltInGenerators
             [GeneratorFactory.Optional("start", IntKind, "Início", 1L), GeneratorFactory.Optional("step", IntKind, "Passo", 1L, min: 1)],
             (p, _) => Ok(new SequenceIntGenerator(p.GetLong("start"), p.GetLong("step")))),
         Basic("core.random.int", "Inteiro aleatório",
-            [GeneratorFactory.Required("min", IntKind, "Mínimo"), GeneratorFactory.Required("max", IntKind, "Máximo")],
+            [GeneratorFactory.Required("min", IntKind, "Mínimo"),
+             GeneratorFactory.Required("max", IntKind, "Máximo"),
+             GeneratorFactory.Optional("distribution", EnumKind, "Distribuição", "uniform", ["uniform", "normal", "zipf"]),
+             GeneratorFactory.Optional("mean", DblKind, "Média", null),
+             GeneratorFactory.Optional("stddev", DblKind, "Desvio padrão", null),
+             GeneratorFactory.Optional("zipfS", DblKind, "Expoente Zipf", 1.0, min: 0.01)],
             (p, _) => p.GetLong("min") <= p.GetLong("max") && p.GetLong("max") < long.MaxValue
-                ? Ok(new RandomIntGenerator(p.GetLong("min"), p.GetLong("max")))
+                ? Ok(new RandomIntGenerator(p.GetLong("min"), p.GetLong("max"), p.GetString("distribution"), p.OptionalDouble("mean"), p.OptionalDouble("stddev"), p.Has("zipfS") ? p.GetDouble("zipfS") : 1.0))
                 : Fail(ErrorCodes.GenParamValue, "min deve ser ≤ max e max < 2^63-1.")),
         Basic("core.random.decimal", "Decimal aleatório",
-            [GeneratorFactory.Required("min", DecKind, "Mínimo"), GeneratorFactory.Required("max", DecKind, "Máximo"),
-             GeneratorFactory.Optional("scale", IntKind, "Escala", 2L, min: 0, max: 9)],
+            [GeneratorFactory.Required("min", DecKind, "Mínimo"),
+             GeneratorFactory.Required("max", DecKind, "Máximo"),
+             GeneratorFactory.Optional("scale", IntKind, "Escala", 2L, min: 0, max: 9),
+             GeneratorFactory.Optional("distribution", EnumKind, "Distribuição", "uniform", ["uniform", "normal"]),
+             GeneratorFactory.Optional("mean", DblKind, "Média", null),
+             GeneratorFactory.Optional("stddev", DblKind, "Desvio padrão", null)],
             (p, _) => p.GetDecimal("min") <= p.GetDecimal("max")
-                ? Ok(new RandomDecimalGenerator(p.GetDecimal("min"), p.GetDecimal("max"), p.GetInt("scale")))
+                ? Ok(new RandomDecimalGenerator(p.GetDecimal("min"), p.GetDecimal("max"), p.GetInt("scale"), p.GetString("distribution"), p.OptionalDouble("mean"), p.OptionalDouble("stddev")))
                 : Fail(ErrorCodes.GenParamValue, "min deve ser ≤ max.")),
         Basic("core.random.float", "Real aleatório",
             [GeneratorFactory.Required("min", DblKind, "Mínimo"), GeneratorFactory.Required("max", DblKind, "Máximo")],
@@ -65,9 +75,12 @@ internal static class BuiltInGenerators
                 : Fail(ErrorCodes.GenParamValue, "min deve ser ≤ max.")),
 
         Dates("core.date.range", "Intervalo de datas",
-            [GeneratorFactory.Required("start", DateTimeKind, "Início"), GeneratorFactory.Required("end", DateTimeKind, "Fim"),
-             GeneratorFactory.Optional("granularity", EnumKind, "Granularidade", "day", Granularities)],
-            (p, _) => Range(ParseDate(p.GetString("start")), ParseDate(p.GetString("end")), p.GetString("granularity"))),
+            [GeneratorFactory.Required("start", DateTimeKind, "Início"),
+             GeneratorFactory.Required("end", DateTimeKind, "Fim"),
+             GeneratorFactory.Optional("granularity", EnumKind, "Granularidade", "day", Granularities),
+             GeneratorFactory.Optional("weekdays", "intList", "Dias da semana (1-7)", null),
+             GeneratorFactory.Optional("hours", TextKind, "Faixa de horas (ex: 08-18)", null)],
+            (p, _) => Range(ParseDate(p.GetString("start")), ParseDate(p.GetString("end")), p.GetString("granularity"), p.GetIntList("weekdays"), p.OptionalString("hours"))),
         Dates("core.date.relative", "Data relativa",
             [GeneratorFactory.Required("from", DurationKind, "Início (duração a partir da referência)"),
              GeneratorFactory.Optional("to", DurationKind, "Fim (duração a partir da referência)", "P0D"),
@@ -91,6 +104,22 @@ internal static class BuiltInGenerators
         Expression("core.expr", "Expressão MDS-Expr", [GeneratorFactory.Required("expression", TextKind, "Expressão")],
             ExprMode.Expression, "expression"),
 
+        Text("core.lorem.words", "Palavras Lorem",
+            [GeneratorFactory.Optional("min", IntKind, "Mínimo", 1L, min: 1),
+             GeneratorFactory.Optional("max", IntKind, "Máximo", 5L, min: 1)],
+            (p, _) => p.GetInt("min") <= p.GetInt("max")
+                ? Ok(new LoremWordsGenerator(p.GetInt("min"), p.GetInt("max")))
+                : Fail(ErrorCodes.GenParamValue, "min deve ser ≤ max.")),
+        Text("core.lorem.paragraph", "Parágrafo Lorem",
+            [GeneratorFactory.Optional("minSentences", IntKind, "Mínimo de frases", 2L, min: 1),
+             GeneratorFactory.Optional("maxSentences", IntKind, "Máximo de frases", 5L, min: 1)],
+            (p, _) => p.GetInt("minSentences") <= p.GetInt("maxSentences")
+                ? Ok(new LoremParagraphGenerator(p.GetInt("minSentences"), p.GetInt("maxSentences")))
+                : Fail(ErrorCodes.GenParamValue, "minSentences deve ser ≤ maxSentences.")),
+
+        new WeightedCompositeFactory(),
+        new SwitchCompositeFactory(),
+
         Catalog("catalog.template", "Template escalar",
             [GeneratorFactory.Required("template", TextKind, "Template"),
              GeneratorFactory.Optional("selection", EnumKind, "Seleção", "weighted", ["weighted", "uniform", "sequential"]),
@@ -101,6 +130,15 @@ internal static class BuiltInGenerators
              GeneratorFactory.Optional("slot", TextKind, "Slot", null),
              GeneratorFactory.Optional("selection", EnumKind, "Seleção", "weighted", ["weighted", "uniform"])],
             CatalogField),
+
+        Brazil("br.cpf", "CPF",
+            [GeneratorFactory.Optional("formatted", BoolKind, "Formatado (000.000.000-00)", false),
+             GeneratorFactory.Optional("validOnly", BoolKind, "Válido", true)],
+            (p, _) => Ok(new CpfGenerator(p.GetBool("formatted")))),
+        Brazil("br.cnpj", "CNPJ",
+            [GeneratorFactory.Optional("formatted", BoolKind, "Formatado (00.000.000/0001-00)", false),
+             GeneratorFactory.Optional("branch", IntKind, "Filial", 1L, min: 1, max: 9999)],
+            (p, _) => Ok(new CnpjGenerator(p.GetBool("formatted"), p.GetInt("branch")))),
     ];
 
     private static Result<IValueGenerator> Ok(IValueGenerator generator) => Result<IValueGenerator>.Ok(generator);
@@ -126,10 +164,10 @@ internal static class BuiltInGenerators
         return Ok(new ListGenerator(values, weights, sequential, offset));
     }
 
-    private static Result<IValueGenerator> Range(DateTime start, DateTime end, string granularity) =>
+    private static Result<IValueGenerator> Range(DateTime start, DateTime end, string granularity, IReadOnlyList<int>? weekdays = null, string? hours = null) =>
         end < start
             ? Fail(ErrorCodes.GenParamValue, "end deve ser ≥ start.")
-            : Ok(new DateRangeGenerator(start, end, granularity));
+            : Ok(new DateRangeGenerator(start, end, granularity, weekdays, hours));
 
     private static Result<IValueGenerator> Relative(ParameterSet p, GeneratorCreateContext ctx)
     {
@@ -152,14 +190,7 @@ internal static class BuiltInGenerators
             return Fail(ErrorCodes.GenParamType, "Duração ISO-8601 inválida em step.");
         }
 
-        if (step.Value.Years != 0 || step.Value.Months != 0)
-        {
-            return Fail(ErrorCodes.GenUnsupported, "Passo com anos ou meses ainda não suportado.");
-        }
-
-        var days = step.Value.Sign * step.Value.Days;
-        var time = step.Value.Sign < 0 ? -step.Value.Time : step.Value.Time;
-        return Ok(new DateSequenceGenerator(ParseDate(p.GetString("start")), days, time));
+        return Ok(new DateSequenceGenerator(ParseDate(p.GetString("start")), step.Value));
     }
 
     private static Result<IValueGenerator> CatalogScalar(ParameterSet p, GeneratorCreateContext ctx)
@@ -217,6 +248,10 @@ internal static class BuiltInGenerators
     private static GeneratorFactory Expression(string id, string name, GeneratorParameterDefinition[] parameters, ExprMode mode, string source) =>
         Make(id, name, GeneratorCategory.Expression, [LogicalType.String, LogicalType.Other], parameters,
             (p, ctx) => ExpressionGenerator.Create(p.GetString(source), mode, ctx));
+
+    private static GeneratorFactory Brazil(string id, string name, GeneratorParameterDefinition[] parameters,
+        Func<ParameterSet, GeneratorCreateContext, Result<IValueGenerator>> create) =>
+        Make(id, name, GeneratorCategory.Brazil, [LogicalType.String], parameters, create);
 
     private static GeneratorFactory Make(string id, string name, GeneratorCategory category, IReadOnlyList<LogicalType> outputs,
         GeneratorParameterDefinition[] parameters, Func<ParameterSet, GeneratorCreateContext, Result<IValueGenerator>> create) =>

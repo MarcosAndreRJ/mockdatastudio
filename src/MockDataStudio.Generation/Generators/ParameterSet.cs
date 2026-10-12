@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using MockDataStudio.Core.Common;
 
@@ -44,7 +45,7 @@ public sealed class ParameterSet
         return Result<ParameterSet>.Ok(set);
     }
 
-    public long GetLong(string name) => Require(name).GetValue<long>();
+    public long GetLong(string name) => checked((long)GetNumber(Require(name)));
 
     public int GetInt(string name) => checked((int)GetLong(name));
 
@@ -64,8 +65,16 @@ public sealed class ParameterSet
 
     public IReadOnlyList<double>? GetDoubleList(string name) =>
         _values.TryGetValue(name, out var node) && node is not null
-            ? node.AsArray().Select(n => n!.GetValue<double>()).ToList()
+            ? node.AsArray().Select(n => GetNumber(n!)).ToList()
             : null;
+
+    public IReadOnlyList<int>? GetIntList(string name) =>
+        _values.TryGetValue(name, out var node) && node is not null
+            ? node.AsArray().Select(n => (int)GetNumber(n!)).ToList()
+            : null;
+
+    public double? OptionalDouble(string name) =>
+        _values.TryGetValue(name, out var node) && node is not null && IsNumber(node, out var v) ? v : null;
 
     public bool Has(string name) => _values.TryGetValue(name, out var node) && node is not null;
 
@@ -86,7 +95,7 @@ public sealed class ParameterSet
         {
             case "int":
             case "long":
-                if (node is not JsonValue value || !value.TryGetValue<long>(out var number))
+                if (!IsNumber(node, out var number) || number != Math.Truncate(number))
                 {
                     return Fail(ErrorCodes.GenParamType, name, "inteiro");
                 }
@@ -130,16 +139,21 @@ public sealed class ParameterSet
                     : Fail(ErrorCodes.GenParamType, name, "lista de textos");
 
             case "doubleList":
-                return node is JsonArray numbers && numbers.All(x => x is JsonValue v && v.TryGetValue<double>(out _))
+                return node is JsonArray numbers && numbers.All(x => x is not null && IsNumber(x, out _))
                     ? Result.Ok()
                     : Fail(ErrorCodes.GenParamType, name, "lista de números");
+
+            case "intList":
+                return node is JsonArray ints && ints.All(x => x is not null && IsNumber(x, out var n) && n == Math.Truncate(n))
+                    ? Result.Ok()
+                    : Fail(ErrorCodes.GenParamType, name, "lista de inteiros");
 
             default:
                 return Result.Fail(ErrorCodes.GenParamType, $"Tipo de parâmetro '{definition.Type}' desconhecido em '{name}'.");
         }
     }
 
-    // Aceita decimal, double e long: o JSON guarda números sem distinguir a representação.
+    // Aceita qualquer representação numérica JSON (int, long, double, decimal ou JsonElement).
     private static bool IsNumber(JsonNode node, out double value)
     {
         value = 0;
@@ -148,25 +162,27 @@ public sealed class ParameterSet
             return false;
         }
 
-        if (v.TryGetValue<decimal>(out var d))
+        try
         {
-            value = (double)d;
+            var obj = v.GetValue<object>();
+            if (obj is JsonElement elem)
+            {
+                if (elem.ValueKind == JsonValueKind.Number && elem.TryGetDouble(out var d))
+                {
+                    value = d;
+                    return true;
+                }
+
+                return false;
+            }
+
+            value = Convert.ToDouble(obj, CultureInfo.InvariantCulture);
             return true;
         }
-
-        if (v.TryGetValue<double>(out var r))
+        catch
         {
-            value = r;
-            return true;
+            return false;
         }
-
-        if (v.TryGetValue<long>(out var l))
-        {
-            value = l;
-            return true;
-        }
-
-        return false;
     }
 
     private static decimal AsDecimal(JsonNode node) => node is JsonValue v && v.TryGetValue<decimal>(out var d)

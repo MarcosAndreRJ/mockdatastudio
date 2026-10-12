@@ -237,9 +237,9 @@ public static class MdsExprParser
             }
 
             var two = i + 1 < source.Length ? source.Substring(i, 2) : string.Empty;
-            if (two is "!=" or "<=" or ">=" or "||")
+            if (two is "==" or "!=" or "<=" or ">=" or "||")
             {
-                tokens.Add(new Token(TokenKind.Operator, two));
+                tokens.Add(new Token(TokenKind.Operator, two == "==" ? "=" : two));
                 i += 2;
                 continue;
             }

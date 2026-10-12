@@ -97,5 +97,26 @@ public sealed class CompositeAndSnapshotTests
         yield return ("core.expr", Obj(("expression", "row_index() * 3 + 1")), "integer");
         yield return ("catalog.template", Obj(("template", "NOME")), "varchar(60)");
         yield return ("catalog.template.field", Obj(("template", "ENDERECO"), ("field", "bairro")), "varchar(60)");
+        yield return ("core.lorem.words", Obj(("min", 2L), ("max", 4L)), "varchar(100)");
+        yield return ("core.lorem.paragraph", Obj(("minSentences", 2L), ("maxSentences", 3L)), "text");
+        yield return ("core.weighted", new JsonObject
+        {
+            ["weights"] = new JsonArray(1.0, 9.0),
+            ["children"] = new JsonArray(
+                new JsonObject { ["generatorId"] = "core.fixed", ["parameters"] = new JsonObject { ["value"] = "raro" } },
+                new JsonObject { ["generatorId"] = "core.fixed", ["parameters"] = new JsonObject { ["value"] = "comum" } }
+            )
+        }, "varchar(20)");
+        yield return ("core.switch", new JsonObject
+        {
+            ["cases"] = new JsonArray(
+                new JsonObject
+                {
+                    ["when"] = "row_index() % 2 == 0",
+                    ["generator"] = new JsonObject { ["generatorId"] = "core.fixed", ["parameters"] = new JsonObject { ["value"] = "par" } }
+                }
+            ),
+            ["else"] = new JsonObject { ["generatorId"] = "core.fixed", ["parameters"] = new JsonObject { ["value"] = "impar" } }
+        }, "varchar(10)");
     }
 }

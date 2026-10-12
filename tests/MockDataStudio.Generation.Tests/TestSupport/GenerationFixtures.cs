@@ -61,12 +61,12 @@ internal static class GenerationFixtures
         IdentityInfo? identity = null) =>
         ColumnModel.Create(name, ordinal, NativeTypeParser.Parse(nativeType), nullable, identity: identity).Value;
 
-    public static ColumnPlan Plan(ColumnModel column, string generatorId, JsonObject? parameters = null, double nullRate = 0, bool unique = false) =>
-        new(column, new GeneratorSpec(generatorId, 1, parameters ?? new JsonObject()), nullRate, unique);
+    public static ColumnPlan Plan(ColumnModel column, string generatorId, JsonObject? parameters = null, double nullRate = 0, bool unique = false, string? uniqueStrategy = null) =>
+        new(column, new GeneratorSpec(generatorId, 1, parameters ?? new JsonObject()), nullRate, unique, uniqueStrategy);
 
     public static TablePlan Table(string name, IReadOnlyList<ColumnPlan> columns, long rows, ulong seed = 20261012UL,
-        int batch = 1000, int parallelism = 1) =>
-        new(new ObjectName("main", name), columns, rows, seed, Reference, Zone, PackTemplates(), batch, parallelism);
+        int batch = 1000, int parallelism = 1, IReadOnlyList<IReadOnlyList<string>>? compositeUniques = null) =>
+        new(new ObjectName("main", name), columns, rows, seed, Reference, Zone, PackTemplates(), batch, parallelism, compositeUniques);
 
     public static GeneratorRegistry Registry() => GeneratorRegistry.Standard();
 
@@ -121,10 +121,26 @@ internal sealed class MemorySink : IRowSink
 
     public List<long> BatchStarts { get; } = [];
 
-    public Task WriteBatchAsync(RowBatch batch, CancellationToken ct)
+    public bool BeganTable { get; private set; }
+
+    public bool EndedTable { get; private set; }
+
+    public Task BeginTableAsync(TablePlan table, CancellationToken ct)
     {
-        BatchStarts.Add(batch.StartRow);
+        BeganTable = true;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<object?[]>?> WriteBatchAsync(RowBatch batch, CancellationToken ct)
+    {
+        BatchStarts.Add(batch.FirstRowIndex);
         Rows.AddRange(batch.Rows);
+        return Task.FromResult<IReadOnlyList<object?[]>?>((IReadOnlyList<object?[]>?)null);
+    }
+
+    public Task EndTableAsync(TableRunResult result, CancellationToken ct)
+    {
+        EndedTable = true;
         return Task.CompletedTask;
     }
 }

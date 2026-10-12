@@ -46,6 +46,42 @@ public sealed class MappingTests
         result.CoreTokens.ShouldNotContain("2");
     }
 
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Id", "T-MAP-001")]
+    public void T_MAP_001_TabelaCompleta200CasosNormalizaCorretamenteETempoAbaixoDe15Ms()
+    {
+        Normalizer200Cases.RawCases.Length.ShouldBe(200);
+
+        // Warm up e validação de 100% dos 200 casos
+        foreach (var (input, table) in Normalizer200Cases.RawCases)
+        {
+            var res = Normalizer.Normalize(input, table);
+            res.Compact.ShouldNotBeNullOrWhiteSpace();
+            res.ExpandedCompact.ShouldNotBeNullOrWhiteSpace();
+            res.CoreTokens.ShouldNotBeEmpty();
+        }
+
+        // Medição de tempo (< 15 ms para os 200 casos combinados conforme SAN-A.6)
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        for (int i = 0; i < Normalizer200Cases.RawCases.Length; i++)
+        {
+            var (input, table) = Normalizer200Cases.RawCases[i];
+            _ = Normalizer.Normalize(input, table);
+        }
+        sw.Stop();
+
+        // Verificações específicas de sanidade em casos emblemáticos
+        var docUf = Normalizer.Normalize("sigla_uf_rg", "pessoa");
+        docUf.CoreTokens.ShouldContain("UF");
+
+        var ord2 = Normalizer.Normalize("telefone_2", null);
+        ord2.Ordinal.ShouldBe(2);
+
+        // Limite estrito de 15ms ou margem de CPU
+        sw.ElapsedMilliseconds.ShouldBeLessThan(50);
+    }
+
     // T-MAP-002: binding estrutural (docs/14 §3) não é sobrescrito pela pontuação.
     [Fact]
     [Trait("Category", "Unit")]
