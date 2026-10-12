@@ -115,3 +115,47 @@ Não foram executadas nesta worktree as suítes de Core, SqlTooling e Catalog (j
 ## 12. Commits
 
 Ver histórico da branch `feature/explorer` (commit de entrega desta fase, registrado após a execução).
+
+## 13. Explorer completo (sprint `sprint/EXP-explorer-completo`, 2026-10-12)
+
+### 13.1 O que foi implementado
+
+| Item do pedido | Situação | Onde |
+|---|---|---|
+| Busca/filtro da árvore | Feito (sobre o catálogo carregado; sem nova consulta ao banco) | `ExplorerFilter`, `ExplorerViewModel.RebuildTree` |
+| Referências de entrada ("quem referencia") | Feito (SQLite verificado) | `ReferenceFinder`, `ExplorerViewModel.LoadReferencesAsync` |
+| EXPLAIN | Feito para SQLite (`EXPLAIN QUERY PLAN`); PostgreSQL/MySQL montados mas **não verificados**; Firebird sem suporte | `ExplainService`, `SqlEditorViewModel.ExplainAsync` |
+| Formatação de SQL | Feito (heurístico, verificado por teste de tokens e idempotência) | `SqlFormatter` |
+| Salvar/abrir script (UTF-8) | Feito (testado sem UI) | `ScriptFileService`, `SqlEditorViewModel` |
+| Exportar grade (CSV/JSON) | Feito para as linhas exibidas (primeira página) | `ResultExportService`, `SqlResultsViewModel.ExportAsync` |
+| Aba de plano na grade | Feito (mesmo grid do resultado) | `SqlResultsViewModel.ShowPlan` |
+| Barra de estado (conexão, ambiente, somente leitura aplicada) | Modelo pronto e testado; **sem elemento visual** na tela | `ConnectionStatus`, `SqlEditorViewModel.StatusBar` |
+| Remoção da dependência de dados de exemplo no Explorer | Feito (`ColumnRow` de `App.Samples` substituído por `ExplorerColumnRow`) | `ExplorerViewModels.cs` |
+
+### 13.2 Testes
+
+- `ExplorerToolsTests` (20 casos, `MockDataStudio.Application.Tests`): filtro, formatador (literais, idempotência, tokens), status da conexão, exportação CSV/JSON, script UTF-8, referências e EXPLAIN sobre SQLite real, recusa de comandos que não são leitura, Firebird sem EXPLAIN.
+- Suíte completa (Release): ver o relatório da sprint no PLANO-DE-ACAO.md (seção C5/C6).
+- Interface (XAML e ViewModels do App): compila em Release; o smoke de UI existente passou. Não há testes FlaUI novos para as telas.
+
+### 13.3 Não verificado
+
+- EXPLAIN em PostgreSQL e MySQL: não executado (sem Docker nesta máquina).
+- Qualquer caminho com PostgreSQL: a árvore do Explorer depende da B2 (extrator), que ainda não foi mesclada.
+- Firebird: o perfil somente leitura **não é aplicado no servidor**. A barra de estado mostra o aviso; a execução não tem essa proteção (pendência registrada).
+
+### 13.4 Pendências (não feitas nesta sprint)
+
+1. Árvore lazy e virtualizada por nível (hoje a carga lista schemas, tabelas e views de uma vez, e não há triggers/sequences/rotinas).
+2. Refresh por nó (hoje só o refresh geral).
+3. Abas Indexes, Foreign Keys (com navegação) e Constraints (UNIQUE/CHECK), e Preview funcional no inspetor (hoje só Columns tem dados).
+4. Menu de contexto: SELECT TOP/LIMIT, copiar nome qualificado, gerar DDL/INSERT, abrir no SQL Editor, ver referências (a ação existe no ViewModel, mas não há botão no XAML).
+5. Autocomplete (C6.2): não iniciado.
+6. Run da seleção, modos Manual/AutoCommit e `QuerySession` próprio.
+7. Exportação completa por cursor (hoje só a primeira página exibida) e histórico de execuções.
+8. Erros com linha e posição destacadas no editor.
+9. Seletor de conexões no card do Explorer e reconexão automática com mensagem clara.
+10. Cancelamento nas cargas do Explorer (hoje usam `CancellationToken.None`) e conexão dedicada para o editor, se o `Gate` causar travamento.
+11. Barra de estado visível na tela (o modelo existe; falta o elemento no XAML).
+12. Confirmação de produção com digitação da palavra (C5.2): hoje a confirmação é `MessageBox` sim/não.
+13. `ExecutionGuard` como componente único (C5.1).

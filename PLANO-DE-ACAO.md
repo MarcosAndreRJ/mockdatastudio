@@ -681,21 +681,21 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | C6 |
 | Referências | docs/23 §5, docs/19 §2, docs/21 S03/S05, TASK-11.01, TASK-11.04, TASK-12.01, TASK-12.02, TASK-12.03, TASK-15.01 |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (`sprint/EXP-explorer-completo`, IA do Explorer, 2026-10-12) · parcial: ver itens
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [ ] **C5.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **C5.1** `ExecutionGuard` com a matriz completa (T-SQL-GUARD-001). *(TASK-11.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C5.1** `ExecutionGuard` com a matriz completa (T-SQL-GUARD-001). *(TASK-11.01)* · Concluído em: ____ · ⏳ PARCIAL: `ExecutionPolicy` (Application/Explorer) é usada pelo SQL Editor e pelo Explorer com a matriz Allow/RequiresConfirmation/Blocked. `ExecutionGuard` como componente único da C5 e T-SQL-GUARD-001 não criados
 - [ ] **C5.2** `ExecutionAuthorization` vinculada ao fingerprint e ao PlanHash, com os diálogos `ConfirmDialog`/`TypedConfirmDialog` (T-SEC-001/003/011). *(TASK-15.01)* · Concluído em: ____ · Evidência: ____
 - [ ] **C5.3** Alerta de servidor divergente do registrado no projeto. *(TASK-11.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **C5.4** Explorer real: árvore lazy e virtualizada, inspetor de tabela, referências, ações rápidas, refresh e filtro; sem dados de exemplo. *(TASK-12.01, TASK-12.02, TASK-12.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **C5.4** Explorer real: árvore lazy e virtualizada, inspetor de tabela, referências, ações rápidas, refresh e filtro; sem dados de exemplo. *(TASK-12.01, TASK-12.02, TASK-12.03)* · Concluído em: ____ · ⏳ PARCIAL: busca funcional sobre o catálogo carregado (`ExplorerFilter`), "Referências" (`ReferenceFinder`, SQLite verificado), inspetor com Columns, status sem dados de exemplo. Falta carga lazy por nível e virtualização, abas Indexes/Foreign Keys/Preview, menu de contexto, refresh por nó, seletor de conexão e reconexão
 
 **Verificação da sprint**
 - [ ] T-SQL-GUARD-001, T-SEC-001/003/005/011 e T-UI-PERF-001 verdes
 - [ ] Encerramento conforme §3.3
 
-**Relatório da sprint:** ____
+**Relatório da sprint:** `sprint/EXP-explorer-completo` (2026-10-12) — **PARCIAL**. Itens entregues e pendências em `docs/progress/explorer/implementation-report.md` §13 (ver também C6). Hash de merge: ver histórico da `main`
 
 ---
 
@@ -708,21 +708,21 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | C9 |
 | Referências | docs/20, TASK-13.01..13.04 |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (parcial; ver itens)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [ ] **C6.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **C6.1** `QuerySession`/`QueryExecutionService`: modos Manual/AutoCommit, paginação, cancelamento, somente leitura no servidor para perfis ReadOnly. *(TASK-13.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C6.1** `QuerySession`/`QueryExecutionService`: modos Manual/AutoCommit, paginação, cancelamento, somente leitura no servidor para perfis ReadOnly. *(TASK-13.01)* · Concluído em: ____ · ⏳ PARCIAL: Run, Stop, Explain (`ExplainService`, SQLite verificado), Format (`SqlFormatter`) e Save/Open Script ligados ao editor; cancelamento e somente leitura via `ExecutionPolicy`. Falta Run da seleção, modos Manual/AutoCommit e `QuerySession` próprio
 - [ ] **C6.2** Motor de autocomplete em `src/MockDataStudio.SqlTooling/Completion` (posse da trilha C). *(TASK-13.02)* · Concluído em: ____ · Evidência: ____
 - [ ] **C6.3** UI do editor: abas por perfil, chip de ambiente, `.xshd` por dialeto, recuperação de abas. *(TASK-13.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **C6.4** Grade de resultados, exportação, histórico e erros com posição. *(TASK-13.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **C6.4** Grade de resultados, exportação, histórico e erros com posição. *(TASK-13.04)* · Concluído em: ____ · ⏳ PARCIAL: exportação CSV/JSON das linhas exibidas (`ResultExportService`, exemplo verificado com RFC 4180) e aba de plano na grade. Falta exportação completa por cursor, histórico e posição do erro no editor
 
 **Verificação da sprint**
 - [ ] T-SQL-EXEC-001/002, T-SQL-COMP-001, T-SQL-HIST-001, T-UI-PERF-003 e T-UI-FLOW-003 verdes; B-SQL-001 (p95 ≤ 50 ms)
 - [ ] Encerramento conforme §3.3
 
-**Relatório da sprint:** ____
+**Relatório da sprint:** `sprint/EXP-explorer-completo` (2026-10-12) — **PARCIAL**. Entregue: busca, referências, EXPLAIN (SQLite), formatação, salvar/abrir script, exportação da grade e aba de plano; 20 testes novos (`ExplorerToolsTests`). Pendente: lista completa em `docs/progress/explorer/implementation-report.md` §13.4
 
 ---
 
