@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using MockDataStudio.App.Data;
 using MockDataStudio.App.ViewModels;
 using MockDataStudio.Application;
@@ -13,6 +15,11 @@ public static class ServiceRegistration
     public static IHost BuildHost()
     {
         var builder = Host.CreateApplicationBuilder();
+
+        // Logging em arquivo com redação de segredos (docs/23 §6, docs/25 §2)
+        builder.Logging.ClearProviders();
+        builder.Logging.AddSerilog(MockDataStudio.Infrastructure.Logging.LoggingSetup.CreateLogger(), dispose: true);
+        builder.Services.AddSingleton<IAppSettings, MockDataStudio.Infrastructure.Settings.JsonAppSettings>();
 
         builder.Services.AddSingleton<IDesignDataSource, SampleDesignDataSource>();
 

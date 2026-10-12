@@ -562,12 +562,12 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **C1.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [x] **C1.0** Início da sprint conforme §3.1. · Concluído em: 2026-10-12 · Evidência: branch sprint/C1-saneamento-ui-infra
 - [ ] **C1.1** Tema escuro a partir de `Themes/Tokens.xaml`; docs/21 §2.1 atualizado com DA-027 e a decisão D-03. *(SAN-C.1)* · Concluído em: ____ · ⏳ PARCIAL: `Themes/Tokens.xaml` e `Colors.xaml` existem (DA-027). Tema escuro não implementado (DA-027 registra como pendente)
 - [ ] **C1.2** Todos os textos das views em `Strings.resx`, conforme D-01 (ou o padrão provisório). *(SAN-C.2)* · Concluído em: ____ · ⏳ PARCIAL: `Resources/Strings.resx` existe no App; cobertura de todas as views não verificada
 - [ ] **C1.3** Componentes padronizados (`EnvironmentChip`, badges etc.) aplicados nas telas existentes; diferença de 2% em Connections resolvida ou justificada; logo/ícone MySQL (D-04). *(SAN-C.3, SAN-C.4)* · Concluído em: ____ · ⏳ PARCIAL: `Controls/EnvironmentChip` existe; aplicação em todas as telas, diferença de 2% e logo MySQL não verificadas
 - [ ] **C1.4** Infrastructure: `DpapiSecretStore` (`ISecretStore`), `IAppSettings` e Serilog com redação de segredos. *(TASK-09.03)* · Concluído em: ____ · ⏳ PARCIAL: `DpapiSecretStore` e `ISecretStore` existem (Infrastructure/Security). `IAppSettings` e redação de segredos no Serilog não encontrados no código
-- [ ] **C1.5** Catálogo: teste de `CAT-IMP-SIZE` (categoria `Slow`, fora da suíte rápida). *(SAN-C.5)* · Concluído em: ____ · Evidência: ____
+- [x] **C1.5** Catálogo: teste de `CAT-IMP-SIZE` (categoria `Slow`, fora da suíte rápida). *(SAN-C.5)* · Concluído em: 2026-10-12 · Evidência: Catalog.Tests/ImportSizeLimitTests (Category=Slow, T-CAT-IMP-SIZE-001)
 
 **Verificação da sprint**
 - [ ] T-SEC-002/004/012 e smoke de UI verdes; capturas antes/depois em `docs/progress/C1/`
