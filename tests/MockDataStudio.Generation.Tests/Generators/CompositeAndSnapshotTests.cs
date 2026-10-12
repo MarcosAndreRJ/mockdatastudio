@@ -66,7 +66,8 @@ public sealed class CompositeAndSnapshotTests
                 continue;
             }
 
-            if (File.ReadAllText(path) != text)
+            // Fim de linha normalizado: o checkout Windows (core.autocrlf) grava os snapshots com CRLF.
+            if (File.ReadAllText(path).Replace("\r\n", "\n", StringComparison.Ordinal) != text)
             {
                 failures.Add($"{id}: saída diverge do snapshot {path}");
             }

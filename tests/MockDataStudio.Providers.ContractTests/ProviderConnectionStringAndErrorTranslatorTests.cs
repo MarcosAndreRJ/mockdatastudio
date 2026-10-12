@@ -1,3 +1,4 @@
+using System.Data.Common;
 using MockDataStudio.Core.Connections;
 using MockDataStudio.Providers.Firebird;
 using MockDataStudio.Providers.Models;
@@ -10,6 +11,21 @@ namespace MockDataStudio.Providers.ContractTests;
 
 public sealed class ProviderConnectionStringAndErrorTranslatorTests
 {
+    // Lê um parâmetro da string por qualquer nome equivalente (sinônimos do driver). Testa o VALOR, não a grafia (docs/10 §4, §6).
+    private static string? Value(string connectionString, params string[] keys)
+    {
+        var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+        foreach (var key in keys)
+        {
+            if (builder.TryGetValue(key, out var value))
+            {
+                return value?.ToString();
+            }
+        }
+
+        return null;
+    }
+
     // --- PostgreSQL ---
 
     [Fact]
@@ -83,11 +99,10 @@ public sealed class ProviderConnectionStringAndErrorTranslatorTests
         cs.ShouldContain("Password=root_pass");
         cs.ShouldContain("Connection Timeout=10");
 
-        // Requisitos de segurança obrigatórios (§5.2):
-        // Não habilitar carregamento local de arquivos sem autorização explícita
-        cs.ShouldContain("AllowLoadLocalInfile=False");
-        cs.ShouldContain("AllowUserVariables=False");
-        cs.ShouldContain("CharSet=utf8mb4");
+        // Invariantes de segurança (docs/10 §4, Prompt §5.2). Devem estar EXPLÍCITOS na string, não apenas como padrão do driver.
+        Value(cs, "Allow Load Local Infile", "AllowLoadLocalInfile").ShouldBe("False");
+        Value(cs, "Allow User Variables", "AllowUserVariables").ShouldBe("False");
+        Value(cs, "Character Set", "CharacterSet", "CharSet").ShouldBe("utf8mb4");
     }
 
     [Fact]
@@ -124,14 +139,14 @@ public sealed class ProviderConnectionStringAndErrorTranslatorTests
 
         var cs = provider.BuildConnectionString(settings, "masterkey");
 
-        cs.ShouldContain("DataSource=firebird.host");
-        cs.ShouldContain("Port=3051");
-        cs.ShouldContain("Database=/var/lib/firebird/data/test.fdb");
-        cs.ShouldContain("User=sysdba");
-        cs.ShouldContain("Password=masterkey");
-        cs.ShouldContain("Charset=UTF8");
-        cs.ShouldContain("Dialect=3");
-        cs.ShouldContain("Connection lifetime=20");
+        Value(cs, "Data Source", "DataSource").ShouldBe("firebird.host");
+        Value(cs, "Port Number", "Port").ShouldBe("3051");
+        Value(cs, "Initial Catalog", "Database").ShouldBe("/var/lib/firebird/data/test.fdb");
+        Value(cs, "User ID", "User").ShouldBe("sysdba");
+        Value(cs, "Password").ShouldBe("masterkey");
+        Value(cs, "Character Set", "Charset", "CharSet").ShouldBe("UTF8");
+        Value(cs, "Dialect").ShouldBe("3");
+        Value(cs, "Connection Timeout", "ConnectionTimeout").ShouldBe("20");
     }
 
     [Fact]

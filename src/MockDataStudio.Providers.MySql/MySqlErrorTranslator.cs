@@ -8,8 +8,11 @@ namespace MockDataStudio.Providers.MySql;
 
 public sealed partial class MySqlErrorTranslator : IErrorTranslator
 {
-    [GeneratedRegex(@"(?i)(password|pwd)\s*=\s*[^;,\s]+", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"(?i)(password|pwd|senha)\s*=\s*[^;,\s]+", RegexOptions.CultureInvariant)]
     private static partial Regex PasswordRedactionRegex();
+
+    [GeneratedRegex(@"(?i)(password|pwd|senha)(\s+)'[^']*'", RegexOptions.CultureInvariant)]
+    private static partial Regex QuotedPasswordRegex();
 
     public DbErrorCategory Categorize(Exception ex)
     {
@@ -79,6 +82,7 @@ public sealed partial class MySqlErrorTranslator : IErrorTranslator
     public static string SanitizeMessage(string message)
     {
         if (string.IsNullOrEmpty(message)) return string.Empty;
-        return PasswordRedactionRegex().Replace(message, "$1=***");
+        var redacted = PasswordRedactionRegex().Replace(message, "$1=***");
+        return QuotedPasswordRegex().Replace(redacted, "$1$2'***'");
     }
 }

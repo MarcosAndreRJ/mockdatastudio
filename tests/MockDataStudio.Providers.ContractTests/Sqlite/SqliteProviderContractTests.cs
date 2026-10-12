@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using MockDataStudio.Core.Connections;
+using MockDataStudio.Core.Common;
 using MockDataStudio.Core.Naming;
 using MockDataStudio.Providers.Models;
 using MockDataStudio.Providers.Sqlite;
@@ -34,6 +35,13 @@ public sealed class SqliteProviderContractTests : ProviderContractTests
     [Trait("Category", "Contract")]
     [Trait("Id", "T-PRV-SQLITE-011")]
     public Task Contrato011_IntrospeccaoParcialSemPermissao() => Task.CompletedTask;
+
+    // T-PRV-NNN-009 (variante agregada): Cancel() do Microsoft.Data.Sqlite não interrompe count(*) sobre CTE infinita,
+    // e a chamada não retorna (PV-019). Não executado para não travar a suíte; o cancelamento entre linhas é o caso verificado.
+    [Fact(Skip = "PV-019: Cancel() não interrompe consulta de uma única etapa no Microsoft.Data.Sqlite; mitigação por CommandTimeout.")]
+    [Trait("Category", "Contract")]
+    [Trait("Id", "T-PRV-SQLITE-009-AGREGADO")]
+    public Task Contrato009_CancelamentoDeConsultaAgregadaNaoEhInterrompidoNoSqlite() => Task.CompletedTask;
 
     // T-PRV-SQLITE-008 (limite de tamanho): SQLite não impõe comprimento de VARCHAR nem em tabelas STRICT.
     [Fact(Skip = "N/A no SQLite: VARCHAR(n) não é imposto pelo engine; a validação de tamanho fica no validador (docs/17).")]

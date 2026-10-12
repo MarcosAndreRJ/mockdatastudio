@@ -14,7 +14,8 @@ public sealed class SmokeTests
     private static readonly (string Navigation, string ScreenMarker)[] Screens =
     [
         ("Home", "Workspace Overview"),
-        ("Connections", "Saved Connections (12)"),
+        // Prefixo: a contagem depende dos perfis cadastrados (antes vinha do dado de exemplo, "(12)").
+        ("Connections", "Saved Connections ("),
         ("Explorer", "Database Explorer"),
         ("SQL Editor", "Query - shopdb"),
         ("Schema Digest", "Database Structure"),
@@ -36,26 +37,38 @@ public sealed class SmokeTests
         using var automation = new UIA3Automation();
         using var app = FlaUI.Core.Application.Launch(exePath);
 
-        var window = app.GetMainWindow(automation, TimeSpan.FromSeconds(30));
-        window.ShouldNotBeNull("A janela principal do app não apareceu.");
-
-        foreach (var (navigation, marker) in Screens)
+        try
         {
-            var item = window.FindFirstDescendant(cf => cf.ByName(navigation));
-            item.ShouldNotBeNull($"Item de navegação '{navigation}' não encontrado.");
+            var window = app.GetMainWindow(automation, TimeSpan.FromSeconds(30));
+            window.ShouldNotBeNull("A janela principal do app não apareceu.");
 
-            item.Click();
-            Thread.Sleep(1200);
+            foreach (var (navigation, marker) in Screens)
+            {
+                var item = window.FindFirstDescendant(cf => cf.ByName(navigation));
+                item.ShouldNotBeNull($"Item de navegação '{navigation}' não encontrado.");
 
-            window.FindFirstDescendant(cf => cf.ByName(marker))
-                .ShouldNotBeNull($"A tela '{navigation}' não exibiu o texto esperado '{marker}'.");
+                item.Click();
+                Thread.Sleep(1200);
 
-            // Uma única janela do processo: se a interface abrir um diálogo de erro, ele aparece como janela extra.
-            var processWindows = automation.GetDesktop()
-                .FindAllChildren(new PropertyCondition(automation.PropertyLibrary.Element.ProcessId, app.ProcessId));
-            processWindows.Length.ShouldBe(1, $"A tela '{navigation}' abriu uma janela inesperada (provável erro de interface).");
+                // Marcadores com contagem dinâmica são comparados por prefixo: o nome UIA do TextBlock é o texto inteiro.
+                window.FindAllDescendants()
+                    .Any(e => (e.Name ?? string.Empty).StartsWith(marker, StringComparison.Ordinal))
+                    .ShouldBeTrue($"A tela '{navigation}' não exibiu o texto esperado '{marker}'.");
+
+                // Uma única janela do processo: se a interface abrir um diálogo de erro, ele aparece como janela extra.
+                var processWindows = automation.GetDesktop()
+                    .FindAllChildren(new PropertyCondition(automation.PropertyLibrary.Element.ProcessId, app.ProcessId));
+                processWindows.Length.ShouldBe(1, $"A tela '{navigation}' abriu uma janela inesperada (provável erro de interface).");
+            }
         }
-
-        app.Close();
+        finally
+        {
+            // Dispose do FlaUI não fecha o processo: encerra explicitamente para não deixar o app vivo.
+            app.Close();
+            if (!app.HasExited)
+            {
+                app.Kill();
+            }
+        }
     }
 }

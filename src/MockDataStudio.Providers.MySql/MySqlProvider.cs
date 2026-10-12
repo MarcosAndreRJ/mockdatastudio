@@ -79,6 +79,7 @@ public sealed class MySqlProvider : IDatabaseProvider
             builder.SslMode = MySqlSslMode.Preferred;
         }
 
+        // O builder já emite AllowLoadLocalInfile=False, AllowUserVariables=False e character set=utf8mb4 (docs/10 §4).
         return builder.ConnectionString;
     }
 

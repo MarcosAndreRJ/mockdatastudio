@@ -263,7 +263,9 @@ public abstract class ProviderContractTests : IDisposable
         var error = await CaptureAsync(async () =>
         {
             await using var command = connection.CreateCommand();
-            command.CommandText = "WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c) SELECT count(*) FROM c";
+            // Consulta que produz linhas: o cancelamento atua entre linhas. Consultas que agregam numa única etapa
+            // não são interrompidas pelo Cancel() do Microsoft.Data.Sqlite (PV-019); ver o caso Skip em SqliteProviderContractTests.
+            command.CommandText = "WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c) SELECT x FROM c";
             await using var reader = await command.ExecuteReaderAsync(cts.Token);
             while (await reader.ReadAsync(cts.Token))
             {
