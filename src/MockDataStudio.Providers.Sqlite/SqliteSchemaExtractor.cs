@@ -88,6 +88,18 @@ public sealed class SqliteSchemaExtractor(SqliteTypeMapper types) : ISchemaExtra
         return objects.Where(o => o.Type == "table").Select(o => new ObjectName(MainNamespace, o.Name)).ToList();
     }
 
+    public async Task<IReadOnlyList<ObjectName>> ListViewsAsync(DbConnection connection, CancellationToken ct)
+    {
+        var objects = await ReadObjectsAsync(connection, ct);
+        return objects.Where(o => o.Type == "view").Select(o => new ObjectName(MainNamespace, o.Name)).ToList();
+    }
+
+    public async Task<IReadOnlyList<TriggerModel>> ListTriggersAsync(DbConnection connection, CancellationToken ct)
+    {
+        var tables = (await ReadObjectsAsync(connection, ct)).Select(o => o.Name).ToHashSet(StringComparer.Ordinal);
+        return await ReadTriggersAsync(connection, tables, ct);
+    }
+
     private static async Task<List<ObjectRow>> ReadObjectsAsync(DbConnection connection, CancellationToken ct)
     {
         var meta = await QueryAsync(connection,

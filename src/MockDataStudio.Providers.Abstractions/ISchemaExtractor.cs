@@ -22,4 +22,14 @@ public interface ISchemaExtractor
     Task<IReadOnlyList<ObjectName>> ListTablesAsync(
         DbConnection connection,
         CancellationToken ct);
+
+    // Listagem leve para navegação sob demanda (Explorer): somente nomes, sem colunas.
+    Task<IReadOnlyList<ObjectName>> ListViewsAsync(
+        DbConnection connection,
+        CancellationToken ct);
+
+    // Triggers com tabela associada, sem corpo (docs/11 §2).
+    Task<IReadOnlyList<TriggerModel>> ListTriggersAsync(
+        DbConnection connection,
+        CancellationToken ct);
 }
