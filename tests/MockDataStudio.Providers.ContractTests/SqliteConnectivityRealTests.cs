@@ -122,8 +122,8 @@ public sealed class SqliteConnectivityRealTests
         var cat1 = translator.Categorize(syntaxEx);
         cat1.ShouldBe(DbErrorCategory.Syntax);
 
-        // Constraint violation
-        var constraintEx = new SqliteException("UNIQUE constraint failed", 19);
+        // Constraint violation (código estendido 2067 = SQLITE_CONSTRAINT_UNIQUE)
+        var constraintEx = new SqliteException("UNIQUE constraint failed", 19, 2067);
         var cat2 = translator.Categorize(constraintEx);
         cat2.ShouldBe(DbErrorCategory.UniqueViolation);
     }
