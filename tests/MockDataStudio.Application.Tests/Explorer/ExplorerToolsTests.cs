@@ -98,6 +98,7 @@ public sealed class ExplorerToolsTests
         status.IsProduction.ShouldBeTrue();
         status.ReadOnlyEnforced.ShouldBeFalse();
         status.Warning.ShouldNotBeNull();
+        status.ReadOnlyLabel.ShouldBe("Somente leitura: NÃO aplicada no servidor");
     }
 
     [Fact]

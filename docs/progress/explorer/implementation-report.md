@@ -159,3 +159,53 @@ Ver histórico da branch `feature/explorer` (commit de entrega desta fase, regis
 11. Barra de estado visível na tela (o modelo existe; falta o elemento no XAML).
 12. Confirmação de produção com digitação da palavra (C5.2): hoje a confirmação é `MessageBox` sim/não.
 13. `ExecutionGuard` como componente único (C5.1).
+
+## 14. Explorer completo, rodada 2 (2026-10-12)
+
+Base: `main` incorporada antes do trabalho (B2 PostgreSQL, A2 planejador, C1 infraestrutura). A base foi verificada verde antes das mudanças.
+
+### 14.1 O que foi feito nesta rodada
+
+| Item | Situação | Onde | Teste |
+|---|---|---|---|
+| Barra de estado visível (conexão, ambiente, somente leitura efetiva) | Feito no rodapé do editor; borda superior de 3 px (vermelha em Production, âmbar em Unknown) | `SqlEditorPageView.xaml`, `ConnectionStatus.ReadOnlyLabel` | `ExplorerToolsTests` (rótulo e aviso) |
+| Menu de contexto da árvore | Feito: SELECT com limite, abrir no editor, copiar nome qualificado, CREATE TABLE, INSERT de exemplo, ver referências | `ExplorerView.xaml` (ItemContainerStyle), `ExplorerViewModel` | `ObjectScriptsTests` (DDL e INSERT executado no SQLite) |
+| Scripts gerados do TableModel real | Feito (`ObjectScripts`), com o dialeto para citação e literais | `ObjectScripts.cs` | 2 testes SQLite (INSERT executado e desfeito) |
+| Inspetor: dados de Indexes, Foreign Keys e Constraints | Dados prontos; navegação pela FK (`OpenReferencedTableCommand`) | `ExplorerViewModel` | Coberto pelo ObjectInspector existente |
+| Confirmação de produção | `ExecutionGuard` decide o nível (nenhum, simples ou digitado); `MessageBox` substituído por `ConfirmDialog`/`TypedConfirmDialog` | `ExecutionGuard.cs`, `ExplorerViewModels.cs` | `ExecutionGuardTests` (5 casos, T-SQL-GUARD-001) |
+
+### 14.2 Testes desta rodada
+
+- Novos nesta rodada: `ObjectScriptsTests` (2), `ExecutionGuardTests` (5, incluindo a matriz em `InlineData`). `ExplorerToolsTests` (20) foi ajustado para a barra de estado.
+- Suíte de Application: 91 aprovados, 0 falhas (inclui os testes da rodada 1 e a política de execução).
+- Suíte completa, Release: todos os projetos verdes **exceto o smoke de UI** (ver 14.3).
+
+### 14.3 Smoke de UI (App.UiTests): intermitente, não resolvido
+
+- A falha aparece em rodadas diferentes e em telas diferentes: `Connections`, `Templates` e `Explorer`, com a mensagem "não exibiu o texto esperado". Passa em outras rodadas.
+- Já falhava na `main` antes desta sprint (ver PV-102 em `docs/32`). Não há evidência de que a causa seja o conteúdo das telas.
+- Mudança feita nesta rodada: o `Thread.Sleep(1200)` fixo virou espera ativa pelo marcador (até 10 s). A falha continuou intermitente.
+- Causa provável não confirmada: a localização do item de navegação (`ByName`) e o tempo de renderização sob carga do UIA. Não foi investigada além disso.
+- **Consequência:** a suíte completa não ficou 100% verde de forma reprodutível nesta rodada.
+
+### 14.4 Não verificado
+
+- Árvore do Explorer em PostgreSQL: depende de `ListViewsAsync`/`ListTriggersAsync` do extrator B2, que estão implementados no contrato `ISchemaExtractor`, mas **não foram executados contra servidor** (sem Docker). Nenhuma mudança na Trilha B foi necessária.
+- EXPLAIN em PostgreSQL e MySQL: não executado.
+- Firebird: o perfil somente leitura **não é aplicado no servidor**. A barra de estado avisa.
+- Testes FlaUI de barra de estado e de menu de contexto: **não escritos**. O smoke existente não cobre esses elementos.
+
+### 14.5 Pendências (ainda não feitas)
+
+1. Árvore lazy e virtualizada por nível, com triggers, sequences e rotinas na árvore e estado de carregamento/erro por nó. Cargas ainda usam `CancellationToken.None`.
+2. Refresh por nó.
+3. Abas Indexes, Foreign Keys e Constraints no XAML (os dados existem no ViewModel; as abas do XAML ainda são estáticas) e aba Preview funcional.
+4. Run da seleção; modos Manual e AutoCommit; `QuerySession` próprio.
+5. Erros com linha e posição destacadas no editor; histórico de execuções; abas por conexão com recuperação.
+6. Autocomplete básico em `SqlTooling/Completion` (C6.2, posse da Trilha C).
+7. Exportação completa por cursor (hoje só a primeira página), com cancelamento, e "carregar mais" na grade.
+8. Seletor de conexões no card do Explorer e reconexão com mensagem clara.
+9. Conexão dedicada para o editor, se o `ActiveConnectionSession.Gate` causar travamento.
+10. Barra de estado também na página do Explorer (hoje só no editor).
+11. `ExecutionAuthorization` com fingerprint/PlanHash e validade de 10 minutos (C5.2); linhas de Explorer da matriz (inserção direta, limpeza, L4) em C5.1.
+12. Smoke de UI intermitente (ver 14.3).

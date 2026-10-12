@@ -6,11 +6,13 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using MockDataStudio.App.Controls;
 using MockDataStudio.Application;
 using MockDataStudio.Application.Explorer;
 using MockDataStudio.Core.Common;
 using MockDataStudio.Core.Connections;
 using MockDataStudio.Core.Naming;
+using MockDataStudio.Core.Schema;
 using MockDataStudio.SqlTooling.Dialect;
 using MockDataStudio.SqlTooling.Splitter;
 
@@ -318,9 +320,17 @@ public sealed partial class SqlEditorViewModel : ObservableObject, IDisposable
                     if (pending is not null && !confirmed)
                     {
                         var reason = string.Join(Environment.NewLine, pending.Messages.Select(m => m.Text));
-                        var answer = MessageBox.Show($"{reason}\n\nExecutar mesmo assim?", "Confirmar execução",
-                            MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                        if (answer == MessageBoxResult.Yes)
+                        var verdict = new AccessVerdict(AccessDecision.RequiresConfirmation, reason);
+                        var confirmation = ExecutionGuard.RequestFor(ExecutionPolicy.AccessOf(pending.Kind), verdict, profile.Environment);
+                        var owner = System.Windows.Application.Current?.MainWindow;
+                        var accepted = confirmation.Level switch
+                        {
+                            ConfirmationLevel.Typed => TypedConfirmDialog.Ask(owner!, "Confirmar execução",
+                                $"{reason}\n\nAmbiente: {profile.Environment}. Esta ação altera o banco.", confirmation.TypedWord!, "Executar"),
+                            ConfirmationLevel.Simple => ConfirmDialog.Ask(owner!, "Confirmar execução", $"{reason}\n\nExecutar mesmo assim?", "Executar"),
+                            _ => true,
+                        };
+                        if (accepted)
                         {
                             await run.DisposeAsync();
                             confirmed = true;
@@ -425,6 +435,13 @@ public sealed partial class ExplorerViewModel : ObservableObject
         SqlResults = sqlResults;
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         ReferencesCommand = new AsyncRelayCommand(LoadReferencesAsync);
+        SelectTopCommand = new AsyncRelayCommand<ExplorerNode?>(node => OpenSelectAsync(node, run: true));
+        OpenInEditorCommand = new AsyncRelayCommand<ExplorerNode?>(node => OpenSelectAsync(node, run: false));
+        CopyNameCommand = new RelayCommand<ExplorerNode?>(CopyQualifiedName);
+        CreateTableCommand = new AsyncRelayCommand<ExplorerNode?>(node => OpenScriptAsync(node, insert: false));
+        InsertExampleCommand = new AsyncRelayCommand<ExplorerNode?>(node => OpenScriptAsync(node, insert: true));
+        ReferencesForNodeCommand = new AsyncRelayCommand<ExplorerNode?>(ShowReferencesForNodeAsync);
+        OpenReferencedTableCommand = new AsyncRelayCommand<ForeignKeyInfo?>(OpenReferencedTableAsync);
         _session.Changed += (_, _) => _ = LoadAsync();
         _ = LoadAsync();
     }
@@ -436,9 +453,43 @@ public sealed partial class ExplorerViewModel : ObservableObject
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand ReferencesCommand { get; }
 
+    // Menu de contexto da árvore: o parâmetro é o nó clicado.
+    public AsyncRelayCommand<ExplorerNode?> SelectTopCommand { get; }
+    public AsyncRelayCommand<ExplorerNode?> OpenInEditorCommand { get; }
+    public RelayCommand<ExplorerNode?> CopyNameCommand { get; }
+    public AsyncRelayCommand<ExplorerNode?> CreateTableCommand { get; }
+    public AsyncRelayCommand<ExplorerNode?> InsertExampleCommand { get; }
+    public AsyncRelayCommand<ExplorerNode?> ReferencesForNodeCommand { get; }
+
     public ObservableCollection<ExplorerNode> Nodes { get; } = [];
     public ObservableCollection<ExplorerColumnRow> SelectedColumns { get; } = [];
     public ObservableCollection<IncomingReference> IncomingReferences { get; } = [];
+
+    // Abas do inspetor (dados do TableModel real via ObjectInspector).
+    public ObservableCollection<IndexInfo> Indexes { get; } = [];
+    public ObservableCollection<ForeignKeyInfo> ForeignKeys { get; } = [];
+    public ObservableCollection<CheckInfo> Checks { get; } = [];
+
+    // Navega para a tabela referenciada por uma FK, selecionando o nó correspondente na árvore.
+    public AsyncRelayCommand<ForeignKeyInfo?> OpenReferencedTableCommand { get; }
+
+    private async Task OpenReferencedTableAsync(ForeignKeyInfo? fk)
+    {
+        if (fk is null)
+        {
+            return;
+        }
+
+        var target = Nodes.SelectMany(s => s.Children).SelectMany(g => g.Children)
+            .FirstOrDefault(n => n.Table is { } t && t == fk.Referenced);
+        if (target is null)
+        {
+            StatusText = $"A tabela referenciada '{fk.Referenced.CanonicalId}' não está na árvore (filtro ativo ou fora do schema).";
+            return;
+        }
+
+        await SelectNodeAsync(target);
+    }
 
     [ObservableProperty]
     private string _connectionTitle = "Sem conexão";
@@ -470,6 +521,9 @@ public sealed partial class ExplorerViewModel : ObservableObject
         _catalog.Clear();
         SelectedColumns.Clear();
         IncomingReferences.Clear();
+        Indexes.Clear();
+        ForeignKeys.Clear();
+        Checks.Clear();
         ReferencesStatus = string.Empty;
         _selectedTable = null;
         SelectedTableName = "Nenhuma tabela selecionada";
@@ -601,6 +655,24 @@ public sealed partial class ExplorerViewModel : ObservableObject
                     SelectedColumns.Add(new ExplorerColumnRow(c.Name, c.NativeType, key, c.Nullable ? "Yes" : "No"));
                 }
 
+                Indexes.Clear();
+                foreach (var index in inspection.Indexes)
+                {
+                    Indexes.Add(index);
+                }
+
+                ForeignKeys.Clear();
+                foreach (var fk in inspection.ForeignKeys)
+                {
+                    ForeignKeys.Add(fk);
+                }
+
+                Checks.Clear();
+                foreach (var check in inspection.Checks)
+                {
+                    Checks.Add(check);
+                }
+
                 var dialect = opened.Provider.GetDialect(opened.Server.Version);
                 SqlEditor.QueryText = TablePreview.BuildSql(table, described.Value!, dialect.QuoteIdentifier, TablePreview.DefaultRows) + ";";
                 StatusText = string.Empty;
@@ -614,6 +686,86 @@ public sealed partial class ExplorerViewModel : ObservableObject
         {
             StatusText = "Falha ao descrever o objeto: " + ex.Message;
         }
+    }
+
+    // Descreve a tabela do nó pelo cache do navegador (ObjectInspector/TableModel real). Null quando o nó não é tabela.
+    private async Task<TableModel?> DescribeNodeAsync(ExplorerNode? node)
+    {
+        var opened = _session.Current;
+        if (node?.Table is not { } table || opened is null || _navigator is null)
+        {
+            return null;
+        }
+
+        await _session.Gate.WaitAsync();
+        try
+        {
+            var described = await _navigator.DescribeTableAsync(opened.Connection, table, CancellationToken.None);
+            if (!described.IsSuccess)
+            {
+                StatusText = described.Error!.Message;
+                return null;
+            }
+
+            return described.Value;
+        }
+        finally
+        {
+            _session.Gate.Release();
+        }
+    }
+
+    // SELECT com limite (TablePreview). Run executa no editor; Abrir apenas posiciona o texto.
+    private async Task OpenSelectAsync(ExplorerNode? node, bool run)
+    {
+        if (node?.Table is not { } table || await DescribeNodeAsync(node) is not { } model || _session.Current is not { } opened)
+        {
+            return;
+        }
+
+        var dialect = opened.Provider.GetDialect(opened.Server.Version);
+        SqlEditor.QueryText = TablePreview.BuildSql(table, model, dialect.QuoteIdentifier, TablePreview.DefaultRows) + ";";
+        if (run)
+        {
+            await SqlEditor.RunAsync();
+        }
+    }
+
+    // DDL (CREATE TABLE) ou INSERT de exemplo, gerados a partir do schema capturado (ObjectScripts).
+    private async Task OpenScriptAsync(ExplorerNode? node, bool insert)
+    {
+        if (node?.Table is not { } table || await DescribeNodeAsync(node) is not { } model || _session.Current is not { } opened)
+        {
+            return;
+        }
+
+        var dialect = opened.Provider.GetDialect(opened.Server.Version);
+        SqlEditor.QueryText = insert
+            ? ObjectScripts.InsertExample(table, model, dialect)
+            : ObjectScripts.CreateTable(table, model, dialect);
+    }
+
+    // Copia o nome já citado pelo dialeto (ex.: "main"."cliente" conforme o SGBD).
+    private void CopyQualifiedName(ExplorerNode? node)
+    {
+        if (node?.Table is not { } table || _session.Current is not { } opened)
+        {
+            return;
+        }
+
+        Clipboard.SetText(opened.Provider.GetDialect(opened.Server.Version).QualifiedName(table));
+        StatusText = "Nome qualificado copiado.";
+    }
+
+    private async Task ShowReferencesForNodeAsync(ExplorerNode? node)
+    {
+        if (node?.Table is null)
+        {
+            return;
+        }
+
+        await SelectNodeAsync(node);
+        await LoadReferencesAsync();
     }
 
     // "Quem referencia" a tabela selecionada, por FKs de todas as tabelas do banco (TASK-12.03).

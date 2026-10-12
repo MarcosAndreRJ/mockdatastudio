@@ -8,9 +8,50 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="12" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <views:SqlEditorView DataContext="{Binding Editor}" />
         <views:SqlResultsView Grid.Row="2" DataContext="{Binding Results}" />
+
+        <!-- Barra de estado (C5.4, docs/23 §5.4): a borda superior de 3 px segue o ambiente; Production em vermelho. -->
+        <Border Grid.Row="3" Padding="10,5" BorderThickness="0,3,0,0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="BorderBrush" Value="#6B7280" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Editor.StatusBar.IsProduction}" Value="True">
+                            <Setter Property="BorderBrush" Value="#DC2626" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Editor.StatusBar.Environment}" Value="Unknown">
+                            <Setter Property="BorderBrush" Value="#D97706" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Right" FontSize="12" Foreground="#B45309"
+                           Text="{Binding Editor.StatusBar.Warning}" Margin="12,0,0,0" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontSize="12" FontWeight="SemiBold"
+                               Text="{Binding Editor.StatusBar.ConnectionName, FallbackValue='Sem conexão'}" />
+                    <TextBlock FontSize="12" Margin="10,0,0,0" Text="{Binding Editor.StatusBar.EngineName}" />
+                    <TextBlock FontSize="12" Margin="10,0,0,0" Text="{Binding Editor.StatusBar.Database}" />
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Margin="10,0,0,0"
+                               Foreground="#B45309" Text="{Binding Editor.StatusBar.Environment}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Editor.StatusBar.IsProduction}" Value="True">
+                                        <Setter Property="Foreground" Value="#DC2626" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock FontSize="12" Margin="10,0,0,0" Text="{Binding Editor.StatusBar.ReadOnlyLabel}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
     </Grid>
 </UserControl>

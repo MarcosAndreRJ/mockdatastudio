@@ -48,13 +48,23 @@ public sealed class SmokeTests
                 item.ShouldNotBeNull($"Item de navegação '{navigation}' não encontrado.");
 
                 item.Click();
-                Thread.Sleep(1200);
 
+                // Espera ativa pelo marcador (até 10 s): o app pode demorar sob carga, e um sleep fixo deixava o teste instável.
                 // Marcadores com contagem dinâmica são comparados por prefixo: o nome UIA do TextBlock é o texto inteiro.
                 // Filtra por tipo (Text) para não enumerar a árvore inteira: a enumeração completa estoura timeout de COM.
-                window.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Text))
-                    .Any(e => (e.Name ?? string.Empty).StartsWith(marker, StringComparison.Ordinal))
-                    .ShouldBeTrue($"A tela '{navigation}' não exibiu o texto esperado '{marker}'.");
+                var shown = false;
+                var deadline = DateTime.UtcNow.AddSeconds(10);
+                while (!shown && DateTime.UtcNow < deadline)
+                {
+                    shown = window.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Text))
+                        .Any(e => (e.Name ?? string.Empty).StartsWith(marker, StringComparison.Ordinal));
+                    if (!shown)
+                    {
+                        Thread.Sleep(250);
+                    }
+                }
+
+                shown.ShouldBeTrue($"A tela '{navigation}' não exibiu o texto esperado '{marker}'.");
 
                 // Uma única janela do processo: se a interface abrir um diálogo de erro, ele aparece como janela extra.
                 var processWindows = automation.GetDesktop()

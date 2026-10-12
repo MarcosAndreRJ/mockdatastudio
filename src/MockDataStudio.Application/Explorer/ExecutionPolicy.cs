@@ -36,6 +36,9 @@ public sealed record ExecutionPolicy(
 
     public bool IsProduction => Environment is ConnectionEnvironment.Production or ConnectionEnvironment.Unknown;
 
+    // Razão usada para alteração de dados sem WHERE (destrutiva). O ExecutionGuard a reconhece para exigir confirmação digitada.
+    public const string DestructiveDataChangeReason = "Alteração de dados sem cláusula WHERE: afetará todas as linhas da tabela.";
+
     // Mapeia a classificação do SqlTooling para a natureza do acesso.
     public static StatementAccess AccessOf(StatementKind kind) => kind switch
     {
@@ -67,8 +70,7 @@ public sealed record ExecutionPolicy(
                     : new AccessVerdict(AccessDecision.Blocked, "Comando não reconhecido em ambiente de produção.");
 
             case StatementAccess.DataChange when isDestructive:
-                return new AccessVerdict(AccessDecision.RequiresConfirmation,
-                    "Alteração de dados sem cláusula WHERE: afetará todas as linhas da tabela.");
+                return new AccessVerdict(AccessDecision.RequiresConfirmation, DestructiveDataChangeReason);
 
             case StatementAccess.DataChange when IsProduction && !authorizedProduction:
                 return new AccessVerdict(AccessDecision.Blocked, "Alteração de dados em produção exige autorização explícita.");

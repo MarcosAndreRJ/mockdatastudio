@@ -155,7 +155,7 @@ public static class ScriptFileService
 // Barra de estado (C5.4 e C5.3, prompt §11): conexão, ambiente e se a restrição de somente leitura foi aplicada de fato.
 public sealed record ConnectionStatusInfo(
     string ConnectionName, string EngineName, string Database, string Environment, bool IsProduction,
-    bool ReadOnlyRequested, bool ReadOnlyEnforced, string? Warning);
+    bool ReadOnlyRequested, bool ReadOnlyEnforced, string? Warning, string ReadOnlyLabel);
 
 public static class ConnectionStatus
 {
@@ -173,6 +173,9 @@ public static class ConnectionStatus
             IsProduction: environment is ConnectionEnvironment.Production,
             readOnlyRequested,
             readOnlyEnforced,
-            warning);
+            warning,
+            ReadOnlyLabel: !readOnlyRequested ? "Leitura e escrita"
+                : readOnlyEnforced ? "Somente leitura: aplicada no servidor"
+                : "Somente leitura: NÃO aplicada no servidor");
     }
 }
