@@ -44,19 +44,19 @@
                                         <TextBlock Text="Stop" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding ExplainCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
                                         <TextBlock Text="Explain" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding FormatCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
                                         <TextBlock Text="Format" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding SaveScriptCommand}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
                                         <TextBlock Text="Save Script" VerticalAlignment="Center" />

@@ -73,7 +73,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <controls:SearchField Placeholder="Search tables, schemas, objects..." />
+                        <controls:SearchField Placeholder="Search tables, schemas, objects..." Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
                         <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Width="38" Height="38" Padding="0"
                                 Content="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="13" />
                     </Grid>
