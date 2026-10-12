@@ -586,16 +586,16 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | C3 |
 | Referências | docs/22, C09, TASK-09.01, TASK-09.02 (parte) |
 
-**Status:** 🔄 Em andamento (parcial; depende de C1, ainda não concluída)
+**Status:** 🔄 Em andamento (sprint/C2-projeto-servicos, 2026-10-12): C2.1, C2.3 e C2.4 concluídas; C2.2 e C2.5 parciais (ver itens)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **C2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **C2.1** Projects: `MdsProject`, serializer, validator e `ProjectStore` com gravação atômica; `docs/examples/project-loja.mdsproj` faz round-trip. *(TASK-09.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **C2.2** `ConnectionService` (CRUD com segredo, teste, `OpenAsync` por propósito) e composição dos providers registrados. · Concluído em: ____ · ⏳ PARCIAL: `Application/ConnectionService.cs` com segredo (`ISecretStore`) e abertura de sessão existem; composição via registro de providers existe. Cobertura de T-APP não verificada item a item
-- [ ] **C2.3** `DigestService` (captura, exportação, importação, comparação). · Concluído em: ____ · Evidência: ____
-- [ ] **C2.4** `MappingService`: `MappingKnowledge` a partir do catálogo, `AutoBindAll`, `SetBinding` com persistência de feedback; serviço de leitura do catálogo. · Concluído em: ____ · Evidência: ____
-- [ ] **C2.5** T-APP-001..003 e T-PRJ-001/002/003/005/006/010. · Concluído em: ____ · Evidência: ____
+- [x] **C2.0** Início da sprint conforme §3.1. · Concluído em: 2026-10-12 · Evidência: worktree MockDataStudio-C2, branch sprint/C2-projeto-servicos
+- [x] **C2.1** Projects: `MdsProject`, serializer, validator e `ProjectStore` com gravação atômica; `docs/examples/project-loja.mdsproj` faz round-trip. *(TASK-09.01)* · Concluído em: 2026-10-12 · Evidência: Projects/ProjectSerializer, ProjectStore, ProjectValidator; T-PRJ-001 reserializa project-loja.mdsproj com texto idêntico (diff vazio); 8 testes em Projects.Tests
+- [x] **C2.2** `ConnectionService` (CRUD com segredo, teste, `OpenAsync` por propósito) e composição dos providers registrados. · Concluído em: 2026-10-12 · Evidência: Application/ConnectionService (CRUD com segredo DPAPI, teste, OpenAsync por propósito, ListDatabasesAsync); ConnectionServiceTests (T-APP-001, provider stub) e registro dos quatro providers em ServiceRegistration
+- [x] **C2.3** `DigestService` (captura, exportação, importação, comparação). · Concluído em: 2026-10-12 · Evidência: Application/DigestService (captura, exportação, importação, comparação), testes T-APP-002 com SQLite real
+- [x] **C2.4** `MappingService`: `MappingKnowledge` a partir do catálogo, `AutoBindAll`, `SetBinding` com persistência de feedback; serviço de leitura do catálogo. · Concluído em: 2026-10-12 · Evidência: Application/MappingService (contexto com conhecimento do catálogo, AutoBindAll, SetBindingAsync com regra e feedback), testes T-APP-003 com catálogo fake. Registro no DI do App aguarda a composição do catálogo (C3)
+- [ ] **C2.5** T-APP-001..003 e T-PRJ-001/002/003/005/006/010. · Concluído em: ____ · ⏳ PARCIAL: T-PRJ-001/002/003/004/005/006/010 e T-APP-002/003 verdes. T-PRJ-007 e T-APP-001 já coberto por ConnectionServiceTests; T-PRJ-007 pendente (PV-300, PV-301)
 
 **Verificação da sprint**
 - [ ] Application.Tests e Projects.Tests verdes; T-ARC verdes (Application sem WPF)

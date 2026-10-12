@@ -111,6 +111,11 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 
 | ID | Decisão | Referência |
 |---|---|---|
+| DA-300 | `MdsProject` ganha `ProjectRules` e `ToolVersion` além dos campos de C09 §1, porque docs/22 §1 e o exemplo `project-loja.mdsproj` os trazem. `SnapshotEntry.SourceFingerprintHash` passa a anulável (importação de digest não tem fingerprint de servidor) | C09 §1, docs/22 §1 |
+| DA-301 | Serializador rejeita propriedade desconhecida na raiz (`additionalProperties: false` do schema, PRJ-SCHEMA), mas tolera MINOR mais novo do mesmo MAJOR (1.7 abre; 2.0 falha com PRJ-MAJOR-UNSUPPORTED). Valores padrão de relações e de opções avançadas de saída são omitidos; `keyOffset`, `validation` e as opções básicas de `output` sempre são gravados, como no exemplo | docs/22 §2, §4 |
+| DA-302 | `IMappingService.BuildContextAsync` devolve `Result<MappingContext>` (falha PRJ-SCHEMA sem snapshot ativo) e `SetBinding` é `SetBindingAsync`, porque aprender regra grava no catálogo. `MigrateBindingsAsync` fica para a C7 | C09 §2 |
+| DA-303 | `IDigestService.Compare` devolve `Result<SchemaDiff>` (digest corrompido vira erro DIG-*). `CaptureAsync` devolve snapshot com Id provisório `snap-0000`; `DigestService.NextSnapshotId(project)` atribui o definitivo | C09 §2 |
+| DA-304 | T-PRJ-010 valida contra `project-1.0.schema.json` com o `$ref` do digest trocado por `{type: object}`: o digest embutido é validado por `DigestValidator` (PRJ-DIGEST) e pelos testes T-DIG. Divergência de hash do digest é só aviso (DA do Core), então PRJ-DIGEST usa erros estruturais | docs/22 §6 |
 
 ### 1.4 Integração e gates (DA-400..499)
 
@@ -201,6 +206,8 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | ID | Verificação | Como verificar | Fallback se negativo | Sprint |
 |---|---|---|---|---|
+| PV-300 | T-PRJ-007 (perfis não resolvidos ao abrir em outra máquina) e as validações PRJ-GENERATOR, PRJ-PARAMS e PRJ-QUERY não implementadas: dependem do registro de geradores (A) e do SqlTooling | Teste com projeto cujo `profileId` não existe; gerador desconhecido; query não-SELECT | Aberto no ProjectValidator como TODO; a abertura não bloqueia | C2/C3 |
+| PV-301 | Autosave e arquivo de recuperação (docs/22 §7) e `ProjectMigrator` com backup `.vX.Y.bak` não implementados (só há formato 1.0) | Teste de recuperação ao reabrir; migração 1.0→1.1 quando existir | Implementar com a UI de projeto (C3) e a primeira mudança de formato | C3 |
 
 ### 5.4 Integração e gates (PV-400..499)
 
@@ -240,6 +247,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
+| 2026-10-12 | DA-300..304, PV-300..301 | Sprint C2 (Projects, DigestService, MappingService) | Implementação de C09 §1 e §2 com ajustes de assinatura registrados |
 
 ### 6.4 Integração e gates
 
