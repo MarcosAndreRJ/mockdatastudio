@@ -210,11 +210,11 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | A2, C2 |
 | Referências | C05, C06, docs/15, docs/14 §2, DA-049, DA-052 |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (sprint/A1-saneamento-motor, IA-1, 2026-10-12)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **A1.0** Início da sprint conforme §3.1 (branch criada, Status 🔄, commit de início). · Concluído em: ____ · Evidência: ____
+- [x] **A1.0** Início da sprint conforme §3.1 (branch criada, Status 🔄, commit de início). · Concluído em: 2026-10-12 · Evidência: Branch sprint/A1-saneamento-motor baseada em feature/connections (53db8cb).
 - [ ] **A1.1** `Core.Profiles`: todos os records/enums de C06 (`KeyStrategy` … `GenerationProfile`, incluindo `ReferenceInstantMode`, `TimeZoneId` e `OutputSettings` completo), com invariantes e testes. *(SAN-A.1)* · Concluído em: ____ · Evidência: ____
 - [ ] **A1.2** `IRowSink` e `RowBatch` conforme C06 (`FirstRowIndex`, `ExecuteSessionStepAsync`, `BeginTableAsync`, `EndTableAsync`, `WriteDeferredUpdatesAsync`) e tipos `PlanStep`; adaptar o motor e os testes; atualizar DA-052. *(SAN-A.2)* · Concluído em: ____ · Evidência: ____
 - [ ] **A1.3** Distribuições `normal` e `zipf`; `weekdays`/`hours` em `core.date.range`; passo com anos/meses em `core.date.sequence`. Saída de gerador existente que mudar exige nova versão (15 §4.4). *(SAN-A.3)* · Concluído em: ____ · Evidência: ____
