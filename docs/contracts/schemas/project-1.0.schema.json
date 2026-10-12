@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mockdatastudio.local/project-1.0.schema.json",
+  "title": "Mock Data Studio Project 1.0",
+  "type": "object",
+  "required": ["format", "formatVersion", "id", "name", "createdAt", "modifiedAt", "snapshots", "bindings", "profiles", "activeProfile"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "mds.project" },
+    "formatVersion": { "type": "string", "pattern": "^1\\.[0-9]+$" },
+    "id": { "$ref": "#/$defs/guid" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "createdAt": { "$ref": "#/$defs/instant" },
+    "modifiedAt": { "$ref": "#/$defs/instant" },
+    "toolVersion": { "type": "string" },
+    "connections": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": { "$ref": "#/$defs/connectionRef" },
+        "target": { "$ref": "#/$defs/connectionRef" },
+        "reference": { "$ref": "#/$defs/connectionRef" }
+      }
+    },
+    "snapshots": { "type": "array", "items": { "$ref": "#/$defs/snapshot" } },
+    "activeSnapshotId": { "type": "string" },
+    "bindings": { "type": "object", "additionalProperties": { "$ref": "#/$defs/binding" } },
+    "projectRules": { "type": "array", "items": { "$ref": "#/$defs/projectRule" } },
+    "profiles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/profile" } },
+    "activeProfile": { "type": "string", "minLength": 1 },
+    "catalogDependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["templateCode", "contentHash", "valueCount"],
+        "additionalProperties": false,
+        "properties": {
+          "templateCode": { "type": "string" },
+          "contentHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "valueCount": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "runs": { "type": "array", "items": { "$ref": "#/$defs/runSummary" } },
+    "notes": { "type": "string" }
+  },
+  "$defs": {
+    "guid": { "type": "string", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$" },
+    "instant": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$" },
+    "hash": { "type": "string", "pattern": "^sha256(v[0-9]+)?:[0-9a-f]{64}$" },
+    "engine": { "enum": ["sqlite", "mysql", "postgresql", "firebird"] },
+    "connectionRef": {
+      "type": "object",
+      "required": ["displayName", "engine"],
+      "additionalProperties": false,
+      "properties": {
+        "profileId": { "$ref": "#/$defs/guid" },
+        "displayName": { "type": "string" },
+        "engine": { "$ref": "#/$defs/engine" },
+        "fingerprint": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "required": ["id", "label", "capturedAt", "structureHash", "digest"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^snap-[0-9]{4,}$" },
+        "label": { "type": "string" },
+        "capturedAt": { "$ref": "#/$defs/instant" },
+        "structureHash": { "$ref": "#/$defs/hash" },
+        "sourceFingerprint": { "$ref": "#/$defs/hash" },
+        "digest": { "$ref": "digest-1.0.schema.json" }
+      }
+    },
+    "generatorSpec": {
+      "type": "object",
+      "required": ["generatorId", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "generatorId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*)+$" },
+        "version": { "type": "integer", "minimum": 1 },
+        "parameters": { "type": "object" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/generatorSpec" } }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "required": ["generator", "origin", "columnFingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "generator": { "$ref": "#/$defs/generatorSpec" },
+        "nullRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "origin": { "enum": ["structural", "auto", "rule", "user"] },
+        "confidence": { "enum": ["confirmed", "high", "medium", "low", "none"] },
+        "columnFingerprint": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "state": { "enum": ["active", "needsReview", "orphaned"] },
+        "unique": { "type": "boolean" },
+        "note": { "type": "string" }
+      }
+    },
+    "projectRule": {
+      "type": "object",
+      "required": ["columnPattern", "targetKind", "targetRef"],
+      "additionalProperties": false,
+      "properties": {
+        "columnPattern": { "type": "string" },
+        "tablePattern": { "type": "string" },
+        "targetKind": { "enum": ["template", "templateField", "preset", "generator"] },
+        "targetRef": { "type": "string" },
+        "parameters": { "type": "object" },
+        "priority": { "type": "integer" }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["uniform", "zipf", "weighted", "range", "poisson"] },
+        "zipfExponent": { "type": "number", "exclusiveMinimum": 0 },
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 },
+        "lambda": { "type": "number", "exclusiveMinimum": 0 },
+        "weights": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 } }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["source", "cardinality"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "enum": ["generated", "existing", "fixed", "dataset", "query"] },
+        "cardinality": {
+          "type": "object",
+          "required": ["mode", "distribution"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "enum": ["childDriven", "parentDriven"] },
+            "distribution": { "$ref": "#/$defs/distribution" },
+            "oneToOne": { "type": "boolean" }
+          }
+        },
+        "fixedValues": { "type": "array", "items": { "type": "array" } },
+        "datasetPath": { "type": "string" },
+        "query": { "type": "string" },
+        "existingLimit": { "type": "integer", "minimum": 1 },
+        "nullRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cycleBreak": { "enum": ["nullThenUpdate", "deferredConstraint", "disableChecks"] },
+        "rootRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "maxDepth": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "tableSettings": {
+      "type": "object",
+      "required": ["include", "rowCount"],
+      "additionalProperties": false,
+      "properties": {
+        "include": { "type": "boolean" },
+        "rowCount": { "type": "integer", "minimum": 0 },
+        "keyStrategy": { "enum": ["explicit", "captured", "naturalKeyLookup", "databaseDefault"] },
+        "keyStartOverride": { "type": "integer" },
+        "relations": { "type": "object", "additionalProperties": { "$ref": "#/$defs/relation" } }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["name", "seed", "referenceInstant", "tables", "output"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "seed": { "type": "string", "pattern": "^[0-9]{1,20}$" },
+        "referenceInstant": { "$ref": "#/$defs/instant" },
+        "referenceInstantMode": { "enum": ["fixed", "now"] },
+        "timeZoneId": { "type": "string" },
+        "defaultKeyStrategy": { "enum": ["explicit", "captured", "naturalKeyLookup", "databaseDefault"] },
+        "keyOffset": { "type": "integer", "minimum": 0 },
+        "tables": { "type": "object", "additionalProperties": { "$ref": "#/$defs/tableSettings" } },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "trialInsert": { "type": "boolean" },
+            "trialRows": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "verifyReferencesInTarget": { "type": "boolean" }
+          }
+        },
+        "output": {
+          "type": "object",
+          "required": ["kind"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "enum": ["sqlScript", "directInsert", "csv", "jsonLines"] },
+            "directory": { "type": "string" },
+            "fileNamePattern": { "type": "string" },
+            "segmentMaxBytes": { "type": "integer", "minimum": 1048576 },
+            "rowsPerStatement": { "type": "integer", "minimum": 0, "maximum": 5000 },
+            "batchSize": { "type": "integer", "minimum": 1, "maximum": 100000 },
+            "transactionMode": { "enum": ["perBatch", "single"] },
+            "includeCleanupScript": { "type": "boolean" },
+            "resyncSequences": { "type": "boolean" },
+            "encoding": { "type": "string" },
+            "emitGuards": { "type": "boolean" },
+            "allowDisableFkChecks": { "type": "boolean" },
+            "qualifyNamespace": { "type": "boolean" },
+            "quoteAllIdentifiers": { "type": "boolean" },
+            "includeTransaction": { "type": "boolean" },
+            "writeBom": { "type": "boolean" },
+            "lineEnding": { "enum": ["\n", "\r\n"] },
+            "csvSeparator": { "type": "string", "minLength": 1, "maxLength": 1 }
+          }
+        }
+      }
+    },
+    "runSummary": {
+      "type": "object",
+      "required": ["runId", "profileName", "startedAt", "status", "rows", "planHash", "seed", "outputKind"],
+      "additionalProperties": false,
+      "properties": {
+        "runId": { "$ref": "#/$defs/guid" },
+        "profileName": { "type": "string" },
+        "startedAt": { "$ref": "#/$defs/instant" },
+        "status": { "enum": ["completed", "failed", "cancelled", "interrupted"] },
+        "rows": { "type": "integer", "minimum": 0 },
+        "planHash": { "$ref": "#/$defs/hash" },
+        "seed": { "type": "string", "pattern": "^[0-9]{1,20}$" },
+        "outputKind": { "enum": ["sqlScript", "directInsert", "csv", "jsonLines"] },
+        "targetFingerprint": { "$ref": "#/$defs/hash" }
+      }
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mockdatastudio.local/digest-1.0.schema.json",
+  "title": "Mock Data Studio Schema Digest 1.0",
+  "type": "object",
+  "required": ["format", "version", "engine", "server", "database", "capturedAt", "hash", "namespaces"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "mds.digest" },
+    "version": { "type": "string", "pattern": "^1\\.[0-9]+$" },
+    "engine": { "enum": ["sqlite", "mysql", "postgresql", "firebird"] },
+    "server": { "type": "string", "minLength": 1 },
+    "database": { "type": "string", "minLength": 1 },
+    "capturedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "hash": { "type": "string", "pattern": "^sha256(v[0-9]+)?:[0-9a-f]{64}$" },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "views": { "type": "boolean" },
+        "routines": { "type": "boolean" },
+        "triggers": { "type": "boolean" },
+        "comments": { "type": "boolean" },
+        "indexes": { "type": "boolean" },
+        "include": { "type": "array", "items": { "type": "string" } },
+        "exclude": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "stats": { "description": "Reservado para extensão (V2).", "type": "object" },
+    "meta": { "description": "Reservado para extensão.", "type": "object" },
+    "namespaces": { "type": "array", "items": { "$ref": "#/$defs/namespace" } }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "identList": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/identifier" } },
+    "extrasMap": { "type": "object", "additionalProperties": { "type": "string" } },
+    "namespace": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "virtual": { "type": "boolean" },
+        "x": { "$ref": "#/$defs/extrasMap" },
+        "tables": { "type": "array", "items": { "$ref": "#/$defs/table" } },
+        "views": { "type": "array", "items": { "$ref": "#/$defs/view" } },
+        "sequences": { "type": "array", "items": { "$ref": "#/$defs/sequence" } },
+        "routines": { "type": "array", "items": { "$ref": "#/$defs/routine" } },
+        "triggers": { "type": "array", "items": { "$ref": "#/$defs/trigger" } }
+      }
+    },
+    "column": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "prefixItems": [
+        { "$ref": "#/$defs/identifier" },
+        { "type": "string" },
+        { "type": "string", "pattern": "^(nn( (ai|idd|ida|ser|tsq))?( (gs|gv))?|(ai|idd|ida|ser|tsq)( (gs|gv))?|gs|gv)?$" },
+        { "$ref": "#/$defs/columnExtras" }
+      ],
+      "items": false
+    },
+    "columnExtras": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "def": { "type": "string" },
+        "seq": { "type": "string" },
+        "gx": { "type": "string" },
+        "enum": { "type": "array", "items": { "type": "string" } },
+        "cs": { "type": "string" },
+        "coll": { "type": "string" },
+        "dom": { "type": "string" },
+        "lu": { "const": "b" },
+        "cmt": { "type": "string" },
+        "x": { "$ref": "#/$defs/extrasMap" }
+      }
+    },
+    "action": { "enum": ["cascade", "restrict", "setnull", "setdefault"] },
+    "foreignKey": {
+      "type": "object",
+      "required": ["n", "c", "r", "rc"],
+      "additionalProperties": false,
+      "properties": {
+        "n": { "$ref": "#/$defs/identifier" },
+        "c": { "$ref": "#/$defs/identList" },
+        "r": { "type": "string", "minLength": 3 },
+        "rc": { "$ref": "#/$defs/identList" },
+        "od": { "$ref": "#/$defs/action" },
+        "ou": { "$ref": "#/$defs/action" },
+        "df": { "enum": ["i", "d"] },
+        "ne": { "const": true }
+      }
+    },
+    "unique": {
+      "type": "object",
+      "required": ["c"],
+      "additionalProperties": false,
+      "properties": {
+        "n": { "$ref": "#/$defs/identifier" },
+        "c": { "$ref": "#/$defs/identList" },
+        "ix": { "const": true },
+        "nnd": { "const": true }
+      }
+    },
+    "index": {
+      "type": "object",
+      "required": ["n"],
+      "additionalProperties": false,
+      "anyOf": [ { "required": ["c"] }, { "required": ["e"] } ],
+      "properties": {
+        "n": { "$ref": "#/$defs/identifier" },
+        "c": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "e": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "w": { "type": "string" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["e"],
+      "additionalProperties": false,
+      "properties": { "n": { "$ref": "#/$defs/identifier" }, "e": { "type": "string", "minLength": 1 } }
+    },
+    "table": {
+      "type": "object",
+      "required": ["name", "cols"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "cols": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/column" } },
+        "pk": { "$ref": "#/$defs/identList" },
+        "pkn": { "$ref": "#/$defs/identifier" },
+        "fk": { "type": "array", "items": { "$ref": "#/$defs/foreignKey" } },
+        "uq": { "type": "array", "items": { "$ref": "#/$defs/unique" } },
+        "ix": { "type": "array", "items": { "$ref": "#/$defs/index" } },
+        "ck": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+        "cmt": { "type": "string" },
+        "x": { "$ref": "#/$defs/extrasMap" }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["name", "cols"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/identifier" },
+        "cols": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/column" } },
+        "upd": { "type": "boolean" },
+        "cmt": { "type": "string" }
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "required": ["n"],
+      "additionalProperties": false,
+      "properties": {
+        "n": { "$ref": "#/$defs/identifier" },
+        "s": { "type": ["integer", "string"] },
+        "i": { "type": ["integer", "string"] },
+        "min": { "type": ["integer", "string"] },
+        "max": { "type": ["integer", "string"] },
+        "cy": { "const": true }
+      }
+    },
+    "routine": {
+      "type": "object",
+      "required": ["n", "k"],
+      "additionalProperties": false,
+      "properties": {
+        "n": { "$ref": "#/$defs/identifier" },
+        "k": { "enum": ["p", "f"] },
+        "p": { "type": "integer", "minimum": 0 },
+        "rt": { "type": "string" }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["n", "tm", "ev"],
+      "additionalProperties": false,
+      "properties": {
+        "n": { "$ref": "#/$defs/identifier" },
+        "t": { "$ref": "#/$defs/identifier" },
+        "tm": { "enum": ["b", "a", "io"] },
+        "ev": { "type": "string", "pattern": "^i?u?d?$", "minLength": 1 },
+        "a": { "const": false },
+        "pos": { "type": "integer" }
+      }
+    }
+  }
+}

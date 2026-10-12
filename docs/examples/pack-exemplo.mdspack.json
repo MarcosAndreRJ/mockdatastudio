@@ -1,0 +1,50 @@
+{
+  "format": "mds.template-pack",
+  "version": "1.0",
+  "pack": {
+    "code": "VAREJO_DEMO",
+    "name": "Varejo (demonstração)",
+    "version": "1.0.0",
+    "author": "Equipe Exemplo",
+    "license": "CC0-1.0 (dados fictícios autorais)",
+    "description": "Pacote de exemplo com dados inteiramente fictícios."
+  },
+  "templates": [
+    {
+      "code": "CATEGORIA_PRODUTO",
+      "name": "Categoria de produto",
+      "kind": "scalar",
+      "logicalType": "string",
+      "tags": ["varejo"],
+      "aliases": [ { "alias": "CATEGORIA" }, { "alias": "DS_CATEGORIA" }, { "alias": "GRUPO", "weight": 0.7 } ],
+      "values": [ "Eletrônicos", "Informática", "Papelaria", { "value": "Utilidades", "weight": 2 } ]
+    },
+    {
+      "code": "PRODUTO",
+      "name": "Produto",
+      "kind": "composite",
+      "fields": [
+        { "fieldCode": "descricao", "logicalType": "string", "ordinal": 1, "maxLength": 150 },
+        { "fieldCode": "unidade", "logicalType": "string", "ordinal": 2, "maxLength": 3 },
+        { "fieldCode": "preco_ref", "logicalType": "decimal", "ordinal": 3 }
+      ],
+      "aliases": [
+        { "alias": "DESCRICAO", "fieldCode": "descricao", "contextTablePattern": "*PRODUTO*|*ITEM*" },
+        { "alias": "DS_PRODUTO", "fieldCode": "descricao" },
+        { "alias": "UNIDADE", "fieldCode": "unidade" },
+        { "alias": "UN", "fieldCode": "unidade" }
+      ],
+      "records": [
+        { "data": { "descricao": "Notebook Modelo Exemplo 14\"", "unidade": "UN", "preco_ref": "4299.90" } },
+        { "data": { "descricao": "Caderno Fictício 200 folhas", "unidade": "UN", "preco_ref": "32.50" } },
+        { "data": { "descricao": "Arroz Tipo Exemplo 5kg", "unidade": "PCT", "preco_ref": "27.90" }, "weight": 3 }
+      ]
+    }
+  ],
+  "presets": [
+    { "code": "SKU_PADRAO", "name": "SKU AAA-#####", "generatorId": "core.mask", "generatorVersion": 1, "parameters": { "pattern": "AAA-#####" } }
+  ],
+  "rules": [
+    { "columnPattern": "*SKU*", "targetKind": "preset", "targetRef": "SKU_PADRAO", "priority": 110 }
+  ]
+}

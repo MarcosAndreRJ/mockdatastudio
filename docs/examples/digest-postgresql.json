@@ -1,0 +1,141 @@
+{
+  "format": "mds.digest",
+  "version": "1.0",
+  "engine": "postgresql",
+  "server": "17.2",
+  "database": "loja",
+  "capturedAt": "2026-10-11T14:03:12Z",
+  "hash": "sha256:4f1c0a7e2b9d3c5a6e8f0a1b2c3d4e5f60718293a4b5c6d7e8f9012345678abc",
+  "options": { "views": true, "routines": true, "triggers": true, "comments": false },
+  "namespaces": [
+    {
+      "name": "public",
+      "tables": [
+        {
+          "name": "categoria",
+          "cols": [
+            ["id", "int4", "nn idd", { "seq": "categoria_id_seq" }],
+            ["nome", "varchar(60)", "nn"],
+            ["pai_id", "int4"]
+          ],
+          "pk": ["id"],
+          "pkn": "categoria_pkey",
+          "fk": [
+            { "n": "fk_categoria_pai", "c": ["pai_id"], "r": "public.categoria", "rc": ["id"], "od": "setnull" }
+          ],
+          "uq": [ { "n": "uq_categoria_nome", "c": ["nome"] } ]
+        },
+        {
+          "name": "cliente",
+          "cols": [
+            ["id", "int8", "nn ida", { "seq": "cliente_id_seq" }],
+            ["nome", "varchar(120)", "nn"],
+            ["cpf", "bpchar(11)", "nn"],
+            ["email", "varchar(200)"],
+            ["zap", "varchar(20)"],
+            ["nro_cep", "bpchar(8)"],
+            ["cidade", "varchar(80)"],
+            ["uf", "bpchar(2)"],
+            ["nascimento", "date"],
+            ["ativo", "bool", "nn", { "def": "true" }],
+            ["criado_em", "timestamptz", "nn", { "def": "now()" }]
+          ],
+          "pk": ["id"],
+          "pkn": "cliente_pkey",
+          "uq": [
+            { "n": "uq_cliente_cpf", "c": ["cpf"] },
+            { "n": "ux_cliente_email", "c": ["email"], "ix": true }
+          ],
+          "ix": [ { "n": "ix_cliente_nome", "c": ["nome"] } ],
+          "ck": [ { "n": "ck_cliente_uf", "e": "uf ~ '^[A-Z]{2}$'" } ]
+        },
+        {
+          "name": "produto",
+          "cols": [
+            ["id", "int4", "nn ser", { "def": "nextval('produto_id_seq'::regclass)", "seq": "produto_id_seq" }],
+            ["sku", "varchar(20)", "nn"],
+            ["descricao", "varchar(150)", "nn"],
+            ["categoria_id", "int4", "nn"],
+            ["preco", "numeric(12,2)", "nn"],
+            ["estoque", "int4", "nn", { "def": "0" }],
+            ["atributos", "jsonb"]
+          ],
+          "pk": ["id"],
+          "pkn": "produto_pkey",
+          "fk": [
+            { "n": "fk_produto_categoria", "c": ["categoria_id"], "r": "public.categoria", "rc": ["id"] }
+          ],
+          "uq": [ { "n": "uq_produto_sku", "c": ["sku"] } ],
+          "ck": [ { "n": "ck_produto_preco", "e": "preco >= 0" } ]
+        },
+        {
+          "name": "pedido",
+          "cols": [
+            ["id", "int8", "nn idd", { "seq": "pedido_id_seq" }],
+            ["cliente_id", "int8", "nn"],
+            ["data_pedido", "timestamp", "nn"],
+            ["status", "varchar(12)", "nn", { "def": "'ABERTO'::character varying" }],
+            ["total", "numeric(14,2)", "nn", { "def": "0" }],
+            ["total_com_frete", "numeric(14,2)", "gs", { "gx": "(total + 15.00)" }]
+          ],
+          "pk": ["id"],
+          "pkn": "pedido_pkey",
+          "fk": [
+            { "n": "fk_pedido_cliente", "c": ["cliente_id"], "r": "public.cliente", "rc": ["id"], "df": "i" }
+          ],
+          "ix": [ { "n": "ix_pedido_abertos", "c": ["data_pedido desc"], "w": "status = 'ABERTO'" } ],
+          "ck": [ { "n": "ck_pedido_status", "e": "status IN ('ABERTO','PAGO','ENVIADO','CANCELADO')" } ]
+        },
+        {
+          "name": "item_pedido",
+          "cols": [
+            ["pedido_id", "int8", "nn"],
+            ["item_seq", "int2", "nn"],
+            ["produto_id", "int4", "nn"],
+            ["quantidade", "int4", "nn"],
+            ["preco_unit", "numeric(12,2)", "nn"]
+          ],
+          "pk": ["pedido_id", "item_seq"],
+          "pkn": "item_pedido_pkey",
+          "fk": [
+            { "n": "fk_item_pedido", "c": ["pedido_id"], "r": "public.pedido", "rc": ["id"], "od": "cascade" },
+            { "n": "fk_item_produto", "c": ["produto_id"], "r": "public.produto", "rc": ["id"] }
+          ],
+          "ck": [ { "n": "ck_item_qtd", "e": "quantidade > 0" } ]
+        },
+        {
+          "name": "entrega",
+          "cols": [
+            ["id", "uuid", "nn", { "def": "gen_random_uuid()" }],
+            ["pedido_id", "int8", "nn"],
+            ["item_seq", "int2", "nn"],
+            ["previsao", "date"],
+            ["cep_entrega", "bpchar(8)", "nn"]
+          ],
+          "pk": ["id"],
+          "pkn": "entrega_pkey",
+          "fk": [
+            { "n": "fk_entrega_item", "c": ["pedido_id", "item_seq"], "r": "public.item_pedido", "rc": ["pedido_id", "item_seq"] }
+          ],
+          "uq": [ { "n": "uq_entrega_item", "c": ["pedido_id", "item_seq"] } ]
+        }
+      ],
+      "views": [
+        { "name": "vw_pedidos_cliente", "cols": [["cliente_id", "int8"], ["qtd_pedidos", "int8"], ["valor_total", "numeric"]], "upd": false }
+      ],
+      "sequences": [
+        { "n": "categoria_id_seq", "s": 1, "i": 1 },
+        { "n": "cliente_id_seq", "s": 1, "i": 1 },
+        { "n": "pedido_id_seq", "s": 1, "i": 1 },
+        { "n": "produto_id_seq", "s": 1, "i": 1 }
+      ],
+      "routines": [
+        { "n": "fn_total_pedido", "k": "f", "p": 1, "rt": "numeric" },
+        { "n": "sp_fechar_pedido", "k": "p", "p": 1 }
+      ],
+      "triggers": [
+        { "n": "trg_item_atualiza_total", "t": "item_pedido", "tm": "a", "ev": "iud" }
+      ]
+    }
+  ]
+}

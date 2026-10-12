@@ -1,0 +1,132 @@
+{
+  "format": "mds.digest",
+  "version": "1.0",
+  "engine": "firebird",
+  "server": "5.0.4",
+  "database": "LOJA.FDB",
+  "capturedAt": "2026-10-11T14:07:55Z",
+  "hash": "sha256:c0ffee00112233445566778899aabbccddeeff00112233445566778899aabbcc",
+  "options": { "views": true, "routines": true, "triggers": true, "comments": false },
+  "namespaces": [
+    {
+      "name": "PUBLIC",
+      "virtual": true,
+      "x": { "dialect": "3", "defaultCharset": "UTF8" },
+      "tables": [
+        {
+          "name": "CATEGORIA",
+          "cols": [
+            ["ID", "integer", "nn idd", { "seq": "RDB$1" }],
+            ["NOME", "varchar(60)", "nn"],
+            ["PAI_ID", "integer"]
+          ],
+          "pk": ["ID"],
+          "pkn": "PK_CATEGORIA",
+          "fk": [ { "n": "FK_CATEGORIA_PAI", "c": ["PAI_ID"], "r": "PUBLIC.CATEGORIA", "rc": ["ID"], "od": "setnull" } ],
+          "uq": [ { "n": "UQ_CATEGORIA_NOME", "c": ["NOME"] } ]
+        },
+        {
+          "name": "CLIENTE",
+          "cols": [
+            ["ID", "bigint", "nn tsq", { "seq": "GEN_CLIENTE_ID" }],
+            ["NOME", "varchar(120)", "nn", { "dom": "DM_NOME" }],
+            ["CPF", "char(11)", "nn"],
+            ["EMAIL", "varchar(200)"],
+            ["ZAP", "varchar(20)"],
+            ["NRO_CEP", "char(8)"],
+            ["CIDADE", "varchar(80)"],
+            ["UF", "char(2)"],
+            ["NASCIMENTO", "date"],
+            ["ATIVO", "boolean", "nn", { "def": "TRUE" }],
+            ["CRIADO_EM", "timestamp", "nn", { "def": "CURRENT_TIMESTAMP" }],
+            ["OBS", "blob sub_type text", "", { "cs": "WIN1252" }]
+          ],
+          "pk": ["ID"],
+          "pkn": "PK_CLIENTE",
+          "uq": [
+            { "n": "UQ_CLIENTE_CPF", "c": ["CPF"] },
+            { "n": "UX_CLIENTE_EMAIL", "c": ["EMAIL"], "ix": true }
+          ],
+          "ix": [ { "n": "IX_CLIENTE_NOME", "c": ["NOME"] } ],
+          "ck": [ { "n": "CK_CLIENTE_UF", "e": "UF SIMILAR TO '[A-Z]{2}'" } ]
+        },
+        {
+          "name": "PRODUTO",
+          "cols": [
+            ["ID", "integer", "nn idd", { "seq": "RDB$2" }],
+            ["SKU", "varchar(20)", "nn"],
+            ["DESCRICAO", "varchar(150)", "nn"],
+            ["CATEGORIA_ID", "integer", "nn"],
+            ["PRECO", "numeric(12,2)", "nn", { "dom": "DM_VALOR" }],
+            ["ESTOQUE", "integer", "nn", { "def": "0" }]
+          ],
+          "pk": ["ID"],
+          "pkn": "PK_PRODUTO",
+          "fk": [ { "n": "FK_PRODUTO_CATEGORIA", "c": ["CATEGORIA_ID"], "r": "PUBLIC.CATEGORIA", "rc": ["ID"] } ],
+          "uq": [ { "n": "UQ_PRODUTO_SKU", "c": ["SKU"] } ],
+          "ck": [ { "n": "CK_PRODUTO_PRECO", "e": "PRECO >= 0" } ]
+        },
+        {
+          "name": "PEDIDO",
+          "cols": [
+            ["ID", "bigint", "nn ida", { "seq": "RDB$3" }],
+            ["CLIENTE_ID", "bigint", "nn"],
+            ["DATA_PEDIDO", "timestamp", "nn"],
+            ["STATUS", "varchar(12)", "nn", { "def": "'ABERTO'" }],
+            ["TOTAL", "numeric(14,2)", "nn", { "def": "0" }],
+            ["TOTAL_COM_FRETE", "numeric(18,2)", "gv", { "gx": "(TOTAL + 15.00)" }]
+          ],
+          "pk": ["ID"],
+          "pkn": "PK_PEDIDO",
+          "fk": [ { "n": "FK_PEDIDO_CLIENTE", "c": ["CLIENTE_ID"], "r": "PUBLIC.CLIENTE", "rc": ["ID"] } ],
+          "ck": [ { "n": "CK_PEDIDO_STATUS", "e": "STATUS IN ('ABERTO','PAGO','ENVIADO','CANCELADO')" } ]
+        },
+        {
+          "name": "ITEM_PEDIDO",
+          "cols": [
+            ["PEDIDO_ID", "bigint", "nn"],
+            ["ITEM_SEQ", "smallint", "nn"],
+            ["PRODUTO_ID", "integer", "nn"],
+            ["QUANTIDADE", "integer", "nn"],
+            ["PRECO_UNIT", "numeric(12,2)", "nn", { "dom": "DM_VALOR" }]
+          ],
+          "pk": ["PEDIDO_ID", "ITEM_SEQ"],
+          "pkn": "PK_ITEM_PEDIDO",
+          "fk": [
+            { "n": "FK_ITEM_PEDIDO", "c": ["PEDIDO_ID"], "r": "PUBLIC.PEDIDO", "rc": ["ID"], "od": "cascade" },
+            { "n": "FK_ITEM_PRODUTO", "c": ["PRODUTO_ID"], "r": "PUBLIC.PRODUTO", "rc": ["ID"] }
+          ],
+          "ck": [ { "n": "CK_ITEM_QTD", "e": "QUANTIDADE > 0" } ]
+        },
+        {
+          "name": "ENTREGA",
+          "cols": [
+            ["ID", "char(16)", "nn", { "cs": "OCTETS", "lu": "b" }],
+            ["PEDIDO_ID", "bigint", "nn"],
+            ["ITEM_SEQ", "smallint", "nn"],
+            ["PREVISAO", "date"],
+            ["CEP_ENTREGA", "char(8)", "nn"]
+          ],
+          "pk": ["ID"],
+          "pkn": "PK_ENTREGA",
+          "fk": [ { "n": "FK_ENTREGA_ITEM", "c": ["PEDIDO_ID", "ITEM_SEQ"], "r": "PUBLIC.ITEM_PEDIDO", "rc": ["PEDIDO_ID", "ITEM_SEQ"] } ],
+          "uq": [ { "n": "UQ_ENTREGA_ITEM", "c": ["PEDIDO_ID", "ITEM_SEQ"] } ]
+        }
+      ],
+      "views": [
+        { "name": "VW_PEDIDOS_CLIENTE", "cols": [["CLIENTE_ID", "bigint"], ["QTD_PEDIDOS", "bigint"], ["VALOR_TOTAL", "numeric(18,2)"]] }
+      ],
+      "sequences": [
+        { "n": "GEN_CLIENTE_ID", "s": 0, "i": 1 }
+      ],
+      "routines": [
+        { "n": "SP_FECHAR_PEDIDO", "k": "p", "p": 1 },
+        { "n": "FN_TOTAL_PEDIDO", "k": "f", "p": 1, "rt": "numeric(14,2)" }
+      ],
+      "triggers": [
+        { "n": "TRG_CLIENTE_BI", "t": "CLIENTE", "tm": "b", "ev": "i", "pos": 0 },
+        { "n": "TRG_ITEM_ATUALIZA_TOTAL", "t": "ITEM_PEDIDO", "tm": "a", "ev": "iud", "pos": 0 }
+      ]
+    }
+  ]
+}

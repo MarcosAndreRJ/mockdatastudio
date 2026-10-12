@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mockdatastudio.local/template-pack-1.0.schema.json",
+  "title": "Mock Data Studio Template Pack 1.0",
+  "type": "object",
+  "required": ["format", "version", "pack", "templates"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "mds.template-pack" },
+    "version": { "type": "string", "pattern": "^1\\.[0-9]+$" },
+    "pack": {
+      "type": "object",
+      "required": ["code", "name", "version", "license"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$" },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "author": { "type": "string" },
+        "license": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      }
+    },
+    "templates": { "type": "array", "items": { "$ref": "#/$defs/template" } },
+    "presets": { "type": "array", "items": { "$ref": "#/$defs/preset" } },
+    "rules": { "type": "array", "items": { "$ref": "#/$defs/rule" } }
+  },
+  "$defs": {
+    "logicalType": { "enum": ["boolean", "integer", "decimal", "float", "string", "text", "binary", "date", "time", "datetime", "datetimetz", "uuid", "json", "enum", "interval", "other"] },
+    "template": {
+      "type": "object",
+      "required": ["code", "name", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$" },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["scalar", "composite"] },
+        "logicalType": { "$ref": "#/$defs/logicalType" },
+        "locale": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["fieldCode", "logicalType"],
+            "additionalProperties": false,
+            "properties": {
+              "fieldCode": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+              "logicalType": { "$ref": "#/$defs/logicalType" },
+              "ordinal": { "type": "integer", "minimum": 1 },
+              "maxLength": { "type": "integer", "minimum": 1 },
+              "required": { "type": "boolean" }
+            }
+          }
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["alias"],
+            "additionalProperties": false,
+            "properties": {
+              "alias": { "type": "string", "minLength": 1 },
+              "fieldCode": { "type": "string" },
+              "weight": { "type": "number", "exclusiveMinimum": 0, "maximum": 2 },
+              "contextTablePattern": { "type": "string" }
+            }
+          }
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["value"],
+                "additionalProperties": false,
+                "properties": { "value": { "type": "string" }, "weight": { "type": "number", "exclusiveMinimum": 0 } }
+              }
+            ]
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["data"],
+            "additionalProperties": false,
+            "properties": {
+              "recordKey": { "type": "string" },
+              "data": { "type": "object", "additionalProperties": { "type": ["string", "null"] } },
+              "weight": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "preset": {
+      "type": "object",
+      "required": ["code", "name", "generatorId", "generatorVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$" },
+        "name": { "type": "string" },
+        "generatorId": { "type": "string" },
+        "generatorVersion": { "type": "integer", "minimum": 1 },
+        "parameters": { "type": "object" },
+        "description": { "type": "string" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["columnPattern", "targetKind", "targetRef"],
+      "additionalProperties": false,
+      "properties": {
+        "columnPattern": { "type": "string" },
+        "tablePattern": { "type": "string" },
+        "engine": { "enum": ["sqlite", "mysql", "postgresql", "firebird"] },
+        "targetKind": { "enum": ["template", "templateField", "preset", "generator"] },
+        "targetRef": { "type": "string" },
+        "parameters": { "type": "object" },
+        "priority": { "type": "integer" }
+      }
+    }
+  }
+}

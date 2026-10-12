@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<SyntaxDefinition name="SQL" extensions=".sql" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+    <Color name="Comment" foreground="#94A3B8" exampleText="-- comment" />
+    <Color name="String" foreground="#15803D" exampleText="'text'" />
+    <Color name="Number" foreground="#B45309" exampleText="123" />
+    <Color name="Keyword" foreground="#2563EB" fontWeight="bold" exampleText="SELECT" />
+    <Color name="Function" foreground="#DB2777" exampleText="COUNT()" />
+    <Color name="Operator" foreground="#475569" exampleText="=" />
+
+    <RuleSet ignoreCase="true">
+        <Span color="Comment" begin="--" />
+        <Span color="Comment" multiline="true" begin="/\*" end="\*/" />
+        <Span color="String" begin="'" end="'" />
+
+        <Keywords color="Function">
+            <Word>COUNT</Word>
+            <Word>SUM</Word>
+            <Word>AVG</Word>
+            <Word>MAX</Word>
+            <Word>MIN</Word>
+            <Word>COALESCE</Word>
+        </Keywords>
+
+        <Keywords color="Keyword">
+            <Word>SELECT</Word>
+            <Word>FROM</Word>
+            <Word>WHERE</Word>
+            <Word>AS</Word>
+            <Word>LEFT</Word>
+            <Word>RIGHT</Word>
+            <Word>INNER</Word>
+            <Word>JOIN</Word>
+            <Word>ON</Word>
+            <Word>AND</Word>
+            <Word>OR</Word>
+            <Word>NOT</Word>
+            <Word>NULL</Word>
+            <Word>IS</Word>
+            <Word>IN</Word>
+            <Word>GROUP</Word>
+            <Word>BY</Word>
+            <Word>ORDER</Word>
+            <Word>DESC</Word>
+            <Word>ASC</Word>
+            <Word>LIMIT</Word>
+            <Word>INSERT</Word>
+            <Word>INTO</Word>
+            <Word>VALUES</Word>
+            <Word>UPDATE</Word>
+            <Word>SET</Word>
+            <Word>DELETE</Word>
+            <Word>TRUE</Word>
+            <Word>FALSE</Word>
+            <Word>CASE</Word>
+            <Word>WHEN</Word>
+            <Word>THEN</Word>
+            <Word>ELSE</Word>
+            <Word>END</Word>
+        </Keywords>
+
+        <Rule color="Number">\b\d+(\.\d+)?\b</Rule>
+        <Rule color="Operator">[?,.:;()\[\]{}+\-*/%&lt;&gt;=!]+</Rule>
+    </RuleSet>
+</SyntaxDefinition>
