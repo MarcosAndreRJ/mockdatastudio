@@ -51,7 +51,8 @@ public sealed class SmokeTests
                 Thread.Sleep(1200);
 
                 // Marcadores com contagem dinâmica são comparados por prefixo: o nome UIA do TextBlock é o texto inteiro.
-                window.FindAllDescendants()
+                // Filtra por tipo (Text) para não enumerar a árvore inteira: a enumeração completa estoura timeout de COM.
+                window.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Text))
                     .Any(e => (e.Name ?? string.Empty).StartsWith(marker, StringComparison.Ordinal))
                     .ShouldBeTrue($"A tela '{navigation}' não exibiu o texto esperado '{marker}'.");
 
