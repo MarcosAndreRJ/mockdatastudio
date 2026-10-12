@@ -34,7 +34,7 @@ public sealed class SmokeTests
         File.Exists(exePath).ShouldBeTrue($"Executável do app não encontrado em {exePath}.");
 
         using var automation = new UIA3Automation();
-        using var app = Application.Launch(exePath);
+        using var app = FlaUI.Core.Application.Launch(exePath);
 
         var window = app.GetMainWindow(automation, TimeSpan.FromSeconds(30));
         window.ShouldNotBeNull("A janela principal do app não apareceu.");
