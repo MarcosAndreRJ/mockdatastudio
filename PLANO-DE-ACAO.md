@@ -242,11 +242,11 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | A3 |
 | Referências | docs/16, docs/17, C06, C07, TASK-07.01..07.06, TASK-06.07 |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (`sprint/A2-planejamento-relacional`, IA Trilha A, 2026-10-12)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **A2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [x] **A2.0** Início da sprint conforme §3.1. · Concluído em: 2026-10-12 · Evidência: branch criada a partir da `main` (0ddb318); dependência A1 ✅ na `main`
 - [ ] **A2.1** `DependencyGraph` + Tarjan iterativo, com ordem determinística. *(TASK-07.01)* · Concluído em: ____ · Evidência: ____
 - [ ] **A2.2** `KeyPlanner` (Explicit/DatabaseDefault, reserva de faixa, overflow, modo offline) e `KeyOracle`. *(TASK-07.03)* · Concluído em: ____ · Evidência: ____
 - [ ] **A2.3** `CycleResolver` (NullThenUpdate + bloqueio `PLN-CYCLE-UNBREAKABLE`) e autorreferência anulável. *(TASK-07.02)* · Concluído em: ____ · Evidência: ____
