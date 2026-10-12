@@ -418,22 +418,22 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | B5, **C4 (gate MVP)** |
 | Referências | docs/10 §5, docs/11, C02, TASK-08.02 |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (`sprint/B2-postgresql`, IA executora, 2026-10-12) · parcial: B1 não concluída (dependência, ver B2.0)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **B2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **B2.1** Conexão, `ServerInfo`/fingerprint e `TypeMapper` (tipos curtos de 11 §5). · Concluído em: ____ · Evidência: ____
-- [ ] **B2.2** `SchemaExtractor`: o digest de `loja` é igual a `docs/examples/digest-postgresql.json` (exceto hash, data e versão). · Concluído em: ____ · Evidência: ____
-- [ ] **B2.3** Dialeto e literais (T-OUT-LIT-PG), `OVERRIDING SYSTEM VALUE`, resync com `setval`, `BuildKeyRangeGuard` com `DO $$`. · Concluído em: ____ · Evidência: ____
-- [ ] **B2.4** `TargetInspector`, `ErrorTranslator`, cancelamento e `IBulkInserter` com INSERT multi-linha parametrizado (COPY fica no B5). · Concluído em: ____ · Evidência: ____
-- [ ] **B2.5** Suíte de contrato T-PRV-PG-001..011 e T-OUT-ROUNDTRIP-PG (via `BuildInsert` do dialeto). · Concluído em: ____ · Evidência: ____
+- [ ] **B2.0** Início da sprint conforme §3.1. · Concluído em: ____ · ⏳ PARCIAL: branch criada a partir da `main` (0ddb318) em 2026-10-12; a dependência B1 não está ✅ (exige Docker). Início autorizado pelo responsável (DA-204)
+- [ ] **B2.1** Conexão, `ServerInfo`/fingerprint e `TypeMapper` (tipos curtos de 11 §5). · Concluído em: ____ · ⏳ PARCIAL: `PostgreSqlTypeMapper` normaliza `format_type`/`pg_type` (testes `Canonical_*` e `Map_*` aprovados). Conexão e `ServerInfo` já existiam e não foram verificados contra servidor (sem Docker)
+- [ ] **B2.2** `SchemaExtractor`: o digest de `loja` é igual a `docs/examples/digest-postgresql.json` (exceto hash, data e versão). · Concluído em: ____ · ⏳ PARCIAL: `PostgreSqlSchemaExtractor` escrito (pg_catalog em lote: tabelas, colunas, PK, FK, UNIQUE, índices, CHECK, triggers, views). **NÃO VERIFICADO** contra servidor; comparação com o digest de referência não feita (PV-200, PV-201)
+- [ ] **B2.3** Dialeto e literais (T-OUT-LIT-PG), `OVERRIDING SYSTEM VALUE`, resync com `setval`, `BuildKeyRangeGuard` com `DO $$`. · Concluído em: ____ · ⏳ PARCIAL: `PostgreSqlDialect` e `PostgreSqlLiteralFormatter` com testes puros (T-PRV-PG-LIT-001/002, T-PRV-PG-DIA-001..004: aspas, NUL, `OVERRIDING`, `setval`). Falta `BuildKeyRangeGuard` com `DO $$` (necessário para A3.4)
+- [ ] **B2.4** `TargetInspector`, `ErrorTranslator`, cancelamento e `IBulkInserter` com INSERT multi-linha parametrizado (COPY fica no B5). · Concluído em: ____ · ⏳ PARCIAL: `ErrorTranslator` já existia (não verificado contra servidor). `TargetInspector` e `IBulkInserter` seguem como `NotImplementedException`
+- [ ] **B2.5** Suíte de contrato T-PRV-PG-001..011 e T-OUT-ROUNDTRIP-PG (via `BuildInsert` do dialeto). · Concluído em: ____ · ⏳ PARCIAL: `PostgreSqlUnitTests` (19 aprovados, sem servidor). T-PRV-PG-001 registrado como Skip com motivo (Docker indisponível; PV-202). T-PRV-PG-002..011 e T-OUT-ROUNDTRIP-PG não escritos
 
 **Verificação da sprint**
 - [ ] Contrato PostgreSQL 17 verde no CI; registro em docs/32 §5.2 do que ficou pendente
 - [ ] Encerramento conforme §3.3
 
-**Relatório da sprint:** ____
+**Relatório da sprint:** `sprint/B2-postgresql` (2026-10-12) — **PARCIAL, não mesclada na `main`**. Feito: `PostgreSqlTypeMapper`, `PostgreSqlDialect` com literais, `PostgreSqlSchemaExtractor` (não verificado contra servidor) e ligação em `PostgreSqlProvider` (`TypeMapper`, `CreateSchemaExtractor`, `GetDialect`). Não feito: `TargetInspector`, `IBulkInserter`, `BuildKeyRangeGuard` e contrato contra servidor (sem Docker). Testes (Release, solução inteira, worktree `MockDataStudio-b2`): Core 109, Generation 80, Mapping 22, SqlTooling 32, Catalog 21, Application 53, Output 6, Architecture 10, ContractTests 41 aprovados e 4 ignorados (3 SQLite; 1 PostgreSQL real, Docker indisponível), IntegrationTests 3, App.UiTests 1; 0 falhas. NuGet: sem pacotes vulneráveis. Decisões: DA-200..204. Pendências: PV-200..202. Hash de merge: não aplicável (sprint não concluída)
 
 ---
 
@@ -446,12 +446,12 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | B5, **C4 (gate MVP)** |
 | Referências | docs/10 §6, docs/11 §4.4, TASK-08.03, PV-004/005/012/014 |
 
-**Status:** ⬜ Não iniciada
+**Status:** ⬜ Não iniciada · parcial de código prévio: conexão e listagem de bancos existem; sem introspecção, dialeto ou bulk (ver B3.1)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [ ] **B3.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **B3.1** Conexão, versão, fingerprint (`MON$GUID`, PV-012) e `TypeMapper` (domínios, charsets, OCTETS). · Concluído em: ____ · Evidência: ____
+- [ ] **B3.1** Conexão, versão, fingerprint (`MON$GUID`, PV-012) e `TypeMapper` (domínios, charsets, OCTETS). · Concluído em: ____ · ⏳ PARCIAL: conexão (`BuildConnectionString`/`OpenConnectionAsync`) já existe. Falta `TypeMapper` (`NotImplementedException`); fingerprint por `MON$GUID` não verificado; nada verificado contra servidor
 - [ ] **B3.2** `SchemaExtractor` com heurística `tsq` (11 §4.4) e CHECK via `RDB$TRIGGERS`; digest de `loja` igual a `docs/examples/digest-firebird.json`. · Concluído em: ____ · Evidência: ____
 - [ ] **B3.3** Dialeto e literais (T-OUT-LIT-FB), um INSERT por linha, `OVERRIDING SYSTEM VALUE` (PV-004), resync por versão (PV-005). · Concluído em: ____ · Evidência: ____
 - [ ] **B3.4** `TargetInspector`, `ErrorTranslator`, cancelamento (PV-014) e `IBulkInserter` com prepared statement. · Concluído em: ____ · Evidência: ____
@@ -474,12 +474,12 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | B5 |
 | Referências | docs/10 §4, TASK-10.01..10.03, PV-007, PV-010 |
 
-**Status:** ⬜ Não iniciada
+**Status:** ⬜ Não iniciada · parcial de código prévio: conexão, `BuildConnectionString` e listagem de bancos existem; sem introspecção, dialeto ou bulk (ver B4.1)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [ ] **B4.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **B4.1** Conexão (`AllowLoadLocalInfile=false`), tipos (`tinyint(1)`, unsigned, enum), leitura de `sql_mode`. *(TASK-10.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **B4.1** Conexão (`AllowLoadLocalInfile=false`), tipos (`tinyint(1)`, unsigned, enum), leitura de `sql_mode`. *(TASK-10.01)* · Concluído em: ____ · ⏳ PARCIAL: conexão e `BuildConnectionString` existem, com chaves de segurança confirmadas por teste (ContractTests). Falta `TypeMapper` (`NotImplementedException`) e leitura de `sql_mode`
 - [ ] **B4.2** `SchemaExtractor` (PV-010): digest de `loja` igual a `docs/examples/digest-mysql.json`. · Concluído em: ____ · Evidência: ____
 - [ ] **B4.3** Dialeto, literais e escapes com e sem `NO_BACKSLASH_ESCAPES` (T-PRV-MYSQL-ESC-001). *(TASK-10.02)* · Concluído em: ____ · Evidência: ____
 - [ ] **B4.4** `TargetInspector`, `ErrorTranslator`, bulk multi-linha e contrato em MySQL 8.4. *(TASK-10.03)* · Concluído em: ____ · Evidência: ____
@@ -558,15 +558,15 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | C2 |
 | Referências | docs/21, docs/ui-inventory.md, docs/23 §3 e §6, TASK-09.03 |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (parcial, evidências em cada item; C1 ainda não concluída)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [ ] **C1.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **C1.1** Tema escuro a partir de `Themes/Tokens.xaml`; docs/21 §2.1 atualizado com DA-027 e a decisão D-03. *(SAN-C.1)* · Concluído em: ____ · Evidência: ____
-- [ ] **C1.2** Todos os textos das views em `Strings.resx`, conforme D-01 (ou o padrão provisório). *(SAN-C.2)* · Concluído em: ____ · Evidência: ____
-- [ ] **C1.3** Componentes padronizados (`EnvironmentChip`, badges etc.) aplicados nas telas existentes; diferença de 2% em Connections resolvida ou justificada; logo/ícone MySQL (D-04). *(SAN-C.3, SAN-C.4)* · Concluído em: ____ · Evidência: ____
-- [ ] **C1.4** Infrastructure: `DpapiSecretStore` (`ISecretStore`), `IAppSettings` e Serilog com redação de segredos. *(TASK-09.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **C1.1** Tema escuro a partir de `Themes/Tokens.xaml`; docs/21 §2.1 atualizado com DA-027 e a decisão D-03. *(SAN-C.1)* · Concluído em: ____ · ⏳ PARCIAL: `Themes/Tokens.xaml` e `Colors.xaml` existem (DA-027). Tema escuro não implementado (DA-027 registra como pendente)
+- [ ] **C1.2** Todos os textos das views em `Strings.resx`, conforme D-01 (ou o padrão provisório). *(SAN-C.2)* · Concluído em: ____ · ⏳ PARCIAL: `Resources/Strings.resx` existe no App; cobertura de todas as views não verificada
+- [ ] **C1.3** Componentes padronizados (`EnvironmentChip`, badges etc.) aplicados nas telas existentes; diferença de 2% em Connections resolvida ou justificada; logo/ícone MySQL (D-04). *(SAN-C.3, SAN-C.4)* · Concluído em: ____ · ⏳ PARCIAL: `Controls/EnvironmentChip` existe; aplicação em todas as telas, diferença de 2% e logo MySQL não verificadas
+- [ ] **C1.4** Infrastructure: `DpapiSecretStore` (`ISecretStore`), `IAppSettings` e Serilog com redação de segredos. *(TASK-09.03)* · Concluído em: ____ · ⏳ PARCIAL: `DpapiSecretStore` e `ISecretStore` existem (Infrastructure/Security). `IAppSettings` e redação de segredos no Serilog não encontrados no código
 - [ ] **C1.5** Catálogo: teste de `CAT-IMP-SIZE` (categoria `Slow`, fora da suíte rápida). *(SAN-C.5)* · Concluído em: ____ · Evidência: ____
 
 **Verificação da sprint**
@@ -586,13 +586,13 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | C3 |
 | Referências | docs/22, C09, TASK-09.01, TASK-09.02 (parte) |
 
-**Status:** ⬜ Não iniciada
+**Status:** 🔄 Em andamento (parcial; depende de C1, ainda não concluída)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [ ] **C2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
 - [ ] **C2.1** Projects: `MdsProject`, serializer, validator e `ProjectStore` com gravação atômica; `docs/examples/project-loja.mdsproj` faz round-trip. *(TASK-09.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **C2.2** `ConnectionService` (CRUD com segredo, teste, `OpenAsync` por propósito) e composição dos providers registrados. · Concluído em: ____ · Evidência: ____
+- [ ] **C2.2** `ConnectionService` (CRUD com segredo, teste, `OpenAsync` por propósito) e composição dos providers registrados. · Concluído em: ____ · ⏳ PARCIAL: `Application/ConnectionService.cs` com segredo (`ISecretStore`) e abertura de sessão existem; composição via registro de providers existe. Cobertura de T-APP não verificada item a item
 - [ ] **C2.3** `DigestService` (captura, exportação, importação, comparação). · Concluído em: ____ · Evidência: ____
 - [ ] **C2.4** `MappingService`: `MappingKnowledge` a partir do catálogo, `AutoBindAll`, `SetBinding` com persistência de feedback; serviço de leitura do catálogo. · Concluído em: ____ · Evidência: ____
 - [ ] **C2.5** T-APP-001..003 e T-PRJ-001/002/003/005/006/010. · Concluído em: ____ · Evidência: ____

@@ -31,7 +31,9 @@ public sealed class PostgreSqlProvider : IDatabaseProvider
 
     public IErrorTranslator ErrorTranslator => _errorTranslator;
 
-    public ITypeMapper TypeMapper => throw new NotImplementedException("Disponível a partir do módulo de introspecção / tipos.");
+    private readonly PostgreSqlTypeMapper _typeMapper = new();
+
+    public ITypeMapper TypeMapper => _typeMapper;
 
     public ProviderCapabilities GetCapabilities(string serverVersion) =>
         new(
@@ -159,11 +161,9 @@ public sealed class PostgreSqlProvider : IDatabaseProvider
         return new ServerInfo(versionText, "PostgreSQL", dbName, normalizedHost, fingerprint);
     }
 
-    public ISchemaExtractor CreateSchemaExtractor() =>
-        throw new NotImplementedException("Disponível a partir do módulo de introspecção (Sprint B2).");
+    public ISchemaExtractor CreateSchemaExtractor() => new PostgreSqlSchemaExtractor(_typeMapper);
 
-    public ISqlDialect GetDialect(string serverVersion) =>
-        throw new NotImplementedException("Disponível a partir do módulo de dialetos (Sprint B2).");
+    public ISqlDialect GetDialect(string serverVersion) => new PostgreSqlDialect();
 
     public IBulkInserter CreateBulkInserter(DbConnection connection, string serverVersion) =>
         throw new NotImplementedException("Disponível a partir do módulo de execução direta (Sprint B2).");

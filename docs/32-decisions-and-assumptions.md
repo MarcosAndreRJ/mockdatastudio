@@ -96,6 +96,11 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 
 | ID | Decisão | Referência |
 |---|---|---|
+| DA-200 | `TypeMapper` do PostgreSQL normaliza os nomes do catálogo (`format_type` e `pg_type`: `bpchar`, `int4`, `character varying(n)`, `timestamp without time zone`) antes do `NativeTypeParser` do Core. Tipos fora do parser (`time with time zone`, arrays, `money`, enum de usuário) não têm mapeamento canônico e mantêm o nome nativo | docs/11 §5; `PostgreSqlTypeMapper` |
+| DA-201 | Dialeto PostgreSQL sem desligamento de FK por sessão: `session_replication_role` exige superusuário. `DisableFkChecks`/`EnableFkChecks` retornam `null` e `SupportsDisableFkChecksPerSession` continua `false` | C02; `PostgreSqlDialect` |
+| DA-202 | Extrator lê `pg_catalog` em lote (uma consulta por tipo de objeto) com filtro opcional por namespace e tabela. `ExtractTableAsync` reusa as mesmas consultas, atendendo ao refresh por nó do Explorer | docs/11 §2 e §6; `PostgreSqlSchemaExtractor` |
+| DA-203 | UNIQUE sem constraint em colunas simples vira `UniqueConstraintModel` com `UniqueSource.UniqueIndex`. Índice de expressão guarda a definição completa (`pg_get_indexdef`) em `IndexColumn.Expression`, sem análise da expressão | docs/11 §2; digest de referência |
+| DA-204 | B2 iniciada antes de B1 ter status ✅ (regra §1.3 do plano), por decisão do responsável em 2026-10-12. B1 depende de Docker, indisponível nesta máquina. O contrato de B2 contra servidor real fica como Skip com motivo | PLANO §1.3; PV-202 |
 
 ### 1.3 Trilha C — Aplicação, projeto e interface (DA-300..399)
 
@@ -165,7 +170,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | PV-015 | Pacote JSON1 presente no `SQLitePCLRaw.bundle_e_sqlite3` atual (RESOLVIDO em 2026-10-12: `CHECK json_valid(...)` da V0001 aplica-se sem erro; T-CAT-001 verde) | Teste em 04.01 | Validação de JSON em C# | TASK-04.01 |
 | PV-017 | `SQLitePCLRaw.lib.e_sqlite3` 2.1.11, dependência transitiva do Microsoft.Data.Sqlite 10, tem alerta NU1903 (GHSA-2m69-gcr7-jv3q) | Build de Catalog e Providers.Sqlite | Atualizar Microsoft.Data.Sqlite quando houver versão com a biblioteca corrigida; decidir antes do release | Sprint 3 |
 | PV-018 | Cobertura High do corpus sintético (48,1%) abaixo da meta de 70%. Causa: variantes com prefixo de tipo (`DS_`, `TX_`, `NM_`, `VL_`) e aliases de vários tokens com sobreposição total recebem TokenOverlap 70 (14 §5); com tipo (+5) e comprimento (+3) o escore é 78, abaixo de 80, logo Medium. Decisão necessária: (a) aceitar a regra e revisar a meta para o caso sem prefixo (~86%); (b) acrescentar evidência para igualdade do núcleo com pontos definidos (alteraria a calibração de 14 §5: exige registro e atualização do 14); (c) medir com corpus real anonimizado (14 §11) antes de escolher | Sprint 5, T-MAP-CORPUS | RESOLVIDO em 2026-10-12: opção (a), ver DA-044 | TASK-05.04 |
-| PV-019 | `DbCommand.Cancel()` do Microsoft.Data.Sqlite não interrompe consulta que agrega numa única etapa (ex.: `count(*)` sobre CTE recursiva infinita): a chamada não retorna. O cancelamento é efetivo entre linhas (verificado com CTE que produz linhas). Mitigação: `CommandTimeoutSec`. Verificar se a versão seguinte do driver ou `sqlite3_interrupt` via SQLitePCLRaw resolvem | Explorer (Fase A), PV-014 | Aberta: aceitar limitação com timeout; investigar interrupção nativa antes do release | TASK-Explorer |
+| PV-019 | `DbCommand.Cancel()` do Microsoft.Data.Sqlite não interrompe consulta que agrega numa única etapa (ex.: `count(*)` sobre CTE recursiva infinita): a chamada não retorna. O cancelamento é efetivo entre linhas (verificado com CTE que produz linhas). Mitigação: `CommandTimeoutSec`. Verificar se a versão seguinte do driver ou `sqlite3_interrupt` via SQLitePCLRaw resolvem | Explorer (Fase A), PV-014 | Pendência explícita (2026-10-12): limitação aceita com timeout; investigar interrupção nativa antes do release | TASK-Explorer |
 | PV-020 | Suíte `ProviderContractTests` da branch `feature/connections` (base) é uma versão anterior (7 testes); a versão com 14 testes está na árvore principal, não commitada | Explorer, release | RESOLVIDO no merge Connections+Explorer (versão completa commitada) | Sprint 3 |
 | PV-016 | Idioma dos rótulos de navegação e da UI: DA-026 e DP-005 preveem pt-BR, mas os mockups usam inglês ("Connections", "Schema Digest" etc.). `Strings.resx` mantém os textos dos mockups até decisão do responsável | Revisão do responsável (DP-005) — decisão **D-01** do Plano de Ação | Manter textos do mockup | TASK-00.04, Sprint C1 |
 
@@ -180,6 +185,9 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | ID | Verificação | Como verificar | Fallback se negativo | Sprint |
 |---|---|---|---|---|
+| PV-200 | Extrator PostgreSQL contra servidor 17: o digest de `loja` deve ser igual a `docs/examples/digest-postgresql.json` (B2.2). Nada foi executado contra servidor nesta etapa | Docker com PostgreSQL 17; capturar `loja` e comparar o digest | Documentar as diferenças e ajustar o extrator; não aceitar divergência de tipo ou de chave sem registro | B2 |
+| PV-201 | Expressão de CHECK: `pg_get_constraintdef` devolve forma diferente da do digest de referência (parênteses e `::text`). A equivalência de digest não foi verificada | Comparar o digest capturado (PV-200) com o de referência | Normalizar a expressão na captura, com regra registrada | B2 |
+| PV-202 | Contrato PostgreSQL real (T-PRV-PG-001..011) e T-OUT-ROUNDTRIP-PG não executados: Docker indisponível. Hoje há só testes puros e um Skip com motivo | Executar `Category=Contract` com Docker e PostgreSQL 17 | Manter o Skip com motivo; B2.5 não é marcada como concluída | B2 |
 
 ### 5.3 Trilha C (PV-300..399)
 
@@ -217,6 +225,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
+| 2026-10-12 | DA-200..204, PV-200..202 | Sprint B2 parcial (TypeMapper, dialeto, extrator e testes puros do PostgreSQL) e reconciliação do plano (C1, C2, C5, B2, B3, B4) | Pedido do responsável em 2026-10-12 |
 
 ### 6.3 Trilha C
 
