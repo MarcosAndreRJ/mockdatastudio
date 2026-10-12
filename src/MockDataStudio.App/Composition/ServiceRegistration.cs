@@ -37,6 +37,15 @@ public static class ServiceRegistration
         // Serviços de Aplicação
         builder.Services.AddSingleton<IConnectionService, MockDataStudio.Application.ConnectionService>();
 
+        // Projeto e estrutura do banco (C2). O MappingService depende do catálogo e será registrado com a composição do catálogo (C3).
+        builder.Services.AddSingleton<MockDataStudio.Core.Hashing.IStructureHasher, MockDataStudio.Core.Hashing.StructureHasher>();
+        builder.Services.AddSingleton<MockDataStudio.Core.Digest.IDigestSerializer, MockDataStudio.Core.Digest.DigestSerializer>();
+        builder.Services.AddSingleton<MockDataStudio.Core.Diff.ISchemaDiffer, MockDataStudio.Core.Diff.SchemaDiffer>();
+        builder.Services.AddSingleton<MockDataStudio.Core.Common.IClock>(MockDataStudio.Core.Common.SystemClock.Instance);
+        builder.Services.AddSingleton<MockDataStudio.Projects.IProjectSerializer, MockDataStudio.Projects.ProjectSerializer>();
+        builder.Services.AddSingleton<MockDataStudio.Projects.IProjectStore, MockDataStudio.Projects.ProjectStore>();
+        builder.Services.AddSingleton<IDigestService, DigestService>();
+
         builder.Services.AddSingleton<ActiveConnectionSession>();
         builder.Services.AddSingleton<MockDataStudio.App.Services.ShellNavigator>();
         builder.Services.AddSingleton<MockDataStudio.SqlTooling.Splitter.ISqlScriptSplitter, MockDataStudio.SqlTooling.Splitter.SqlScriptSplitter>();
