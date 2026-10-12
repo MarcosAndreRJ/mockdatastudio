@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MockDataStudio.App/MockDataStudio.App.csproj" />
+    <Project Path="src/MockDataStudio.Application/MockDataStudio.Application.csproj" />
+    <Project Path="src/MockDataStudio.Catalog/MockDataStudio.Catalog.csproj" />
+    <Project Path="src/MockDataStudio.Core/MockDataStudio.Core.csproj" />
+    <Project Path="src/MockDataStudio.Generation/MockDataStudio.Generation.csproj" />
+    <Project Path="src/MockDataStudio.Infrastructure/MockDataStudio.Infrastructure.csproj" />
+    <Project Path="src/MockDataStudio.Mapping/MockDataStudio.Mapping.csproj" />
+    <Project Path="src/MockDataStudio.Output/MockDataStudio.Output.csproj" />
+    <Project Path="src/MockDataStudio.Projects/MockDataStudio.Projects.csproj" />
+    <Project Path="src/MockDataStudio.Providers.Abstractions/MockDataStudio.Providers.Abstractions.csproj" />
+    <Project Path="src/MockDataStudio.Providers.Firebird/MockDataStudio.Providers.Firebird.csproj" />
+    <Project Path="src/MockDataStudio.Providers.MySql/MockDataStudio.Providers.MySql.csproj" />
+    <Project Path="src/MockDataStudio.Providers.PostgreSql/MockDataStudio.Providers.PostgreSql.csproj" />
+    <Project Path="src/MockDataStudio.Providers.Sqlite/MockDataStudio.Providers.Sqlite.csproj" />
+    <Project Path="src/MockDataStudio.SqlTooling/MockDataStudio.SqlTooling.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MockDataStudio.App.UiTests/MockDataStudio.App.UiTests.csproj" />
+    <Project Path="tests/MockDataStudio.Application.Tests/MockDataStudio.Application.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Architecture.Tests/MockDataStudio.Architecture.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Benchmarks/MockDataStudio.Benchmarks.csproj" />
+    <Project Path="tests/MockDataStudio.Catalog.Tests/MockDataStudio.Catalog.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Core.Tests/MockDataStudio.Core.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Generation.Tests/MockDataStudio.Generation.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Mapping.Tests/MockDataStudio.Mapping.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Output.Tests/MockDataStudio.Output.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Projects.Tests/MockDataStudio.Projects.Tests.csproj" />
+    <Project Path="tests/MockDataStudio.Providers.ContractTests/MockDataStudio.Providers.ContractTests.csproj" />
+    <Project Path="tests/MockDataStudio.Providers.IntegrationTests/MockDataStudio.Providers.IntegrationTests.csproj" />
+    <Project Path="tests/MockDataStudio.SqlTooling.Tests/MockDataStudio.SqlTooling.Tests.csproj" />
+  </Folder>
+</Solution>

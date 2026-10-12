@@ -1,8 +1,7 @@
 <UserControl x:Class="MockDataStudio.App.Views.ExplorerView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ae="http://icsharpcode.net/sharpdevelop/avalonedit"
-             xmlns:s="clr-namespace:MockDataStudio.App.Samples"
+             xmlns:views="clr-namespace:MockDataStudio.App.Views"
              xmlns:controls="clr-namespace:MockDataStudio.App.Controls">
 
     <Grid>
@@ -79,7 +78,7 @@
                                 Content="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="13" />
                     </Grid>
 
-                    <TreeView x:Name="ObjectTree" ItemsSource="{x:Static s:SampleData.ExplorerTree}">
+                    <TreeView x:Name="ObjectTree" ItemsSource="{Binding ExplorerTree}">
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -106,73 +105,7 @@
                     <ColumnDefinition Width="360" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Editor SQL -->
-                <Border Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
-                    <DockPanel>
-                        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-                            <DockPanel Margin="6,0,8,0">
-                                <Border DockPanel.Dock="Right" Height="30" Padding="10,0" Margin="0,4,0,0" CornerRadius="8"
-                                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceBrush}">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="shopdb (PostgreSQL)" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                                    </StackPanel>
-                                </Border>
-                                <StackPanel Orientation="Horizontal">
-                                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8,8,0,0" Padding="12,8" Margin="0,4,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Ellipse Width="7" Height="7" Fill="{StaticResource WarningBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Query - shopdb" FontWeight="Medium" />
-                                    </StackPanel>
-                                </Border>
-                                <Button Style="{StaticResource GhostButton}" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                                        Foreground="{StaticResource TextSecondaryBrush}" Margin="4,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-
-                        <DockPanel DockPanel.Dock="Top" Margin="12,10">
-                            <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Margin="0,0,1,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Run" VerticalAlignment="Center" />
-                                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9" VerticalAlignment="Center" Margin="10,0,0,0" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" IsEnabled="False">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextMutedBrush}" />
-                                        <TextBlock Text="Stop" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Explain" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Format" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Save Script" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </DockPanel>
-
-                        <ae:TextEditor x:Name="QueryEditor" ShowLineNumbers="True" FontFamily="Consolas" FontSize="13"
-                                       Background="{StaticResource EditorBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                                       BorderThickness="0" Padding="6,4" LineNumbersForeground="{StaticResource TextMutedBrush}" />
-                    </DockPanel>
-                </Border>
+                <views:SqlEditorView DataContext="{Binding SqlEditor}" />
 
                 <!-- Detalhes da tabela -->
                 <Border Style="{StaticResource Card}" Grid.Column="2" Padding="14">
@@ -199,7 +132,7 @@
                             </StackPanel>
                         </Border>
 
-                        <DataGrid ItemsSource="{x:Static s:SampleData.ClienteColumns}" FontSize="12">
+                        <DataGrid ItemsSource="{Binding ClienteColumns}" FontSize="12">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Column" Binding="{Binding Name}" Width="*" />
                                 <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto" />
@@ -210,68 +143,8 @@
                     </DockPanel>
                 </Border>
 
-                <!-- Resultados -->
-                <Border Style="{StaticResource Card}" Grid.Row="2" Grid.ColumnSpan="3" Padding="0" ClipToBounds="True">
-                    <DockPanel>
-                        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,0,10,0">
-                            <DockPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <Border Style="{StaticResource TabText}" BorderBrush="{StaticResource AccentBrush}" Margin="0,0,2,-1">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Results" Foreground="{StaticResource AccentBrush}" FontWeight="Medium" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Style="{StaticResource TabText}" Margin="0,0,2,-1">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE783;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Messages" Foreground="{StaticResource TextSecondaryBrush}" />
-                                        </StackPanel>
-                                    </Border>
-                                    <Border Style="{StaticResource TabText}" Margin="0,0,2,-1">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="Query Plan" Foreground="{StaticResource TextSecondaryBrush}" />
-                                        </StackPanel>
-                                    </Border>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
 
-                        <DockPanel DockPanel.Dock="Top" Margin="12,10">
-                            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource SuccessSoftBrush}" Margin="0,0,8,0">
-                                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource SuccessBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <TextBlock Text="100 rows returned (36 ms)" FontWeight="Medium" />
-                            </StackPanel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <controls:SearchField Placeholder="Search results..." Width="230" />
-                                <Button Style="{StaticResource SecondaryButton}" Height="38" Margin="8,0,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xEDE1;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Export" VerticalAlignment="Center" />
-                                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9" Margin="8,0,0,0" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource GhostButton}" Width="34" Height="34" Margin="8,0,0,0" Content="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
-                                <Button Style="{StaticResource GhostButton}" Width="34" Height="34" Margin="2,0,0,0" Content="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource AccentBrush}" />
-                                <Button Style="{StaticResource GhostButton}" Width="34" Height="34" Margin="2,0,0,0" Content="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
-                            </StackPanel>
-                        </DockPanel>
-
-                        <DataGrid ItemsSource="{x:Static s:SampleData.QueryResults}" FontSize="12">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="cliente_id" Binding="{Binding ClienteId}" Width="110" />
-                                <DataGridTextColumn Header="nome" Binding="{Binding Nome}" Width="*" />
-                                <DataGridTextColumn Header="email" Binding="{Binding Email}" Width="2*" />
-                                <DataGridTextColumn Header="total_pedidos" Binding="{Binding TotalPedidos}" Width="*" />
-                                <DataGridTextColumn Header="valor_total" Binding="{Binding ValorTotal}" Width="*" />
-                                <DataGridTextColumn Header="ultimo_pedido" Binding="{Binding UltimoPedido}" Width="*" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </DockPanel>
-                </Border>
+                <views:SqlResultsView Grid.Row="2" Grid.ColumnSpan="3" DataContext="{Binding SqlResults}" />
             </Grid>
         </Grid>
     </Grid>

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="0" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Providers (PRV-) -->
+  <data name="PRV-CONN-FAILED" xml:space="preserve">
+    <value>Falha ao conectar ao banco de dados. Verifique o endereço, a porta e as credenciais informadas.</value>
+  </data>
+  <data name="PRV-CONN-LOST" xml:space="preserve">
+    <value>A conexão com o banco de dados foi perdida durante a operação.</value>
+  </data>
+  <data name="PRV-TIMEOUT" xml:space="preserve">
+    <value>A operação no banco de dados excedeu o tempo limite configurado.</value>
+  </data>
+  <data name="PRV-INTROSPECT-PARTIAL" xml:space="preserve">
+    <value>A introspecção foi concluída parcialmente devido à falta de permissões para ler determinados objetos.</value>
+  </data>
+  <data name="PRV-SQLITE-NOFILE" xml:space="preserve">
+    <value>O arquivo de banco de dados SQLite especificado não existe ou não pôde ser acessado.</value>
+  </data>
+  <data name="PRV-UNSUPPORTED-VERSION" xml:space="preserve">
+    <value>A versão do servidor de banco de dados não é suportada oficialmente pelo provider.</value>
+  </data>
+
+  <!-- Schema Digest (DIG-) -->
+  <data name="DIG-JSON" xml:space="preserve">
+    <value>O arquivo informado não é um JSON válido.</value>
+  </data>
+  <data name="DIG-FORMAT" xml:space="preserve">
+    <value>O formato do arquivo de digest não atende à especificação esperada.</value>
+  </data>
+  <data name="DIG-VERSION" xml:space="preserve">
+    <value>A versão do formato do digest é inválida ou incompatível.</value>
+  </data>
+  <data name="DIG-MAJOR-UNSUPPORTED" xml:space="preserve">
+    <value>A versão principal (major) do digest é mais recente que a versão suportada por este aplicativo.</value>
+  </data>
+  <data name="DIG-MINOR-NEWER" xml:space="preserve">
+    <value>O digest foi gerado em uma versão secundária mais nova; novos atributos desconhecidos foram ignorados.</value>
+  </data>
+  <data name="DIG-SCHEMA" xml:space="preserve">
+    <value>O digest falhou na validação de conformidade estrutural do esquema.</value>
+  </data>
+  <data name="DIG-DUP" xml:space="preserve">
+    <value>Foram encontrados identificadores duplicados de tabelas ou colunas no mesmo escopo do digest.</value>
+  </data>
+  <data name="DIG-PK-COL" xml:space="preserve">
+    <value>A chave primária referencia uma coluna que não existe na tabela.</value>
+  </data>
+  <data name="DIG-FK-TARGET" xml:space="preserve">
+    <value>A chave estrangeira referencia uma tabela ou coluna de destino inexistente.</value>
+  </data>
+  <data name="DIG-FK-EXTERNAL" xml:space="preserve">
+    <value>A chave estrangeira referencia um namespace externo não incluído no digest.</value>
+  </data>
+  <data name="DIG-FK-ARITY" xml:space="preserve">
+    <value>A quantidade de colunas de origem e destino na chave estrangeira não corresponde.</value>
+  </data>
+  <data name="DIG-FLAGS" xml:space="preserve">
+    <value>As flags estruturais do digest contêm valores incompatíveis ou desconhecidos.</value>
+  </data>
+  <data name="DIG-HASH-MISMATCH" xml:space="preserve">
+    <value>O hash estrutural registrado no digest não confere com o conteúdo recalculado.</value>
+  </data>
+
+  <!-- Catálogo (CAT-) -->
+  <data name="CAT-BUILTIN-READONLY" xml:space="preserve">
+    <value>Templates embutidos do sistema não podem ser alterados ou removidos.</value>
+  </data>
+  <data name="CAT-MIG-CHECKSUM" xml:space="preserve">
+    <value>O checksum de uma migração do catálogo divergiu do histórico registrado.</value>
+  </data>
+  <data name="CAT-NEWER-SCHEMA" xml:space="preserve">
+    <value>O arquivo de catálogo possui esquema mais recente que o suportado pelo aplicativo (somente leitura).</value>
+  </data>
+  <data name="CAT-STG-FORBIDDEN" xml:space="preserve">
+    <value>O script de importação contém comandos não permitidos no ambiente de staging.</value>
+  </data>
+  <data name="CAT-STG-SQLERROR" xml:space="preserve">
+    <value>Ocorreu um erro ao executar o script no ambiente de staging.</value>
+  </data>
+  <data name="CAT-IMP-CODE" xml:space="preserve">
+    <value>O código do template de importação é inválido. Utilize letras maiúsculas, números e sublinhados.</value>
+  </data>
+  <data name="CAT-IMP-KIND" xml:space="preserve">
+    <value>O tipo de template ou o tipo lógico informado é inválido.</value>
+  </data>
+  <data name="CAT-IMP-UNKNOWN-TEMPLATE" xml:space="preserve">
+    <value>O template referenciado para o alias ou valor não foi encontrado.</value>
+  </data>
+  <data name="CAT-IMP-FIELD" xml:space="preserve">
+    <value>O campo referenciado não existe no template composto correspondente.</value>
+  </data>
+  <data name="CAT-IMP-RECORD-JSON" xml:space="preserve">
+    <value>O registro composto informado não contém um objeto JSON válido ou faltam campos obrigatórios.</value>
+  </data>
+  <data name="CAT-IMP-VALUE-TYPE" xml:space="preserve">
+    <value>O valor informado não pôde ser convertido para o tipo lógico do template.</value>
+  </data>
+  <data name="CAT-IMP-LENGTH" xml:space="preserve">
+    <value>O comprimento do valor ultrapassa o limite máximo configurado para o campo.</value>
+  </data>
+  <data name="CAT-IMP-DUPVALUE" xml:space="preserve">
+    <value>Valor duplicado detectado no template; a repetição foi ignorada.</value>
+  </data>
+  <data name="CAT-IMP-BUILTIN" xml:space="preserve">
+    <value>Não é permitido sobrescrever a estrutura fundamental de um template embutido.</value>
+  </data>
+  <data name="CAT-IMP-WEIGHT" xml:space="preserve">
+    <value>O peso informado para a ponderação deve ser um número positivo maior que zero.</value>
+  </data>
+  <data name="CAT-IMP-RULE" xml:space="preserve">
+    <value>A regra de mapeamento informada contém alvo ou referência inválida.</value>
+  </data>
+  <data name="CAT-IMP-SIZE" xml:space="preserve">
+    <value>O script de importação excede o tamanho máximo permitido para processamento.</value>
+  </data>
+
+  <!-- Mapeamento (MAP-) -->
+  <data name="MAP-UNMAPPED" xml:space="preserve">
+    <value>A coluna não possui template ou gerador configurado.</value>
+  </data>
+  <data name="MAP-AMBIGUOUS" xml:space="preserve">
+    <value>Foram encontradas múltiplas sugestões de mapeamento com pontuações próximas.</value>
+  </data>
+  <data name="MAP-LOWCONF" xml:space="preserve">
+    <value>A sugestão de mapeamento possui baixa confiança e deve ser revisada.</value>
+  </data>
+  <data name="MAP-TYPE" xml:space="preserve">
+    <value>O gerador selecionado é incompatível com o tipo de dado da coluna.</value>
+  </data>
+  <data name="MAP-ORPHAN" xml:space="preserve">
+    <value>O mapeamento referencia uma coluna que não existe mais no esquema atual.</value>
+  </data>
+  <data name="MAP-REVIEW" xml:space="preserve">
+    <value>O mapeamento foi alterado e requer confirmação do usuário.</value>
+  </data>
+
+  <!-- Geração (GEN-) -->
+  <data name="GEN-PARAM-REQUIRED" xml:space="preserve">
+    <value>Um parâmetro obrigatório do gerador não foi preenchido.</value>
+  </data>
+  <data name="GEN-PARAM-RANGE" xml:space="preserve">
+    <value>O valor do parâmetro está fora da faixa permitida para o gerador.</value>
+  </data>
+  <data name="GEN-PARAM-TYPE" xml:space="preserve">
+    <value>O tipo do parâmetro informado não corresponde ao esperado pelo gerador.</value>
+  </data>
+  <data name="GEN-COERCE" xml:space="preserve">
+    <value>Não foi possível converter o valor gerado para o tipo da coluna.</value>
+  </data>
+  <data name="GEN-UNIQUE-EXHAUSTED" xml:space="preserve">
+    <value>O espaço de valores únicos para o gerador foi esgotado antes de atingir a quantidade de linhas pedida.</value>
+  </data>
+  <data name="GEN-EXPR-SYNTAX" xml:space="preserve">
+    <value>Erro de sintaxe na expressão de cálculo do gerador.</value>
+  </data>
+  <data name="GEN-EXPR-TYPE" xml:space="preserve">
+    <value>A expressão resultou em um tipo incompatível com a coluna de destino.</value>
+  </data>
+  <data name="GEN-EXPR-UNKNOWN-FN" xml:space="preserve">
+    <value>A expressão referencia uma função não reconhecida.</value>
+  </data>
+  <data name="GEN-UQ-UNIFORM" xml:space="preserve">
+    <value>A unicidade composta bijetiva requer componentes de distribuição uniforme.</value>
+  </data>
+
+  <!-- Planejamento relacional (PLN-) -->
+  <data name="PLN-FK-PARENT-EXCLUDED" xml:space="preserve">
+    <value>A tabela pai referenciada pela chave estrangeira não foi incluída na geração.</value>
+  </data>
+  <data name="PLN-CYCLE-UNBREAKABLE" xml:space="preserve">
+    <value>Ciclo de dependências não quebrável entre tabelas com chaves obrigatórias.</value>
+  </data>
+  <data name="PLN-CYCLE-NULLUPDATE" xml:space="preserve">
+    <value>Ciclo resolvido temporariamente preenchendo com nulo e atualizando posteriormente.</value>
+  </data>
+  <data name="PLN-FKCHECKS-OFF" xml:space="preserve">
+    <value>A verificação de integridade referencial foi temporariamente desligada para a inserção em lote.</value>
+  </data>
+  <data name="PLN-SELF-NOTNULL" xml:space="preserve">
+    <value>Autorreferência com coluna NOT NULL não é suportada pelo SGBD de destino sem desligar validações.</value>
+  </data>
+  <data name="PLN-SELF-CAPTURED" xml:space="preserve">
+    <value>Autorreferência NOT NULL não é compatível com chaves capturadas em tempo de inserção.</value>
+  </data>
+  <data name="PLN-KEY-ALWAYS-SCRIPT" xml:space="preserve">
+    <value>Chave gerada como IDENTITY ALWAYS não pode ser especificada em scripts SQL para tabelas referenciadas.</value>
+  </data>
+  <data name="PLN-FB-TRIGGER-KEY" xml:space="preserve">
+    <value>Trigger no Firebird sobrescreve o valor da chave gerada, impedindo amarração de dependências filhas.</value>
+  </data>
+  <data name="PLN-KEY-OVERFLOW" xml:space="preserve">
+    <value>A faixa de chaves calculada excede o valor máximo suportado pelo tipo de dado da coluna.</value>
+  </data>
+  <data name="PLN-KEY-OFFLINE" xml:space="preserve">
+    <value>A faixa de chaves não foi verificada diretamente contra o banco de dados de destino.</value>
+  </data>
+  <data name="PLN-UNIQUE-CAPACITY" xml:space="preserve">
+    <value>A quantidade de linhas solicitada excede a capacidade de valores únicos disponíveis no template ou gerador.</value>
+  </data>
+  <data name="PLN-UNIQUE-EXISTING" xml:space="preserve">
+    <value>Existem registros pré-existentes no banco que podem colidir com valores únicos gerados.</value>
+  </data>
+  <data name="PLN-ONE-TO-ONE-CAPACITY" xml:space="preserve">
+    <value>Relação 1:1 não pode gerar mais linhas filhas do que o total de registros pais existentes.</value>
+  </data>
+  <data name="PLN-PARENTDRIVEN-MULTI" xml:space="preserve">
+    <value>Uma tabela não pode possuir mais de uma relação orientada pelo pai (ParentDriven).</value>
+  </data>
+  <data name="PLN-FK-NONPURE-PARENT" xml:space="preserve">
+    <value>A chave estrangeira referencia colunas únicas do pai que não são geradas por geradores puros e determinísticos.</value>
+  </data>
+  <data name="PLN-FK-OVERLAP" xml:space="preserve">
+    <value>Sobreposição inconsistente entre colunas que participam de múltiplas chaves estrangeiras.</value>
+  </data>
+  <data name="PLN-REF-EMPTY" xml:space="preserve">
+    <value>O conjunto de chaves de referência existente está vazio para uma coluna de chave estrangeira NOT NULL.</value>
+  </data>
+  <data name="PLN-EXPR-CYCLE" xml:space="preserve">
+    <value>Detectada dependência circular entre colunas geradas por expressões na mesma tabela.</value>
+  </data>
+  <data name="PLN-EXPR-PARENT" xml:space="preserve">
+    <value>A expressão tentou acessar dados da tabela pai inexistentes no contexto atual.</value>
+  </data>
+  <data name="PLN-BINDING-REVIEW" xml:space="preserve">
+    <value>Existem colunas com mapeamentos pendentes de revisão em tabelas incluídas na geração.</value>
+  </data>
+  <data name="PLN-NO-ROWS" xml:space="preserve">
+    <value>A tabela foi incluída no plano mas está configurada para gerar zero linhas.</value>
+  </data>
+
+  <!-- Validação estática / pré-voo (VAL-) -->
+  <data name="VAL-NULL-NOTNULL" xml:space="preserve">
+    <value>Taxa de nulos maior que zero configurada em uma coluna obrigatória (NOT NULL).</value>
+  </data>
+  <data name="VAL-UNBOUND" xml:space="preserve">
+    <value>Coluna NOT NULL sem valor default e sem gerador/template configurado.</value>
+  </data>
+  <data name="VAL-TYPE" xml:space="preserve">
+    <value>Tipo de saída do gerador é incompatível com o tipo da coluna.</value>
+  </data>
+  <data name="VAL-LEN" xml:space="preserve">
+    <value>Comprimento máximo dos valores gerados ultrapassa o limite da coluna de texto.</value>
+  </data>
+  <data name="VAL-LEN-BYTES" xml:space="preserve">
+    <value>Tamanho em bytes dos valores gerados ultrapassa o limite permitido pelo conjunto de caracteres (charset).</value>
+  </data>
+  <data name="VAL-PRECISION" xml:space="preserve">
+    <value>A precisão ou escala numérica gerada ultrapassa a definição da coluna no banco.</value>
+  </data>
+  <data name="VAL-INT-RANGE" xml:space="preserve">
+    <value>A faixa de números inteiros gerados ultrapassa os limites permitidos pelo tipo da coluna.</value>
+  </data>
+  <data name="VAL-DATE-RANGE" xml:space="preserve">
+    <value>A faixa de datas geradas está fora dos limites suportados pelo SGBD de destino.</value>
+  </data>
+  <data name="VAL-ENUM" xml:space="preserve">
+    <value>O gerador pode produzir valores que não pertencem à lista de valores enumerados permitidos.</value>
+  </data>
+  <data name="VAL-CHECK" xml:space="preserve">
+    <value>O domínio de valores gerados viola a restrição CHECK definida na coluna.</value>
+  </data>
+  <data name="VAL-CHECK-UNVERIFIED" xml:space="preserve">
+    <value>A restrição CHECK possui expressão complexa que não pôde ser validada estaticamente.</value>
+  </data>
+  <data name="VAL-UQ-PARTIAL" xml:space="preserve">
+    <value>Índice único condicional ou baseado em expressão não pôde ser garantido estaticamente.</value>
+  </data>
+  <data name="VAL-TRIGGER-INSERT" xml:space="preserve">
+    <value>A tabela possui triggers de inserção ativas que podem rejeitar ou alterar os dados inseridos.</value>
+  </data>
+  <data name="VAL-REF-MISSING-IN-TARGET" xml:space="preserve">
+    <value>Chave estrangeira referencia registros existentes que não foram encontrados no banco de dados.</value>
+  </data>
+  <data name="VAL-GENERATED-BOUND" xml:space="preserve">
+    <value>Foi definido um gerador em uma coluna computada/gerada pelo próprio banco de dados.</value>
+  </data>
+  <data name="VAL-DEFAULT-NULLRATE" xml:space="preserve">
+    <value>Gerador padrão de valor default não pode possuir taxa de nulos maior que zero.</value>
+  </data>
+  <data name="VAL-SQLITE-DATESTORAGE" xml:space="preserve">
+    <value>Coluna de data no SQLite sem definição de formato de armazenamento (utilizando padrão texto ISO).</value>
+  </data>
+  <data name="VAL-MYSQL-NONSTRICT" xml:space="preserve">
+    <value>O MySQL de destino está com modo não-estrito ativado, o que pode mascarar truncamentos.</value>
+  </data>
+  <data name="VAL-REPRO" xml:space="preserve">
+    <value>A geração utiliza fontes vinculadas a estado externo ou relógio, o que afeta a reprodutibilidade exata.</value>
+  </data>
+  <data name="VAL-PROD-TARGET" xml:space="preserve">
+    <value>Operação de inserção direta bloqueada em ambiente classificado como Produção.</value>
+  </data>
+
+  <!-- Saída (OUT-) -->
+  <data name="OUT-IO" xml:space="preserve">
+    <value>Erro de entrada e saída ao gravar os arquivos de saída gerados.</value>
+  </data>
+  <data name="OUT-SEGMENT-OVERSIZE" xml:space="preserve">
+    <value>O tamanho de um comando individual ultrapassou o limite do segmento configurado.</value>
+  </data>
+  <data name="OUT-DISK-FULL" xml:space="preserve">
+    <value>Espaço em disco insuficiente para concluir a gravação dos arquivos.</value>
+  </data>
+
+  <!-- Execução (RUN-) -->
+  <data name="RUN-KEY-RANGE-TAKEN" xml:space="preserve">
+    <value>A faixa de chaves reservada para a execução foi ocupada por outra transação no banco.</value>
+  </data>
+  <data name="RUN-BATCH-FAILED" xml:space="preserve">
+    <value>Falha ao inserir lote de registros diretamente no banco de dados.</value>
+  </data>
+  <data name="RUN-INTERRUPTED" xml:space="preserve">
+    <value>A execução foi interrompida antes da conclusão de todas as tabelas.</value>
+  </data>
+
+  <!-- Editor SQL (SQL-) -->
+  <data name="SQL-SPLIT" xml:space="preserve">
+    <value>Erro ao dividir comandos SQL no editor devido a blocos ou delimitadores malformados.</value>
+  </data>
+  <data name="SQL-BLOCKED-READONLY" xml:space="preserve">
+    <value>Comando de modificação bloqueado porque a conexão está configurada como somente leitura.</value>
+  </data>
+  <data name="SQL-CANCELLED" xml:space="preserve">
+    <value>A execução da consulta foi cancelada pelo usuário.</value>
+  </data>
+  <data name="SQL-DISCONNECTED" xml:space="preserve">
+    <value>A sessão do editor SQL está desconectada do servidor.</value>
+  </data>
+
+  <!-- Projetos (PRJ-) -->
+  <data name="PRJ-JSON" xml:space="preserve">
+    <value>O arquivo de projeto contém JSON inválido ou corrompido.</value>
+  </data>
+  <data name="PRJ-SCHEMA" xml:space="preserve">
+    <value>O arquivo de projeto não está em conformidade com o esquema JSON especificado.</value>
+  </data>
+  <data name="PRJ-DIGEST" xml:space="preserve">
+    <value>O snapshot de digest contido no projeto é inválido.</value>
+  </data>
+  <data name="PRJ-BINDING-COLUMN" xml:space="preserve">
+    <value>O mapeamento referencia uma coluna que não existe no snapshot ativo do projeto.</value>
+  </data>
+  <data name="PRJ-GENERATOR" xml:space="preserve">
+    <value>O gerador especificado no projeto não é reconhecido nesta versão.</value>
+  </data>
+  <data name="PRJ-PARAMS" xml:space="preserve">
+    <value>Os parâmetros configurados para o gerador no projeto são inválidos.</value>
+  </data>
+  <data name="PRJ-QUERY" xml:space="preserve">
+    <value>A consulta de referência do projeto não é uma instrução SELECT válida.</value>
+  </data>
+  <data name="PRJ-CATALOG" xml:space="preserve">
+    <value>Uma dependência de template ou pack do catálogo não foi encontrada no banco interno.</value>
+  </data>
+  <data name="PRJ-MAJOR-UNSUPPORTED" xml:space="preserve">
+    <value>A versão principal do arquivo de projeto é superior à suportada por esta versão do aplicativo.</value>
+  </data>
+
+  <!-- Segurança (SEC-) -->
+  <data name="SEC-NO-AUTHORIZATION" xml:space="preserve">
+    <value>Operação direta no banco bloqueada por ausência de autorização de ambiente.</value>
+  </data>
+  <data name="SEC-AUTH-EXPIRED" xml:space="preserve">
+    <value>A autorização concedida para a execução direta expirou.</value>
+  </data>
+  <data name="SEC-FINGERPRINT-MISMATCH" xml:space="preserve">
+    <value>A identificação do servidor (fingerprint) divergiu da autorização concedida previamente.</value>
+  </data>
+  <data name="SEC-TRIAL-PROD" xml:space="preserve">
+    <value>Inserções de teste (Trial Insert) não são permitidas em bancos de produção.</value>
+  </data>
+  <data name="SEC-UNTRUSTED-PROJECT" xml:space="preserve">
+    <value>Projeto não confiável: execução de consultas de referência SQL desabilitada por segurança.</value>
+  </data>
+
+</root>

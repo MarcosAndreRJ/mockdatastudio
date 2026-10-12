@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master", "develop" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-unit:
+    name: Build & Unit Tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore MockDataStudio.slnx
+
+      - name: Build solution (Release)
+        run: dotnet build MockDataStudio.slnx -c Release --no-restore
+
+      - name: Run Unit & Architecture Tests
+        run: >
+          dotnet test MockDataStudio.slnx -c Release --no-build
+          --filter "Category=Unit|Category=Architecture"
+          --logger "trx;LogFileName=unit-tests.trx"
+          --results-directory ./TestResults
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: ./TestResults/*.trx
+
+  integration:
+    name: Integration Tests (Ubuntu / Testcontainers)
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip integration]')"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Integration Test Projects
+        run: >
+          dotnet restore tests/MockDataStudio.Providers.IntegrationTests/MockDataStudio.Providers.IntegrationTests.csproj
+
+      - name: Build Integration Tests
+        run: >
+          dotnet build tests/MockDataStudio.Providers.IntegrationTests/MockDataStudio.Providers.IntegrationTests.csproj -c Release --no-restore
+
+      - name: Run Integration Tests
+        run: >
+          dotnet test tests/MockDataStudio.Providers.IntegrationTests/MockDataStudio.Providers.IntegrationTests.csproj -c Release --no-build
+          --filter "Category=Integration"
+          --logger "trx;LogFileName=integration-tests.trx"
+          --results-directory ./TestResults
+        continue-on-error: true

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MockDataStudio Test Containers Configuration",
+  "version": "1.0.0",
+  "containers": {
+    "postgresql": {
+      "image": "postgres:17",
+      "port": 5432,
+      "env": {
+        "POSTGRES_USER": "mds_user",
+        "POSTGRES_PASSWORD": "mds_password",
+        "POSTGRES_DB": "mds_test"
+      }
+    },
+    "mysql": {
+      "image": "mysql:8.4",
+      "port": 3306,
+      "env": {
+        "MYSQL_ROOT_PASSWORD": "root_password",
+        "MYSQL_USER": "mds_user",
+        "MYSQL_PASSWORD": "mds_password",
+        "MYSQL_DATABASE": "mds_test"
+      }
+    },
+    "firebird": {
+      "image": "firebird:5.0",
+      "fallback_image": "jacobalberty/firebird:v5.0",
+      "port": 3050,
+      "env": {
+        "FIREBIRD_ROOT_PASSWORD": "masterkey",
+        "FIREBIRD_DATABASE": "mds_test.fdb"
+      }
+    }
+  }
+}

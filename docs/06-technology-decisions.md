@@ -55,8 +55,8 @@
 Decisão: **WPF**. Avalonia é a alternativa registrada caso multiplataforma vire requisito (a separação MVVM e a ausência de dependências WPF fora de `MockDataStudio.App` preservam essa opção). ADR-001.
 
 ### 3.3 Editor de código
-- **AvalonEdit** — MIT [V]; última versão upstream verificada 6.1.x (2021) com alvos `net6.0-windows`/`net462` [V]. Funciona em .NET 10 por compatibilidade de TFM [K]. Fork **AvalonEditB** (MIT, 2.4.0, busca/substituição e seleção em bloco) [V].
-- Decisão: usar **AvalonEdit** (pacote `AvalonEdit`), encapsulado atrás de `SqlEditorControl` para permitir troca para AvalonEditB sem impacto. Revisar se upstream ficar incompatível.
+- **AvalonEdit** — MIT [V]; versão utilizada **6.3.0.90** [V]. Verificado no protótipo: compila e executa diretamente em `net10.0-windows` sem avisos ou erros. Fork **AvalonEditB** (MIT, 2.4.0, busca/substituição e seleção em bloco) mantido como contingência.
+- Decisão: usar **AvalonEdit** (pacote `AvalonEdit` 6.3.0.90 via CPM), encapsulado atrás de controle de editor para permitir troca sem impacto caso necessário.
 
 ### 3.4 Layout/docking
 - Decisão: **sem biblioteca de docking no V1**. Layout fixo com `GridSplitter`, painéis recolhíveis e persistência de larguras. Motivo: menor dependência, menor risco; docking flutuante não é necessidade do fluxo principal. Reavaliar AvalonDock (Dirkster) no V2 [K: licença MS-PL — a verificar].

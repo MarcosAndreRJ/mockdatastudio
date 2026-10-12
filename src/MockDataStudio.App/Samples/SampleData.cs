@@ -29,7 +29,7 @@ public sealed record TableItem(string Name, string Status, string FieldInfo, Bru
 public sealed record FieldItem(string Name, string Glyph, string Type, string Constraints, string SuggestedTemplate, string Generator,
     string Confidence, Brush ConfidenceFg, Brush ConfidenceBg, string Status, Brush StatusFg, Brush StatusBg);
 
-public sealed record ChangeItem(string Type, string Object, string Change, Brush ChangeFg, string Details);
+public sealed record ChangeItem(string Type, string ObjectName, string Change, Brush ChangeFg, string Details);
 
 public sealed record StatTile(string Value, string Label, string Glyph, Brush Fg, Brush Bg);
 
@@ -391,14 +391,14 @@ public static class SampleData
         new("Connection tested successfully", "Connection is healthy. Latency: 15 ms", "3 days ago", Hex("#16A34A")),
     ];
 
-    private static ImageSource Logo(string name)
+    private static BitmapImage Logo(string name)
     {
         var image = new BitmapImage(new Uri($"pack://application:,,,/Resources/Logos/{name}.png", UriKind.Absolute));
         image.Freeze();
         return image;
     }
 
-    private static Brush Hex(string hex)
+    private static SolidColorBrush Hex(string hex)
     {
         var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
         brush.Freeze();

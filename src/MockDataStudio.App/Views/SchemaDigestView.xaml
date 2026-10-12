@@ -1,7 +1,6 @@
 <UserControl x:Class="MockDataStudio.App.Views.SchemaDigestView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:s="clr-namespace:MockDataStudio.App.Samples"
              xmlns:controls="clr-namespace:MockDataStudio.App.Controls">
 
     <Grid>
@@ -90,7 +89,7 @@
                             <RowDefinition Height="Auto" /><RowDefinition Height="8" /><RowDefinition Height="Auto" /><RowDefinition Height="8" /><RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <ItemsControl ItemsSource="{x:Static s:SampleData.DigestStats}" Grid.ColumnSpan="3" Grid.RowSpan="5">
+                        <ItemsControl ItemsSource="{Binding DigestStats}" Grid.ColumnSpan="3" Grid.RowSpan="5">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid Columns="3" />
@@ -110,7 +109,7 @@
                         </ItemsControl>
                     </Grid>
 
-                    <ItemsControl ItemsSource="{x:Static s:SampleData.DigestInfo}">
+                    <ItemsControl ItemsSource="{Binding DigestInfo}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <UniformGrid Columns="2" />
@@ -150,7 +149,7 @@
                                 Content="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="13" />
                     </Grid>
 
-                    <TreeView x:Name="DigestTreeView" ItemsSource="{x:Static s:SampleData.DigestTree}">
+                    <TreeView x:Name="DigestTreeView" ItemsSource="{Binding DigestTree}">
                         <TreeView.ItemTemplate>
                             <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -187,7 +186,7 @@
                             </StackPanel>
                         </Border>
                     </Grid>
-                    <TextBox Style="{StaticResource ReadOnlyEditor}" Text="{x:Static s:SampleData.DigestJson}" />
+                    <TextBox Style="{StaticResource ReadOnlyEditor}" Text="{Binding DigestJson}" />
                 </DockPanel>
             </Border>
         </Grid>
@@ -324,10 +323,10 @@
                         </Border>
                     </Grid>
 
-                    <DataGrid ItemsSource="{x:Static s:SampleData.DigestChanges}" FontSize="12">
+                    <DataGrid ItemsSource="{Binding DigestChanges}" FontSize="12">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="90" />
-                            <DataGridTextColumn Header="Object" Binding="{Binding Object}" Width="*" />
+                            <DataGridTextColumn Header="Object" Binding="{Binding ObjectName}" Width="*" />
                             <DataGridTemplateColumn Header="Change" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

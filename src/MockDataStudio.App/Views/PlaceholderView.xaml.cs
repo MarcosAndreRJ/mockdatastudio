@@ -4,9 +4,8 @@ namespace MockDataStudio.App.Views;
 
 public partial class PlaceholderView : UserControl
 {
-    public PlaceholderView(string title)
+    public PlaceholderView()
     {
         InitializeComponent();
-        TitleText.Text = title;
     }
 }

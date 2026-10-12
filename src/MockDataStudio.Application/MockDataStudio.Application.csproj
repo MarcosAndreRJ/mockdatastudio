@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>MockDataStudio.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MockDataStudio.Core\MockDataStudio.Core.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Providers.Abstractions\MockDataStudio.Providers.Abstractions.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Catalog\MockDataStudio.Catalog.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Mapping\MockDataStudio.Mapping.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Generation\MockDataStudio.Generation.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Output\MockDataStudio.Output.csproj" />
+    <ProjectReference Include="..\MockDataStudio.SqlTooling\MockDataStudio.SqlTooling.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Projects\MockDataStudio.Projects.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+</Project>

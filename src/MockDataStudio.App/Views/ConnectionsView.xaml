@@ -1,7 +1,6 @@
 <UserControl x:Class="MockDataStudio.App.Views.ConnectionsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:s="clr-namespace:MockDataStudio.App.Samples"
              xmlns:controls="clr-namespace:MockDataStudio.App.Controls">
 
     <Grid>
@@ -197,7 +196,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <DataGrid ItemsSource="{x:Static s:SampleData.SavedConnections}" FontSize="12" SelectedIndex="0">
+                        <DataGrid ItemsSource="{Binding SavedConnections}" FontSize="12" SelectedIndex="0">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="Auto">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -368,7 +367,7 @@
                             <!-- Testes recentes -->
                             <DockPanel Grid.Column="2">
                                 <TextBlock Text="Recent Connection Tests" FontWeight="Medium" DockPanel.Dock="Top" Margin="0,0,0,8" />
-                                <DataGrid ItemsSource="{x:Static s:SampleData.RecentConnectionTests}" FontSize="11">
+                                <DataGrid ItemsSource="{Binding RecentConnectionTests}" FontSize="11">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Date &amp; Time" Binding="{Binding When}" Width="Auto" />
                                         <DataGridTemplateColumn Header="Status" Width="Auto">
@@ -559,7 +558,7 @@
                                 <TextBlock Text="View all" Foreground="{StaticResource AccentBrush}" FontWeight="Medium" DockPanel.Dock="Right" />
                                 <TextBlock Text="Recent Activity" Style="{StaticResource SectionTitle}" FontSize="14" />
                             </DockPanel>
-                            <ItemsControl ItemsSource="{x:Static s:SampleData.ConnectionActivities}" Margin="0,0,0,8">
+                            <ItemsControl ItemsSource="{Binding ConnectionActivities}" Margin="0,0,0,8">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="0,0,0,12">

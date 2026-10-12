@@ -39,6 +39,10 @@ Classificação (briefing §17):
 | DA-020 | Unicidade composta bijetiva usa componentes uniformes (perde pesos) | 15 §8.4 |
 | DA-021 | Template de e-mail usa somente domínios fictícios/reservados | 23 §10 |
 | DA-022 | MVP com SQLite+PostgreSQL+Firebird; MySQL no M5 | 27 §2 |
+| DA-023 | Migração da solução para `MockDataStudio.slnx` nativo do .NET 10 | 07 §1, Sprint 0.3 |
+| DA-024 | Separação de `SqlEditorView` e `ExplorerView` no Sprint 1 | docs/ui-inventory.md, Sprint 0.2 |
+| DA-025 | Adição de logotipo próprio para MySQL (`mysql.png`), mantendo `mariadb.png` | docs/ui-inventory.md, Sprint 0.2 |
+| DA-026 | Externalização dos textos da interface para `Strings.resx` (pt-BR padrão) preservando visual dos mockups | docs/ui-inventory.md, Sprint 0.2 |
 
 ## 2. Premissas (PA)
 
@@ -88,8 +92,8 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | PV-005 | Semântica de `ALTER SEQUENCE ... RESTART WITH` por versão FB | T-PRV-FB-KEY-003 | Ajustar valor calculado por versão | TASK-08.03 |
 | PV-006 | COPY binário PG com identity ALWAYS | T-PRV-PG-COPY-001 | INSERT multi-linha com OVERRIDING | TASK-15.02 |
 | PV-007 | Autorreferência NOT NULL na mesma linha por SGBD | T-REL-SELF-NN-<X> | Bloqueio `PLN-SELF-NOTNULL` | TASK-10.04/16.01 |
-| PV-008 | AvalonEdit funciona em net10.0-windows sem problemas | Protótipo na TASK-13.03 | AvalonEditB | TASK-13.03 |
-| PV-009 | Imagem Docker oficial do Firebird (nome/tags) | Docker Hub | Imagem comunitária | TASK-00.05 |
+| PV-008 | AvalonEdit funciona em net10.0-windows sem problemas (RESOLVIDO: 6.3.0.90 compila e roda sem erros) | Validado no protótipo de UI em 2026-10-12 | — | Sprint 0.3 |
+| PV-009 | Imagem Docker oficial do Firebird (RESOLVIDO: fixado `firebird:5.0` com fallback `jacobalberty/firebird:v5.0` em tests/containers.json) | Docker Hub / tests/containers.json | Imagem comunitária | Sprint 0.10 |
 | PV-010 | Formato de `COLUMN_DEFAULT` no MySQL 8.4/9.x | T-PRV-MYSQL-002 | Normalização ajustada | TASK-10.01 |
 | PV-011 | Norma vigente do CNPJ alfanumérico (algoritmo de DV) | Publicação oficial da Receita Federal | Adiar `br.cnpj` v2 | TASK-17.05 |
 | PV-012 | Disponibilidade de `MON$DATABASE.MON$GUID` (FB4+) para fingerprint | Teste | Usar caminho/alias + servidor | TASK-08.03 |
@@ -103,3 +107,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 |---|---|---|---|
 | 2026-10-11 | — | Criação do registro | Especificação inicial |
 | 2026-10-11 | DA-015/016 | Movidos tipos puros para Core; Providers/Catalog → SqlTooling | Auditoria (36, achados A-01, A-02) |
+| 2026-10-12 | DA-023 | Migração da solução para `MockDataStudio.slnx` | Modernização .NET 10 (Sprint 0.3) |
+| 2026-10-12 | DA-024..026 | Decisões de UI decorrentes do inventário | Inventário de UI (docs/ui-inventory.md, Sprint 0.2) |
+| 2026-10-12 | PV-008 | Resolvido: AvalonEdit 6.3.0.90 compila e funciona em net10.0-windows | Verificação empírica no build Release do protótipo |
+| 2026-10-12 | PV-009 | Resolvido: Imagem Firebird fixada `firebird:5.0` com fallback | TASK-00.05 / Sprint 0.10 |

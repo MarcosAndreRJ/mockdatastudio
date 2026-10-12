@@ -4,15 +4,23 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>14</LangVersion>
     <RootNamespace>MockDataStudio.App</RootNamespace>
     <AssemblyName>MockDataStudio.App</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
+    <ProjectReference Include="..\MockDataStudio.Application\MockDataStudio.Application.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Infrastructure\MockDataStudio.Infrastructure.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Providers.Sqlite\MockDataStudio.Providers.Sqlite.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Providers.MySql\MockDataStudio.Providers.MySql.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Providers.PostgreSql\MockDataStudio.Providers.PostgreSql.csproj" />
+    <ProjectReference Include="..\MockDataStudio.Providers.Firebird\MockDataStudio.Providers.Firebird.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
   <ItemGroup>

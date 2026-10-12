@@ -1,0 +1,13 @@
+<Window x:Class="MockDataStudio.App.Controls.ConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="460" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}" FontFamily="Segoe UI" FontSize="13">
+    <StackPanel Margin="20">
+        <TextBlock x:Name="MessageText" TextWrapping="Wrap" Margin="0,0,0,20" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Style="{StaticResource SecondaryButton}" Content="Cancelar" IsCancel="True" MinWidth="110" Margin="0,0,8,0" />
+            <Button x:Name="ConfirmButton" Style="{StaticResource PrimaryButton}" IsDefault="True" MinWidth="110" Click="Confirm_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

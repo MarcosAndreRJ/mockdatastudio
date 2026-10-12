@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>MockDataStudio.Providers.PostgreSql</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MockDataStudio.Providers.Abstractions\MockDataStudio.Providers.Abstractions.csproj" />
+    <ProjectReference Include="..\MockDataStudio.SqlTooling\MockDataStudio.SqlTooling.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+</Project>

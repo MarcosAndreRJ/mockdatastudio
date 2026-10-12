@@ -94,11 +94,11 @@
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
             <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0" Margin="10,14"
-                     ItemContainerStyle="{StaticResource NavItemStyle}" SelectionChanged="NavList_SelectionChanged"
+                     ItemContainerStyle="{StaticResource NavItemStyle}" ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav, Mode=TwoWay}"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" AutomationProperties.Name="{Binding Title}">
                             <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="16"
                                        Width="26" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
                             <TextBlock Text="{Binding Title}" FontSize="14" VerticalAlignment="Center" Margin="6,0,0,0"
@@ -110,6 +110,6 @@
         </Border>
 
         <!-- Conteúdo -->
-        <ContentControl x:Name="ContentHost" Grid.Row="1" Grid.Column="1" Margin="24,20,24,20" />
+        <ContentControl x:Name="ContentHost" Grid.Row="1" Grid.Column="1" Margin="24,20,24,20" Content="{Binding CurrentPage}" />
     </Grid>
 </Window>

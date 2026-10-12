@@ -1,22 +1,24 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- Pincéis usados pelas views. Superfícies, texto, borda e destaque vêm dos tokens de Tokens.xaml. -->
+
     <!-- Superfícies -->
-    <SolidColorBrush x:Key="WindowBgBrush" Color="#F3F6FB" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="WindowBgBrush" Color="{StaticResource Bg.Panel}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Bg.Base}" />
     <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F8FAFC" />
     <SolidColorBrush x:Key="EditorBrush" Color="#FBFCFE" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#E3E8F0" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}" />
     <SolidColorBrush x:Key="SelectedBrush" Color="#EAF2FF" />
     <SolidColorBrush x:Key="HoverBrush" Color="#F1F5F9" />
 
     <!-- Texto -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#0F172A" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#64748B" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource Fg.Primary}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource Fg.Muted}" />
     <SolidColorBrush x:Key="TextMutedBrush" Color="#94A3B8" />
 
     <!-- Destaque e estados -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#2563EB" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="#1D4ED8" />
     <SolidColorBrush x:Key="AccentSoftBrush" Color="#DBEAFE" />
     <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A" />

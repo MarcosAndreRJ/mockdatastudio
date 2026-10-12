@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: mds-test-postgres
+    environment:
+      POSTGRES_USER: mds_user
+      POSTGRES_PASSWORD: mds_password
+      POSTGRES_DB: mds_test
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mds_user -d mds_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mysql:
+    image: mysql:8.4
+    container_name: mds-test-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: mds_user
+      MYSQL_PASSWORD: mds_password
+      MYSQL_DATABASE: mds_test
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mds_user", "-pmds_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  firebird:
+    image: firebird:5.0
+    container_name: mds-test-firebird
+    environment:
+      FIREBIRD_ROOT_PASSWORD: masterkey
+      FIREBIRD_DATABASE: mds_test.fdb
+    ports:
+      - "3050:3050"

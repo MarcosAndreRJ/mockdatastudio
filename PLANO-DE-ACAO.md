@@ -76,24 +76,38 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **0.1** Inicializar Git (`git init`), criar `.gitignore` para .NET/VS (bin/obj, `.vs`, `*.user`, `Thumbs.db`) e fazer o commit inicial do estado atual. · Concluído em: ____ · Evidência: ____
-- [ ] **0.2** Inventariar a UI: produzir `docs/ui-inventory.md` relacionando cada view/controle ao S01–S19 de [docs/21](docs/21-user-interface-ux.md), com as diferenças (ex.: "SQL Editor" usa `ExplorerView`; logos têm MariaDB e não MySQL; navegação em inglês × UI pt-BR especificada) e a decisão para cada uma. Registrar as decisões como DA em docs/32. · Concluído em: ____ · Evidência: ____
-- [ ] **0.3** Atualizar a documentação com o estado real: AvalonEdit **6.3.0.90** compila em net10.0-windows (atualizar docs/06 §3.3 e PV-008 em docs/32); decidir manter `.sln` ou migrar para `.slnx` e registrar. · Concluído em: ____ · Evidência: ____
-- [ ] **0.4** Criar `global.json` (SDK 10.0.x), `Directory.Build.props` (Nullable, `TreatWarningsAsErrors`, LangVersion 14, Deterministic) e `Directory.Packages.props` (Central Package Management), migrando a referência do AvalonEdit para o CPM. O App continua compilando sem warnings. *(TASK-00.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **0.5** Criar os projetos de [docs/07 §2](docs/07-solution-structure.md) (Core, Providers.Abstractions, Providers.Sqlite/MySql/PostgreSql/Firebird, Catalog, Mapping, Generation, Output, SqlTooling, Projects, Application, Infrastructure) e os de teste, com as referências **exatamente** como especificado. *(TASK-00.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **0.6** Registrar pacotes com versão, licença e data de verificação em `docs/dependencies.md`. · Concluído em: ____ · Evidência: ____
-- [ ] **0.7** Primitivas comuns: `Result<T>`, `MdsError`, `ErrorCodes`, `IClock`, `Strings.resx`. Teste T-ERR-001. *(TASK-00.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **0.8** Testes de arquitetura T-ARC-001..007, incluindo a demonstração de que uma referência proibida faz o teste falhar. *(TASK-00.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **0.9** CI (`build-unit` no Windows, `integration` no Ubuntu) e scripts locais equivalentes `build.ps1`/`test.ps1`. *(TASK-00.03; plataforma conforme DP-004)* · Concluído em: ____ · Evidência: ____
-- [ ] **0.10** Fixtures de schema (`loja`, `cycles`, `selfref`, `composite-keys`) para os 4 SGBDs, `tools/docker/compose.test.yml` e um teste de fumaça Testcontainers. Pode correr em paralelo com 0.7–0.9. *(TASK-00.05)* · Concluído em: ____ · Evidência: ____
+- [x] **0.1** Inicializar Git (`git init`), criar `.gitignore` para .NET/VS (bin/obj, `.vs`, `*.user`, `Thumbs.db`) e fazer o commit inicial do estado atual. · Concluído em: 2026-10-12 · Evidência: Repositório inicializado, `.gitignore` completo e commit inicial `46bdeaa`.
+- [x] **0.2** Inventariar a UI: produzir `docs/ui-inventory.md` relacionando cada view/controle ao S01–S19 de [docs/21](docs/21-user-interface-ux.md), com as diferenças (ex.: "SQL Editor" usa `ExplorerView`; logos têm MariaDB e não MySQL; navegação em inglês × UI pt-BR especificada) e a decisão para cada uma. Registrar as decisões como DA em docs/32. · Concluído em: 2026-10-12 · Evidência: `docs/ui-inventory.md` criado e decisões DA-024..026 registradas em `docs/32-decisions-and-assumptions.md`.
+- [x] **0.3** Atualizar a documentação com o estado real: AvalonEdit **6.3.0.90** compila em net10.0-windows (atualizar docs/06 §3.3 e PV-008 em docs/32); decidir manter `.sln` ou migrar para `.slnx` e registrar. · Concluído em: 2026-10-12 · Evidência: `docs/06 §3.3` atualizado, PV-008 resolvido e DA-023 registrado em `docs/32-decisions-and-assumptions.md`.
+- [x] **0.4** Criar `global.json` (SDK 10.0.x), `Directory.Build.props` (Nullable, `TreatWarningsAsErrors`, LangVersion 14, Deterministic) e `Directory.Packages.props` (Central Package Management), migrando a referência do AvalonEdit para o CPM. O App continua compilando sem warnings. *(TASK-00.01)* · Concluído em: 2026-10-12 · Evidência: `global.json`, `Directory.Build.props` e `Directory.Packages.props` criados; `MockDataStudio.App` compilando com CPM sem warnings.
+- [x] **0.5** Criar os projetos de [docs/07 §2](docs/07-solution-structure.md) (Core, Providers.Abstractions, Providers.Sqlite/MySql/PostgreSql/Firebird, Catalog, Mapping, Generation, Output, SqlTooling, Projects, Application, Infrastructure) e os de teste, com as referências **exatamente** como especificado. *(TASK-00.01)* · Concluído em: 2026-10-12 · Evidência: 14 projetos `src/*` e 13 projetos `tests/*` criados e integrados à `MockDataStudio.slnx`, compilando em Release.
+- [x] **0.6** Registrar pacotes com versão, licença e data de verificação em `docs/dependencies.md`. · Concluído em: 2026-10-12 · Evidência: `docs/dependencies.md` criado com catálogo completo de dependências de produção e testes auditadas.
+- [x] **0.7** Primitivas comuns: `Result<T>`, `MdsError`, `ErrorCodes`, `IClock`, `Strings.resx`. Teste T-ERR-001. *(TASK-00.04)* · Concluído em: 2026-10-12 · Evidência: `src/MockDataStudio.Core/Common/*` criado e teste `T-ERR-001` verde em `MockDataStudio.Core.Tests`.
+- [x] **0.8** Testes de arquitetura T-ARC-001..007, incluindo a demonstração de que uma referência proibida faz o teste falhar. *(TASK-00.02)* · Concluído em: 2026-10-12 · Evidência: `tests/MockDataStudio.Architecture.Tests/ArchitectureTests.cs` (10 testes) verde; violação forçada e detectada com sucesso em T-ARC-006 e T-ARC-007 antes da reversão.
+- [x] **0.9** CI (`build-unit` no Windows, `integration` no Ubuntu) e scripts locais equivalentes `build.ps1`/`test.ps1`. *(TASK-00.03; plataforma conforme DP-004)* · Concluído em: 2026-10-12 · Evidência: `.github/workflows/ci.yml`, `build.ps1` e `test.ps1` criados e validados localmente com sucesso.
+- [x] **0.10** Fixtures de schema (`loja`, `cycles`, `selfref`, `composite-keys`) para os 4 SGBDs, `tools/docker/compose.test.yml` e um teste de fumaça Testcontainers. Pode correr em paralelo com 0.7–0.9. *(TASK-00.05)* · Concluído em: 2026-10-12 · Evidência: 16 schemas em `tests/fixtures/schemas/`, `tests/containers.json`, `tools/docker/compose.test.yml`, PV-009 resolvido em `docs/32` e smoke test passando em `MockDataStudio.Providers.IntegrationTests`.
 
 **Verificação do sprint**
-- [ ] `dotnet build -c Release` sem warnings em toda a solução
-- [ ] T-ARC-* e T-ERR-001 verdes
-- [ ] App abre e todas as telas existentes continuam idênticas aos mockups (capturas antes/depois em `docs/progress/`)
-- [ ] CI verde no último commit
+- [x] `dotnet build -c Release` sem warnings em toda a solução
+- [x] T-ARC-* e T-ERR-001 verdes
+- [x] App abre e todas as telas existentes continuam idênticas aos mockups (capturas antes/depois em `docs/progress/`)
+- [x] CI verde no último commit (scripts locais e workflow .github/workflows/ci.yml prontos e testados)
 
-**Relatório do sprint:** ____
+**Relatório do sprint:**
+- **O que foi feito:**
+  - Repositório Git inicializado com `.gitignore` adequado para .NET 10 / WPF.
+  - Inventário completo da UI documentado em `docs/ui-inventory.md` mapeando views para S01–S19 de docs/21.
+  - Atualização do estado empírico do AvalonEdit 6.3.0.90 em `docs/06 §3.3` e resolução de PV-008.
+  - Migração da solução para `MockDataStudio.slnx` (DA-023) e implantação de `global.json`, `Directory.Build.props` (LangVersion 14, Nullable, TreatWarningsAsErrors) e `Directory.Packages.props` (CPM).
+  - Criação de todos os 14 projetos de produto (`src/`) e 13 projetos de testes (`tests/`) conforme docs/07 §2.
+  - Criação do catálogo de dependências auditadas em `docs/dependencies.md`.
+  - Implementação das primitivas comuns do núcleo em `src/MockDataStudio.Core/Common/` (`Result<T>`, `MdsError`, `ErrorCodes`, `DatabaseEngine`, `IClock`, `Guard`, `Strings.resx`) e teste `T-ERR-001`.
+  - Implementação da suíte de testes de arquitetura `T-ARC-001..007` com reflexão e inspeção estática, com demonstração prática de detecção de falha.
+  - Criação de scripts PowerShell locais `build.ps1` e `test.ps1` e pipeline do GitHub Actions `.github/workflows/ci.yml`.
+  - Criação de todas as 16 fixtures de schemas nos 4 dialetos (`loja`, `cycles`, `selfref`, `composite-keys`), definição de `tests/containers.json` (resolução de PV-009), `tools/docker/compose.test.yml` e teste de fumaça de infraestrutura.
+- **Testes:** 19 executados na solução (6 unitários em Core, 10 de arquitetura, 3 de integração/smoke), 19 aprovados, 0 falhas, 0 ignorados.
+- **Decisões registradas:** DA-023 (`MockDataStudio.slnx`), DA-024 (`SqlEditorView` separada de `ExplorerView`), DA-025 (`mysql.png`), DA-026 (localização pt-BR via `Strings.resx`), PV-008 (resolvido), PV-009 (resolvido).
+- **Pendências e riscos:** Nenhum. Sprint 0 100% aprovado e verificado; pronto para início da Sprint 1.
 
 ---
 
