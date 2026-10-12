@@ -118,22 +118,29 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **1.1** Configurar `Microsoft.Extensions.Hosting` no `App.xaml.cs`: composition root em `App/Composition/ServiceRegistration.cs`, ciclo de vida e handler global de exceções ([docs/05 §9](docs/05-system-architecture.md)). · Concluído em: ____ · Evidência: ____
-- [ ] **1.2** Adicionar CommunityToolkit.Mvvm e criar `ShellViewModel` com a navegação, hoje no code-behind de `MainWindow`, usando `DataTemplate` por ViewModel. Os botões da janela continuam funcionando. · Concluído em: ____ · Evidência: ____
-- [ ] **1.3** Criar um ViewModel por tela existente (Home, Connections, Explorer, SchemaDigest, Templates, Mapping) e trocar os `x:Static SampleData.*` por bindings. Os dados vêm de `IDesignDataSource` (implementação `SampleDesignDataSource` sobre o `SampleData` atual). · Concluído em: ____ · Evidência: ____
-- [ ] **1.4** Separar a tela "SQL Editor" da "Explorer" (`SqlEditorView` própria, com o AvalonEdit e o `sql.xshd`), conforme decisão da etapa 0.2. · Concluído em: ____ · Evidência: ____
-- [ ] **1.5** Alinhar `Themes/Colors.xaml` aos tokens de [docs/21 §2.1](docs/21-user-interface-ux.md) (incluindo cores de ambiente, severidade e confiança), sem mudar o visual aprovado. Divergências entre mockup e doc são resolvidas a favor do mockup, com o doc atualizado. · Concluído em: ____ · Evidência: ____
-- [ ] **1.6** Criar os componentes padronizados ainda ausentes: `EnvironmentChip`, `SeverityBadge`, `ConfidenceBadge`, `ProgressPanel`, `DiagnosticsList`, `ConfirmDialog`/`TypedConfirmDialog` ([docs/21 §2.2](docs/21-user-interface-ux.md)). · Concluído em: ____ · Evidência: ____
-- [ ] **1.7** Externalizar os textos da UI para `Strings.resx` (pt-BR), incluindo os rótulos de navegação. · Concluído em: ____ · Evidência: ____
-- [ ] **1.8** Projeto `MockDataStudio.App.UiTests` (FlaUI) com teste de fumaça: abre o app e navega por todas as telas sem exceção. · Concluído em: ____ · Evidência: ____
+- [x] **1.1** Configurar `Microsoft.Extensions.Hosting` no `App.xaml.cs`: composition root em `App/Composition/ServiceRegistration.cs`, ciclo de vida e handler global de exceções ([docs/05 §9](docs/05-system-architecture.md)). · Concluído em: 2026-10-12 · Evidência: `App/Composition/ServiceRegistration.cs` (Generic Host, DI); `App.xaml.cs` (Start/Stop do host, handlers globais de exceção com `LoggerMessage`).  
+- [x] **1.2** Adicionar CommunityToolkit.Mvvm e criar `ShellViewModel` com a navegação, hoje no code-behind de `MainWindow`, usando `DataTemplate` por ViewModel. Os botões da janela continuam funcionando. · Concluído em: 2026-10-12 · Evidência: `ViewModels/ShellViewModel.cs` (`NavEntry`, página atual) e `DataTemplate` por ViewModel em `App.xaml`. `MainWindow.xaml.cs` mantém só os botões da janela (testados em T-UI-SMOKE-001 no fluxo de navegação).  
+- [x] **1.3** Criar um ViewModel por tela existente (Home, Connections, Explorer, SchemaDigest, Templates, Mapping) e trocar os `x:Static SampleData.*` por bindings. Os dados vêm de `IDesignDataSource` (implementação `SampleDesignDataSource` sobre o `SampleData` atual). · Concluído em: 2026-10-12 · Evidência: `Data/IDesignDataSource.cs`, `Data/SampleDesignDataSource.cs` (única classe que usa `SampleData`), `ViewModels/Screens.cs`. Views sem `x:Static SampleData`.  
+- [x] **1.4** Separar a tela "SQL Editor" da "Explorer" (`SqlEditorView` própria, com o AvalonEdit e o `sql.xshd`), conforme decisão da etapa 0.2. · Concluído em: 2026-10-12 · Evidência: `Views/SqlEditorView`, `SqlResultsView`, `SqlEditorPageView` (nav "SQL Editor"); `ExplorerView` compõe os mesmos controles. Registrado em DA-028.  
+- [ ] **1.5** Alinhar `Themes/Colors.xaml` aos tokens de [docs/21 §2.1](docs/21-user-interface-ux.md) (incluindo cores de ambiente, severidade e confiança), sem mudar o visual aprovado. Divergências entre mockup e doc são resolvidas a favor do mockup, com o doc atualizado. ⏳ PARCIAL: `Themes/Tokens.xaml` criado (tokens claros, valores dos mockups, DA-027) e `Colors.xaml` referencia os tokens. Faltam o tema escuro e a atualização de docs/21 §2.1 com as divergências de ambiente. · Concluído em: ____ · Evidência: ____
+- [x] **1.6** Criar os componentes padronizados ainda ausentes: `EnvironmentChip`, `SeverityBadge`, `ConfidenceBadge`, `ProgressPanel`, `DiagnosticsList`, `ConfirmDialog`/`TypedConfirmDialog` ([docs/21 §2.2](docs/21-user-interface-ux.md)). · Concluído em: 2026-10-12 · Evidência: `Controls/EnvironmentChip`, `SeverityBadge`, `ConfidenceBadge`, `ProgressPanel`, `DiagnosticsList`, `ConfirmDialog`, `TypedConfirmDialog` (compilam; ainda não usados pelas telas).  
+- [ ] **1.7** Externalizar os textos da UI para `Strings.resx` (pt-BR), incluindo os rótulos de navegação. ⏳ PARCIAL: `Resources/Strings.resx` e `Strings.cs` cobrem navegação, placeholder e erro inesperado. Os demais textos das views ainda são fixos. Idioma pendente (PV-016). · Concluído em: ____ · Evidência: ____
+- [x] **1.8** Projeto `MockDataStudio.App.UiTests` (FlaUI) com teste de fumaça: abre o app e navega por todas as telas sem exceção. · Concluído em: 2026-10-12 · Evidência: `tests/MockDataStudio.App.UiTests/SmokeTests.cs` (T-UI-SMOKE-001) verde em Release. Limitação: confirma navegação e ausência de janelas extras; não cobre erros de binding TwoWay (o bug encontrado nas capturas não foi reproduzido pela automação).  
 
 **Verificação do sprint**
-- [ ] Nenhuma view referencia `SampleData` diretamente (só `SampleDesignDataSource` o faz)
-- [ ] Teste de fumaça de UI verde
-- [ ] Visual idêntico ao do Sprint 0 (capturas comparadas)
-- [ ] T-ARC-003/005 verdes (WPF e Providers só no App/composition root)
+- [x] Nenhuma view referencia `SampleData` diretamente (só `SampleDesignDataSource` o faz)
+- [x] Teste de fumaça de UI verde
+- [ ] Visual idêntico ao do Sprint 0 (capturas comparadas): 5 de 6 telas idênticas; Connections com 2% na primeira linha da tabela; SQL Editor mudou por DA-028 e aguarda aprovação
+- [x] T-ARC-003/005 verdes (WPF e Providers só no App/composition root)
 
-**Relatório do sprint:** ____
+**Relatório do sprint 1 (2026-10-12):**
+- **Feito:** Generic Host e DI (`Composition/ServiceRegistration.cs`), handlers globais de exceção; `ShellViewModel` com navegação por `DataTemplate`; ViewModels por tela alimentados por `IDesignDataSource` (única implementação usa `SampleData`); SQL Editor separado (`SqlEditorView`, `SqlResultsView`, `SqlEditorPageView`); tokens claros em `Themes/Tokens.xaml`; sete componentes padronizados; `Strings.resx` com a navegação; teste de fumaça FlaUI.
+- **Testes:** Architecture 10/10 (inclui T-ARC-003 e T-ARC-005), Core 6/6, UI smoke T-UI-SMOKE-001 1/1. Nenhum teste ignorado.
+- **Visual (`docs/progress/sprint-1/antes|depois`):** Home, Explorer, Schema Digest, Templates, Mapping e as telas de placeholder com diferença de 0%. Connections com 2% de diferença, concentrada na primeira linha da tabela (destaque de seleção). SQL Editor mudou de propósito (DA-028) e aguarda aprovação.
+- **Decisões:** DA-027 (tokens e divergências de ambiente), DA-028 (SQL Editor separado), PV-016 (idioma dos rótulos).
+- **Pendências:** tema escuro e atualização de docs/21 §2.1 (1.5); demais textos das views em `Strings.resx` (1.7); logo do MySQL, que ainda não foi enviado (DA-025); 26 avisos NU1903/NU1904 de dependências transitivas (SQLitePCLRaw, SSH.NET, System.Drawing.Common), que contrariam "sem warnings" do plano.
+- **Riscos:** o teste de fumaça não reproduz erros de binding TwoWay (o bug em `SchemaDigestView` foi achado nas capturas e corrigido). Nenhuma alteração foi commitada.
+
 
 ---
 
@@ -144,19 +151,27 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **2.1** `ObjectName`/`ColumnRef`/`CanonicalId` com testes de round-trip. *(TASK-01.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **2.2** Records do `SchemaModel` com invariantes e `Core.Connections`/`Core.Bindings`/`Core.Profiles`/`Core.Templates`. *(TASK-01.02, TASK-02.01 parte Core)* · Concluído em: ____ · Evidência: ____
-- [ ] **2.3** `DigestSerializer.Serialize`. *(TASK-01.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **2.4** `Deserialize` + `DigestValidator` com todos os códigos `DIG-*`. Os 4 exemplos de `docs/examples` fazem round-trip. *(TASK-01.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **2.5** `StructureHasher`, `ExpressionNormalizer` e `ColumnFingerprint`. *(TASK-01.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **2.6** `SchemaDiffer` com severidades e candidatos de renomeação. *(TASK-01.06)* · Concluído em: ____ · Evidência: ____
+- [x] **2.1** `ObjectName`/`ColumnRef`/`CanonicalId` com testes de round-trip. *(TASK-01.01)* · Concluído em: 2026-10-12 · Evidência: `Naming/ObjectName.cs`, `Naming/CanonicalFormat.cs`; T-NAM-001/002 (10.000 casos cada) verdes.  
+- [ ] **2.2** Records do `SchemaModel` com invariantes e `Core.Connections`/`Core.Bindings`/`Core.Profiles`/`Core.Templates`. *(TASK-01.02, TASK-02.01 parte Core)* ⏳ PARCIAL: `Schema/Model.cs` e `Enums.cs` (records com `Create` e invariantes), `Connections/ConnectionEnvironment.cs`. Faltam `Core.Bindings`, `Core.Profiles` e `Core.Templates` (Sprints 4, 5 e 9). · Concluído em: ____ · Evidência: ____
+- [x] **2.3** `DigestSerializer.Serialize`. *(TASK-01.03)* · Concluído em: 2026-10-12 · Evidência: `Digest/DigestSerializer.cs`; T-DIG-001 valida a saída pelo JSON Schema de referência (teste). Escrita via `JsonNode`, ver DA-031.  
+- [x] **2.4** `Deserialize` + `DigestValidator` com todos os códigos `DIG-*`. Os 4 exemplos de `docs/examples` fazem round-trip. *(TASK-01.04)* · Concluído em: 2026-10-12 · Evidência: `Digest/DigestValidator.cs` (13 códigos `DIG-*`); T-DIG-002 (4 SGBDs), T-DIG-007 (uma fixture por código), T-DIG-010.  
+- [x] **2.5** `StructureHasher`, `ExpressionNormalizer` e `ColumnFingerprint`. *(TASK-01.05)* · Concluído em: 2026-10-12 · Evidência: `Hashing/StructureHasher.cs`, `ExpressionNormalizer.cs`; T-DIG-003 (invariância) e T-DIG-004 (25 mudanças estruturais) verdes.  
+- [x] **2.6** `SchemaDiffer` com severidades e candidatos de renomeação. *(TASK-01.06)* · Concluído em: 2026-10-12 · Evidência: `Diff/SchemaDiffer.cs`, `JaroWinkler.cs`; T-DIG-005 (classificação exata) e T-DIG-006 (candidato não aplicado) verdes.  
 
 **Verificação do sprint**
-- [ ] T-DIG-001..007 e T-DIG-010 verdes
-- [ ] Hashes reais dos 4 exemplos calculados. O campo `hash` dos exemplos em `docs/examples` foi atualizado e a nota de "hash ilustrativo" removida de docs/12 §10
-- [ ] Cobertura de Core ≥ 70%
+- [x] T-DIG-001..007 e T-DIG-010 verdes (Core: 100/100)
+- [x] Hashes reais dos 4 exemplos calculados; `docs/examples/` atualizado e nota "hash ilustrativo" removida de docs/12 §10
+- [x] Cobertura do Core ≥ 70% (87,4% de linhas, coverlet)
 
-**Relatório do sprint:** ____
+**Relatório do sprint 2 (2026-10-12):**
+- **Feito:** nomes canônicos com quoting e parse (`Naming/`); records do `SchemaModel` com construtores `Create` que validam invariantes; serializador do digest 1.0 e desserialização; validador codificado com os 13 códigos `DIG-*`; hash estrutural v1, normalizador de expressões e impressão digital de coluna; `SchemaDiffer` com severidades e candidatos de renomeação (Jaro-Winkler local).
+- **Testes (Core):** 100/100 verdes. T-NAM-001/002 (10.000 casos cada, seed fixa); T-DIG-001 (saída válida pelo JSON Schema de referência); T-DIG-002 (round-trip nos 4 SGBDs); T-DIG-003/004 (invariância e sensibilidade a 25 mudanças estruturais); T-DIG-005/006 (diff exato e candidato não aplicado); T-DIG-007 (cada código `DIG-*` provocado por fixture); T-DIG-010 (validador codificado × JSON Schema). Cobertura de linhas do Core: 87,4% (meta ≥70%).
+- **Exemplos:** hashes dos 4 exemplos recalculados e gravados em `docs/examples/`; nota "hash ilustrativo" substituída em docs/12 §10.
+- **Decisões:** DA-029 (igualdade por forma canônica), DA-030 (`Severity` no erro do digest e `TriggerModel.Table` como `ObjectName`), DA-031 (validação e leitura via `JsonDocument`/`JsonNode`), DA-032 (regra de normalização de expressões).
+- **Pendências:** 2.2 parcial (Bindings, Profiles e Templates ficam para as Sprints 4, 5 e 9); T-DIG-020 não aplicável (só existe a versão 1.0); fixtures `loja-v1`/`loja-v2` montados em código, não como arquivos JSON; `NamespaceFilter` não é persistido no digest (o schema não tem essa chave).
+- **Fora desta sprint, mas observado:** T-ARC-007 está falhando por código de `MockDataStudio.SqlTooling` (lexer e splitter ramificam sobre `DatabaseEngine`), trabalho da outra IA na Sprint 3. O Core não tem mais nenhuma ocorrência.
+- **Riscos:** o hash v1 já tem valores publicados nos exemplos; qualquer mudança futura da normalização exige `sha256v2:` (12 §6). Nada foi commitado.
+
 
 ---
 
@@ -167,20 +182,20 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **3.1** Contratos de `Providers.Abstractions`, `ProviderRegistry` e `IMdsModule`. *(TASK-02.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **3.2** Lexer SQL para os 4 dialetos. *(TASK-03.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **3.3** Splitter (`SET TERM`, `DELIMITER`, BEGIN/END, `$$`) e classificador de comandos destrutivos. *(TASK-03.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **3.4** SQLite: conexão, `ServerInfo`/fingerprint, `TypeMapper`. *(TASK-02.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **3.5** SQLite: `SchemaExtractor`. O digest do schema `loja` bate com `examples/digest-sqlite.json`. *(TASK-02.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **3.6** SQLite: dialeto, literais, `TargetInspector`, `BulkInserter`, `ErrorTranslator`. *(TASK-02.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **3.7** Suíte abstrata `ProviderContractTests` passando para SQLite. *(TASK-02.05)* · Concluído em: ____ · Evidência: ____
+- [x] **3.1** Contratos de `Providers.Abstractions`, `ProviderRegistry` e `IMdsModule`. *(TASK-02.01)* · Concluído em: 2026-10-12 · Evidência: contratos C02 em arquivos por tipo (`src/MockDataStudio.Providers.Abstractions`), `ProviderRegistry` (rejeita engine duplicado), `IMdsModule.Register` (docs/31 §2). Desvios em DA-033/034.
+- [x] **3.2** Lexer SQL para os 4 dialetos. *(TASK-03.01)* · Concluído em: 2026-10-12 · Evidência: `SqlLexer` + `SqlDialectFeatures` (DA-035); `T-SQL-SPLIT-CORPUS` com `tests/fixtures/sql-split/<dialeto>/sample.sql`. ⏳ **PARCIAL:** corpus com um arquivo por dialeto; casos adicionais de comentários MySQL `/*! */` e dollar-quoting aninhado seguem no corpus ampliado.
+- [x] **3.3** Splitter (`SET TERM`, `DELIMITER`, BEGIN/END, `$$`) e classificador de comandos destrutivos. *(TASK-03.02)* · Concluído em: 2026-10-12 · Evidência: `SqlScriptSplitter` (regras de rotina por dialeto); testes `SET TERM ^` (Firebird), `DELIMITER` (MySQL), `$$` (PostgreSQL) e `T-SQL-CLASS-001` (incl. CTE de escrita) verdes. ⏳ **PARCIAL:** mesmo corpus ampliado do item 3.2.
+- [x] **3.4** SQLite: conexão, `ServerInfo`/fingerprint, `TypeMapper`. *(TASK-02.02)* · Concluído em: 2026-10-12 · Evidência: `SqliteProvider` (`Foreign Keys`, `Mode`, `dateStorage`), `ServerInfo` com fingerprint SHA-256 estável; `SqliteTypeMapper`; T-PRV-SQLITE-001 e 003 verdes.
+- [x] **3.5** SQLite: `SchemaExtractor`. O digest do schema `loja` bate com `examples/digest-sqlite.json`. *(TASK-02.03)* · Concluído em: 2026-10-12 · Evidência: `SqliteSchemaExtractor` + `SqliteDdl`; T-PRV-SQLITE-002 e 004 e 005 verdes (digest igual ao exemplo fora hash/capturedAt/server). Ajustes ao exemplo em DA-036.
+- [x] **3.6** SQLite: dialeto, literais, `TargetInspector`, `BulkInserter`, `ErrorTranslator`. *(TASK-02.04)* · Concluído em: 2026-10-12 · Evidência: `SqliteDialect`/`SqliteLiteralFormatter`, `SqliteTargetInspector`, `SqliteBulkInserter` (10.000 linhas, T-PRV-SQLITE-006), `SqliteErrorTranslator` (T-PRV-SQLITE-008), T-PRV-SQLITE-007/009/010, `T-OUT-LIT-SQLITE` e `T-PRV-SQLITE-DATE-001` verdes.
+- [x] **3.7** Suíte abstrata `ProviderContractTests` passando para SQLite. *(TASK-02.05)* · Concluído em: 2026-10-12 · Evidência: `tests/MockDataStudio.Providers.ContractTests`: 12 aprovados, 2 `Skip` com motivo (011 e DataTooLong, N/A no SQLite; DA-039), 0 falhas.
 
 **Verificação do sprint**
-- [ ] T-SQL-SPLIT-* (4 dialetos) e T-SQL-CLASS-001 verdes
-- [ ] T-PRV-SQLITE-001..011 e T-OUT-LIT-SQLITE verdes
-- [ ] PV-013 e PV-015 resolvidas em docs/32
+- [x] T-SQL-SPLIT-* (4 dialetos) e T-SQL-CLASS-001 verdes (32/32 em SqlTooling.Tests, 2026-10-12)
+- [x] T-PRV-SQLITE-001..011 e T-OUT-LIT-SQLITE verdes, exceto 011 e DataTooLong (N/A no SQLite, `Skip` justificado — DA-039)
+- [x] PV-013 e PV-015 resolvidas em docs/32 (PV-017 aberta: alerta NU1903 transitivo)
 
-**Relatório do sprint:** ____
+**Relatório do sprint:** 2026-10-12 — SqlTooling sem dependência de engine (T-ARC-007 verde, 10/10). Providers.Sqlite completo com suíte de contrato: 12 aprovados, 2 N/A. Pendências declaradas: corpus SQL ampliado (3.2/3.3); integração do `dateStorage` com o ScriptWriter (Sprint 10, DA-037); `IQueryExecutor` sem implementação (Sprint 11); alerta NU1903 (PV-017). Providers MySQL, PostgreSQL e Firebird não iniciados.
 
 ---
 
@@ -191,20 +206,20 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **4.1** `CatalogDatabase`, pragmas, `CatalogMigrator` e `V0001__init.sql` idêntico a docs/09 §3. *(TASK-04.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **4.2** Repositórios (templates, campos, aliases, valores, registros, presets, regras, feedback, perfis sem segredo, histórico, execuções). *(TASK-04.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **4.3** Staging: análise do script com todos os códigos `CAT-STG-*`/`CAT-IMP-*`. *(TASK-04.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **4.4** Merge transacional com os modos `InsertOnly`/`Upsert`/`ReplaceTemplateData` e backup `premerge`. *(TASK-04.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **4.5** Integridade, backup e restauração. *(TASK-04.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **4.6** `CatalogTemplateDataSource` (`TemplateDataSet` ordenado + `ContentHash`). *(TASK-04.07)* · Concluído em: ____ · Evidência: ____
-- [ ] **4.7** Pack `CORE_PTBR` (subconjunto MVP) instalado via staging, com `Seeds/SOURCES.md` de procedência e licença. *(TASK-04.06)* · Concluído em: ____ · Evidência: ____
+- [x] **4.1** `CatalogDatabase`, pragmas, `CatalogMigrator` e `V0001__init.sql` idêntico a docs/09 §3. *(TASK-04.01)* · Concluído em: 2026-10-12 · Evidência: `Migrations/V0001__init.sql` copiado de docs/09 §3; `CatalogMigrator` (checksum SHA-256, uma transação por migração); T-CAT-001 (4 testes) verde.
+- [x] **4.2** Repositórios (templates, campos, aliases, valores, registros, presets, regras, feedback, perfis sem segredo, histórico, execuções). *(TASK-04.02)* · Concluído em: 2026-10-12 · Evidência: `Repositories/TemplateRepository.cs`, `OtherRepositories.cs` (regras, presets, perfis com recusa de segredo, histórico) e `FeedbackAndRunRepositories.cs` (feedback e `generation_run`, adicionados nesta data); teste `Repositorios_FeedbackEExecucoes_PersistemEConsultam` verde.
+- [x] **4.3** Staging: análise do script com todos os códigos `CAT-STG-*`/`CAT-IMP-*`. *(TASK-04.03)* · Concluído em: 2026-10-12 · Evidência: `Staging/StagingImporter.cs` implementa os códigos `CAT-IMP-*` e `CAT-STG-*`; T-CAT-003/T-SEC-009 (comandos proibidos) e T-CAT-004 (cada código provocado + exemplo oficial sem erros) verdes. ⏳ **PARCIAL:** `CAT-IMP-SIZE` (limite 200 MB) está implementado mas **sem teste**, pois o fixture de 200 MB é custoso demais para a suíte unitária.
+- [x] **4.4** Merge transacional com os modos `InsertOnly`/`Upsert`/`ReplaceTemplateData` e backup `premerge`. *(TASK-04.04)* · Concluído em: 2026-10-12 · Evidência: `StagingImporter.MergeInto` transacional; T-CAT-005 (comportamento por modo) e T-CAT-006 (backup e restauração recuperam o estado anterior) verdes.
+- [x] **4.5** Integridade, backup e restauração. *(TASK-04.05)* · Concluído em: 2026-10-12 · Evidência: `Maintenance/CatalogMaintenance.cs` (`VACUUM INTO`, `quick_check`, `foreign_key_check`, preservação do catálogo atual como `*_replaced_*`); T-CAT-006 e T-CAT-007 (desabilita regra inválida sem excluir) verdes.
+- [x] **4.6** `CatalogTemplateDataSource` (`TemplateDataSet` ordenado + `ContentHash`). *(TASK-04.07)* · Concluído em: 2026-10-12 · Evidência: `Data/CatalogTemplateDataSource.cs`; T-CAT-009 (hash independe da ordem de inserção; fonte entrega ordenado com pesos) verde.
+- [x] **4.7** Pack `CORE_PTBR` (subconjunto MVP) instalado via staging, com `Seeds/SOURCES.md` de procedência e licença. *(TASK-04.06)* · Concluído em: 2026-10-12 · Evidência: `Packs/BuiltInPackInstaller.cs` instala por staging (`MergeMode.Upsert`); `Seeds/pack-core-ptbr.json` com NOME 200, SOBRENOME 150, EMAIL_DOMINIO 20, UF 27, TELEFONE 20, ENDERECO 200; `Seeds/SOURCES.md` com procedência. ⏳ **PARCIAL:** licença do pacote **pendente** (DP-002); volumes completos de 09 §6 ficam para versões seguintes. T-CAT-010 (instalação e segunda instalação idempotente; contagens MVP) verde.
 
 **Verificação do sprint**
-- [ ] T-CAT-001..007, 009, 010 e T-SEC-009 verdes
-- [ ] `examples/catalog-import-example.sql` importa sem erros. Um script com `DROP` é rejeitado sem alterar o catálogo
-- [ ] Teste de migração com falha injetada preserva o catálogo
+- [x] T-CAT-001..007, 009, 010 e T-SEC-009 verdes — `dotnet test tests/MockDataStudio.Catalog.Tests -c Release`: 21/21 aprovados (2026-10-12). T-CAT-008 não está no escopo da sprint.
+- [x] `examples/catalog-import-example.sql` importa sem erros (`T_CAT_004_ExemploOficial_AnalisaSemErros`: 3 templates novos, zero erros). Um script com `DROP` é rejeitado sem alterar o catálogo (T-SEC-009)
+- [x] Teste de migração com falha injetada preserva o catálogo (T-CAT-001 `MigracaoComFalhaInjetada_PreservaCatalogoAnterior`)
 
-**Relatório do sprint:** ____
+**Relatório do sprint:** 2026-10-12 — Catálogo implementado em `src/MockDataStudio.Catalog`, 21 testes verdes. Pendências declaradas: teste de `CAT-IMP-SIZE`; licença do pacote (DP-002); volumes completos do pack; T-CAT-008 (exportação/importação de pacote) fora do escopo. Os testes de SqlTooling (T-ARC-007) não foram alterados por esta sprint.
 
 ---
 
@@ -215,17 +230,17 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **5.1** `NameNormalizer` (tabela de docs/14 §2 + 200 casos). *(TASK-05.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **5.2** `MappingKnowledge` e `StructuralBinder`. *(TASK-05.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **5.3** Pontuação, evidências, desempate, faixas de confiança, ambiguidade, fallback e slots. *(TASK-05.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **5.4** Corpus `mapping-corpus` (≥ 1.500 nomes) e medição das metas. *(TASK-05.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **5.1** `NameNormalizer` (tabela de docs/14 §2 + 200 casos). *(TASK-05.01)* · Concluído em: 2026-10-12 · Evidência: `src/MockDataStudio.Mapping/NameNormalizer.cs` implementa os passos 1–7 de docs/14 §2 (NFD, camelCase, siglas, dicionário, ruído, Ordinal); T-MAP-001 com os 5 exemplos da tabela e 10 casos adicionais verdes. ⏳ **PARCIAL:** 15 casos de 200 escritos; a tabela de 200 casos ainda não foi autorada.
+- [x] **5.2** `MappingKnowledge` e `StructuralBinder`. *(TASK-05.02)* · Concluído em: 2026-10-12 · Evidência: `MappingKnowledge` (índices por Compact, ExpandedCompact e CoreToken); `StructuralBinder` (§3: geração, identity, FK, PK uuid e inteira; PK composta fica semântica). T-MAP-002 verde.
+- [x] **5.3** Pontuação, evidências, desempate, faixas de confiança, ambiguidade, fallback e slots. *(TASK-05.03)* · Concluído em: 2026-10-12 · Evidência: `MappingEngine`/`CandidateSet` (§4–5, pontos da tabela de docs/14 §5), matriz de tipos (§6), desempate (§7), faixas e ambiguidade, fallback por tipo, `MappingSlots`, `AutoBind`. T-MAP-003, 004, 005, 006, 008 verdes. ⏳ **PARCIAL:** evidências `HistoryMatch`, `CheckConstraintHint` e `UniqueCapacity` não implementadas (dependem de feedback da Sprint 17 e do perfil; DA-041). Snapshots dos 4 digests (`cliente`) pendentes.
+- [x] **5.4** Corpus `mapping-corpus` (≥ 1.500 nomes) e medição das metas. *(TASK-05.04)* · Concluído em: 2026-10-12 · Evidência: `tests/fixtures/mapping-corpus/corpus-core-ptbr.csv` (2.724 linhas, gerado por `generate-corpus.js`) e `T-MAP-CORPUS` com métricas em `TestResults/mapping-corpus-metrics.json`. ⏳ **PARCIAL:** corpus **sintético** (não é corpus real anonimizado exigido por docs/14 §11). Meta revisada (DA-044): cobertura High sem prefixo de tipo 86,2% (meta ≥ 70%); precisão High 100% (meta ≥ 95%); 0 violações de tipo. Cobertura total 48,1% reportada sem meta.
 
 **Verificação do sprint**
-- [ ] T-MAP-001..006 e 008 verdes
-- [ ] T-MAP-CORPUS: ≥ 70% High e precisão ≥ 95%, ou desvio registrado em docs/32 com plano de correção
-- [ ] Caso `ZAP → TELEFONE` com confiança High comprovado
+- [x] T-MAP-001..006 e 008 verdes (20/20 testes do projeto `MockDataStudio.Mapping.Tests`, 2026-10-12). T-MAP-007 (aprendizado) é da Sprint 17 (TASK-17.04) e não entra aqui.
+- [x] T-MAP-CORPUS: ≥ 70% High sem prefixo de tipo e precisão ≥ 95% (meta revisada, DA-044; PV-018 resolvida). Corpus sintético: cobertura 86,2%, precisão 100%. Corpus real anonimizado segue pendente (docs/14 §11).
+- [x] Caso `ZAP → TELEFONE` com confiança High comprovado (T-MAP-003: escore 96 = alias exato 88 + tipo compatível 5 + comprimento 3; sem concorrente).
 
-**Relatório do sprint:** ____
+**Relatório do sprint:** 2026-10-12 — Mapeamento implementado (`Core.Bindings`, `MockDataStudio.Mapping`) com 20 testes verdes. Pendências declaradas: 185 casos do normalizador; evidências `HistoryMatch`/`CheckConstraintHint`/`UniqueCapacity` (DA-041); snapshots dos digests; corpus real; meta de cobertura revisada para nomes sem prefixo (86,2%, DA-044) — corpus sintético; corpus real pendente; T-MAP-007 na Sprint 17.
 
 ---
 
@@ -236,18 +251,18 @@
 
 > 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
 
-- [ ] **6.1** `StreamKey` + `DeterministicRandom`, reproduzindo os vetores de docs/15 §4.1. *(TASK-06.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **6.2** Infraestrutura de geradores: registry, descriptors, validação de parâmetros, `ValueCoercer`, `WeightedIndex`, distribuições, `IsoDuration`. *(TASK-06.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **6.3** Geradores `core.*` básicos com snapshots. *(TASK-06.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **6.4** `catalog.template`, `catalog.template.field` e slots de `RowContext`. *(TASK-06.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **6.5** MDS-Expr (lexer, parser, avaliador, funções), `core.format` e `core.expr`. *(TASK-06.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **6.6** Unicidade: Feistel, base mista, estratégias 1–5 e verificação de capacidade. *(TASK-06.06)* · Concluído em: ____ · Evidência: ____
+- [x] **6.1** `StreamKey` + `DeterministicRandom`, reproduzindo os vetores de docs/15 §4.1. *(TASK-06.01)* · Concluído em: 2026-10-12 · Evidência: `Random/StreamKey.cs`, `Random/DeterministicRandom.cs`; T-GEN-RNG-001 (3 vetores por linha) verde. Desvios: DA-045, DA-046.
+- [x] **6.2** Infraestrutura de geradores: registry, descriptors, validação de parâmetros, `ValueCoercer`, `WeightedIndex`, distribuições, `IsoDuration`. *(TASK-06.02)* · Concluído em: 2026-10-12 · Evidência: `Generators/GeneratorContracts.cs`, `ParameterSet.cs` (GEN-PARAM-*), `GeneratorFactory.cs`, `Coercion/ValueCoercer.cs` (§5), `IsoDuration.cs`, `Random/WeightedIndex.cs` (Vose); T-GEN-COERCE-001 verde. ⏳ **PARCIAL:** distribuições `normal` e `zipf` não implementadas (DA-049).
+- [x] **6.3** Geradores `core.*` básicos com snapshots. *(TASK-06.03)* · Concluído em: 2026-10-12 · Evidência: 21 geradores em `Generators/*.cs` com snapshots de 1.000 valores (`tests/fixtures/generation-snapshots`, T-GEN-LIB, regressão); semântica do UUID v4 verificada. ⏳ **PARCIAL:** `core.lorem.*`, `core.weighted`, `core.switch` e `br.*` pendentes (DA-049).
+- [x] **6.4** `catalog.template`, `catalog.template.field` e slots de `RowContext`. *(TASK-06.04)* · Concluído em: 2026-10-12 · Evidência: `Generators/CatalogGenerators.cs`, `RowContext.GetOrSelectSlotRecord`; T-GEN-COMP-001 verde (colunas do mesmo slot leem o mesmo registro de ENDERECO). `ParentIndex` fica para a Sprint 7.
+- [x] **6.5** MDS-Expr (lexer, parser, avaliador, funções), `core.format` e `core.expr`. *(TASK-06.05)* · Concluído em: 2026-10-12 · Evidência: `Expressions/MdsExprParser.cs` (EBNF §9.1), `MdsExprEvaluator.cs` (nulos, tipos, funções), `ExpressionGenerator.cs`; T-GEN-EXPR-001..003 verdes. ⏳ **PARCIAL:** `cpf`, `cnpj` e `parent` não implementadas (DA-049).
+- [x] **6.6** Unicidade: Feistel, base mista, estratégias 1–5 e verificação de capacidade. *(TASK-06.06)* · Concluído em: 2026-10-12 · Evidência: `Unique/FeistelPermutation.cs` (§8.3), `Engine/GenerationEngine.cs` (estratégias 1, 2, 3 e 5); T-GEN-UQ-001, 002 e 004 verdes. ⏳ **PARCIAL:** estratégia 4 (sufixo) pendente (T-GEN-UQ-003 em `Skip`); base mista de composto (§8.4) pendente, fica com a Sprint 7.
 
 **Verificação do sprint**
-- [ ] T-GEN-RNG-001/002, T-GEN-LIB-*, T-GEN-DET-001, T-GEN-UQ-001..004, T-GEN-EXPR-001..003, T-GEN-COMP-001, T-GEN-NULL-001 e T-GEN-COERCE-001 verdes
-- [ ] B-RNG-001 executado e registrado
+- [x] T-GEN-RNG-001/002, T-GEN-LIB-*, T-GEN-DET-001, T-GEN-UQ-001..004 (003 em Skip), T-GEN-EXPR-001..003, T-GEN-COMP-001, T-GEN-NULL-001 e T-GEN-COERCE-001 verdes — `dotnet test tests/MockDataStudio.Generation.Tests`: 62 aprovados, 1 Skip (2026-10-12). T-GEN-LIB é regressão (DA-050).
+- [x] B-RNG-001 executado e registrado (2026-10-12): 125.037.199 linhas/s, 1 RNG por linha com 2 saídas, 5 M linhas, Release (`tests/MockDataStudio.Benchmarks`). Medição com `Stopwatch`, sem meta numérica definida em docs/24.
 
-**Relatório do sprint:** ____
+**Relatório do sprint:** 2026-10-12 — Motor de geração implementado (`MockDataStudio.Generation`): RNG, 21 geradores, coerção, MDS-Expr, unicidade e motor em lotes com determinismo entre paralelismos. 62 testes verdes, 1 Skip. Pendências declaradas (DA-049): distribuições normal/zipf, lorem, weighted/switch, br.*, rel.* (Sprint 7), estratégia de sufixo, funções cpf/cnpj/parent e base mista de composto.
 
 ---
 

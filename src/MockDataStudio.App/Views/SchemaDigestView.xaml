@@ -186,7 +186,7 @@
                             </StackPanel>
                         </Border>
                     </Grid>
-                    <TextBox Style="{StaticResource ReadOnlyEditor}" Text="{Binding DigestJson}" />
+                    <TextBox Style="{StaticResource ReadOnlyEditor}" Text="{Binding DigestJson, Mode=OneWay}" />
                 </DockPanel>
             </Border>
         </Grid>

@@ -13,4 +13,11 @@
     <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="Dapper" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Migrações imutáveis (09 §3, M-01) e schema de staging (09 §4). -->
+    <EmbeddedResource Include="Migrations\*.sql" />
+    <EmbeddedResource Include="Staging\staging-schema.sql" />
+    <EmbeddedResource Include="Seeds\*.json" />
+  </ItemGroup>
 </Project>

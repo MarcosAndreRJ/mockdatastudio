@@ -13,6 +13,9 @@ public static class ErrorCodes
     public const string PrvIntrospectPartial = "PRV-INTROSPECT-PARTIAL";
     public const string PrvSqliteNoFile = "PRV-SQLITE-NOFILE";
     public const string PrvUnsupportedVersion = "PRV-UNSUPPORTED-VERSION";
+    public const string PrvCancelled = "PRV-CANCELLED";
+    public const string PrvSqlSyntax = "PRV-SQL-SYNTAX";
+    public const string PrvSqlError = "PRV-SQL-ERROR";
 
     // Schema Digest (DIG-)
     public const string DigJson = "DIG-JSON";
@@ -47,6 +50,10 @@ public static class ErrorCodes
     public const string CatImpWeight = "CAT-IMP-WEIGHT";
     public const string CatImpRule = "CAT-IMP-RULE";
     public const string CatImpSize = "CAT-IMP-SIZE";
+    public const string CatMigFailed = "CAT-MIG-FAILED";
+    public const string CatStgSession = "CAT-STG-SESSION";
+    public const string CatProfileSecret = "CAT-PROFILE-SECRET";
+    public const string CatBackupFailed = "CAT-BACKUP-FAILED";
 
     // Mapeamento semântico (MAP-)
     public const string MapUnmapped = "MAP-UNMAPPED";
@@ -66,6 +73,12 @@ public static class ErrorCodes
     public const string GenExprType = "GEN-EXPR-TYPE";
     public const string GenExprUnknownFn = "GEN-EXPR-UNKNOWN-FN";
     public const string GenUqUniform = "GEN-UQ-UNIFORM";
+    public const string GenParamValue = "GEN-PARAM-VALUE";
+    public const string GenUnknownGenerator = "GEN-UNKNOWN-GENERATOR";
+    public const string GenUnsupported = "GEN-UNSUPPORTED";
+    public const string GenExprLimit = "GEN-EXPR-LIMIT";
+    public const string GenExprColumn = "GEN-EXPR-COLUMN";
+    public const string GenExprCycle = "GEN-EXPR-CYCLE";
 
     // Planejamento relacional (PLN-)
     public const string PlnFkParentExcluded = "PLN-FK-PARENT-EXCLUDED";

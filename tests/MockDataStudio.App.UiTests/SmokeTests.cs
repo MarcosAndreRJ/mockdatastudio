@@ -1,26 +1,28 @@
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Conditions;
 using FlaUI.UIA3;
 using Shouldly;
 using Xunit;
 
 namespace MockDataStudio.App.UiTests;
 
-// Teste de fumaça (Sprint 1, etapa 1.8): abre o app, percorre todas as telas e falha se aparecer erro.
+// Teste de fumaça (Sprint 1, etapa 1.8): abre o app, percorre todas as telas e verifica
+// (a) que a tela certa foi exibida (texto exclusivo da tela) e (b) que nenhuma janela extra apareceu.
 public sealed class SmokeTests
 {
-    private static readonly string[] NavigationTitles =
+    private static readonly (string Navigation, string ScreenMarker)[] Screens =
     [
-        "Home",
-        "Connections",
-        "Explorer",
-        "SQL Editor",
-        "Schema Digest",
-        "Templates",
-        "Mapping",
-        "Generation",
-        "History",
-        "Settings",
+        ("Home", "Workspace Overview"),
+        ("Connections", "Saved Connections (12)"),
+        ("Explorer", "Database Explorer"),
+        ("SQL Editor", "Query - shopdb"),
+        ("Schema Digest", "Database Structure"),
+        ("Templates", "Template Catalog"),
+        ("Mapping", "Field Mapping"),
+        ("Generation", "Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."),
+        ("History", "Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."),
+        ("Settings", "Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."),
     ];
 
     [Fact]
@@ -37,18 +39,21 @@ public sealed class SmokeTests
         var window = app.GetMainWindow(automation, TimeSpan.FromSeconds(30));
         window.ShouldNotBeNull("A janela principal do app não apareceu.");
 
-        foreach (var title in NavigationTitles)
+        foreach (var (navigation, marker) in Screens)
         {
-            var item = window.FindFirstDescendant(cf => cf.ByName(title));
-            item.ShouldNotBeNull($"Item de navegação '{title}' não encontrado.");
+            var item = window.FindFirstDescendant(cf => cf.ByName(navigation));
+            item.ShouldNotBeNull($"Item de navegação '{navigation}' não encontrado.");
 
             item.Click();
-            Thread.Sleep(600);
+            Thread.Sleep(1200);
 
-            // A caixa de erro do app tem o mesmo título da janela principal: conta-se a quantidade de janelas.
-            var topLevelWindows = app.GetAllTopLevelWindows(automation);
-            Console.WriteLine($"DBG {title}: {topLevelWindows.Length} -> " + string.Join(" | ", topLevelWindows.Select(w => w.Title + "[" + w.ClassName + "]")));
-            topLevelWindows.Length.ShouldBe(1, $"Tela '{title}' abriu uma janela inesperada (provável erro de interface).");
+            window.FindFirstDescendant(cf => cf.ByName(marker))
+                .ShouldNotBeNull($"A tela '{navigation}' não exibiu o texto esperado '{marker}'.");
+
+            // Uma única janela do processo: se a interface abrir um diálogo de erro, ele aparece como janela extra.
+            var processWindows = automation.GetDesktop()
+                .FindAllChildren(new PropertyCondition(automation.PropertyLibrary.Element.ProcessId, app.ProcessId));
+            processWindows.Length.ShouldBe(1, $"A tela '{navigation}' abriu uma janela inesperada (provável erro de interface).");
         }
 
         app.Close();

@@ -16,5 +16,6 @@
     <ProjectReference Include="..\..\src\MockDataStudio.Core\MockDataStudio.Core.csproj" />
     <ProjectReference Include="..\..\src\MockDataStudio.Providers.Abstractions\MockDataStudio.Providers.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\MockDataStudio.SqlTooling\MockDataStudio.SqlTooling.csproj" />
+    <ProjectReference Include="..\..\src\MockDataStudio.Providers.Sqlite\MockDataStudio.Providers.Sqlite.csproj" />
   </ItemGroup>
 </Project>

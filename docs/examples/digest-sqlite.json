@@ -5,7 +5,7 @@
   "server": "3.46.1",
   "database": "loja.db",
   "capturedAt": "2026-10-11T14:01:05Z",
-  "hash": "sha256:0b1c2d3e4f5a69788796a5b4c3d2e1f00112233445566778899aabbccddeeff0",
+  "hash": "sha256:c338a413649bcae20bd9100fee716c5071d3db2cb9ee89ff4a55626f69205755",
   "options": { "views": true, "routines": false, "triggers": true, "comments": false },
   "namespaces": [
     {
@@ -46,35 +46,17 @@
           "ck": [ { "e": "length(uf) = 2" } ]
         },
         {
-          "name": "produto",
+          "name": "entrega",
           "cols": [
-            ["id", "integer", "nn ai"],
-            ["sku", "text", "nn"],
-            ["descricao", "text", "nn"],
-            ["categoria_id", "integer", "nn"],
-            ["preco", "numeric(12,2)", "nn"],
-            ["estoque", "integer", "nn", { "def": "0" }],
-            ["atributos", "json"]
+            ["id", "text", "nn"],
+            ["pedido_id", "integer", "nn"],
+            ["item_seq", "integer", "nn"],
+            ["previsao", "date"],
+            ["cep_entrega", "char(8)", "nn"]
           ],
           "pk": ["id"],
-          "fk": [ { "n": "fk_produto_0", "c": ["categoria_id"], "r": "main.categoria", "rc": ["id"] } ],
-          "uq": [ { "c": ["sku"] } ],
-          "ck": [ { "e": "preco >= 0" } ],
-          "x": { "strict": "0" }
-        },
-        {
-          "name": "pedido",
-          "cols": [
-            ["id", "integer", "nn ai"],
-            ["cliente_id", "integer", "nn"],
-            ["data_pedido", "datetime", "nn"],
-            ["status", "text", "nn", { "def": "'ABERTO'" }],
-            ["total", "numeric(14,2)", "nn", { "def": "0" }],
-            ["total_com_frete", "numeric(14,2)", "gv", { "gx": "total + 15.00" }]
-          ],
-          "pk": ["id"],
-          "fk": [ { "n": "fk_pedido_0", "c": ["cliente_id"], "r": "main.cliente", "rc": ["id"] } ],
-          "ck": [ { "e": "status IN ('ABERTO','PAGO','ENVIADO','CANCELADO')" } ]
+          "fk": [ { "n": "fk_entrega_0", "c": ["pedido_id", "item_seq"], "r": "main.item_pedido", "rc": ["pedido_id", "item_seq"] } ],
+          "uq": [ { "c": ["pedido_id", "item_seq"] } ]
         },
         {
           "name": "item_pedido",
@@ -94,17 +76,34 @@
           "x": { "withoutRowid": "1" }
         },
         {
-          "name": "entrega",
+          "name": "pedido",
           "cols": [
-            ["id", "text", "nn"],
-            ["pedido_id", "integer", "nn"],
-            ["item_seq", "integer", "nn"],
-            ["previsao", "date"],
-            ["cep_entrega", "char(8)", "nn"]
+            ["id", "integer", "nn ai"],
+            ["cliente_id", "integer", "nn"],
+            ["data_pedido", "datetime", "nn"],
+            ["status", "text", "nn", { "def": "'ABERTO'" }],
+            ["total", "numeric(14,2)", "nn", { "def": "0" }],
+            ["total_com_frete", "numeric(14,2)", "gv", { "gx": "total + 15.00" }]
           ],
           "pk": ["id"],
-          "fk": [ { "n": "fk_entrega_0", "c": ["pedido_id", "item_seq"], "r": "main.item_pedido", "rc": ["pedido_id", "item_seq"] } ],
-          "uq": [ { "c": ["pedido_id", "item_seq"] } ]
+          "fk": [ { "n": "fk_pedido_0", "c": ["cliente_id"], "r": "main.cliente", "rc": ["id"] } ],
+          "ck": [ { "e": "status IN ('ABERTO','PAGO','ENVIADO','CANCELADO')" } ]
+        },
+        {
+          "name": "produto",
+          "cols": [
+            ["id", "integer", "nn ai"],
+            ["sku", "text", "nn"],
+            ["descricao", "text", "nn"],
+            ["categoria_id", "integer", "nn"],
+            ["preco", "numeric(12,2)", "nn"],
+            ["estoque", "integer", "nn", { "def": "0" }],
+            ["atributos", "json"]
+          ],
+          "pk": ["id"],
+          "fk": [ { "n": "fk_produto_0", "c": ["categoria_id"], "r": "main.categoria", "rc": ["id"] } ],
+          "uq": [ { "c": ["sku"] } ],
+          "ck": [ { "e": "preco >= 0" } ]
         }
       ],
       "views": [

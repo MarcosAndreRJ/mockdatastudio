@@ -5,7 +5,7 @@
   "server": "5.0.4",
   "database": "LOJA.FDB",
   "capturedAt": "2026-10-11T14:07:55Z",
-  "hash": "sha256:c0ffee00112233445566778899aabbccddeeff00112233445566778899aabbcc",
+  "hash": "sha256:d99457f164a2d8752475cd866cf584537ab97175b886a09a6f43ab4d45120a31",
   "options": { "views": true, "routines": true, "triggers": true, "comments": false },
   "namespaces": [
     {

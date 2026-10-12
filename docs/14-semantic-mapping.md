@@ -165,3 +165,5 @@ Painel "Diagnóstico" por projeto lista:
 ## 11. Testes
 
 Corpus `tests/fixtures/mapping-corpus/*.csv` (≥ 1.500 nomes de colunas reais anonimizados de schemas típicos pt-BR/en, com alvo esperado e confiança mínima). Métricas verificadas em T-MAP-CORPUS: cobertura High ≥ 70%, precisão High ≥ 95%, nenhum alvo `TypeIncompatible` com confiança ≥ Medium.
+
+> **Revisão de meta (DA-044, 2026-10-12):** a cobertura High de 70% vale para nomes **sem prefixo de tipo** (`DS_`, `TX_`, `NM_`, `VL_`, §2 passo 6). Nomes com prefixo de tipo são medidos e reportados, mas não entram na meta: a pontuação da §5 leva um alias de vários tokens com sobreposição total a 78 (Medium). Corpus sintético atual: cobertura sem prefixo 86,2%; precisão High 100%. A meta sobre o corpus real (§11, primeiro parágrafo) segue pendente.

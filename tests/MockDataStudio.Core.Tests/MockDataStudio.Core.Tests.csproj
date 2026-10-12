@@ -9,7 +9,10 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Shouldly" />
+    <!-- Somente testes: validação de referência do digest (T-DIG-001, T-DIG-010). DA-017. -->
+    <PackageReference Include="JsonSchema.Net" />
   </ItemGroup>
 
   <ItemGroup>

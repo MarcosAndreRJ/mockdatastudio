@@ -59,6 +59,15 @@
   <data name="PRV-UNSUPPORTED-VERSION" xml:space="preserve">
     <value>A versão do servidor de banco de dados não é suportada oficialmente pelo provider.</value>
   </data>
+  <data name="PRV-CANCELLED" xml:space="preserve">
+    <value>A operação foi cancelada pelo usuário.</value>
+  </data>
+  <data name="PRV-SQL-SYNTAX" xml:space="preserve">
+    <value>O banco de dados rejeitou o comando por erro de sintaxe SQL.</value>
+  </data>
+  <data name="PRV-SQL-ERROR" xml:space="preserve">
+    <value>O banco de dados retornou um erro ao executar o comando.</value>
+  </data>
 
   <!-- Schema Digest (DIG-) -->
   <data name="DIG-JSON" xml:space="preserve">
@@ -202,6 +211,27 @@
   <data name="GEN-UQ-UNIFORM" xml:space="preserve">
     <value>A unicidade composta bijetiva requer componentes de distribuição uniforme.</value>
   </data>
+  <data name="GEN-PARAM-VALUE" xml:space="preserve">
+    <value>Valor de parâmetro inconsistente com o gerador (ex.: intervalo vazio ou template não carregado).</value>
+  </data>
+  <data name="GEN-UNKNOWN-GENERATOR" xml:space="preserve">
+    <value>Gerador desconhecido: o identificador não está registrado.</value>
+  </data>
+  <data name="GEN-UNSUPPORTED" xml:space="preserve">
+    <value>Recurso do gerador ainda não suportado nesta versão.</value>
+  </data>
+  <data name="GEN-EXPR-LIMIT" xml:space="preserve">
+    <value>Expressão excede os limites de tamanho ou profundidade (docs/15 §9.3).</value>
+  </data>
+  <data name="GEN-EXPR-COLUMN" xml:space="preserve">
+    <value>Expressão referencia coluna inexistente na tabela.</value>
+  </data>
+  <data name="GEN-EXPR-CYCLE" xml:space="preserve">
+    <value>Dependência circular entre colunas geradas por expressão.</value>
+  </data>
+  <data name="PLN-UNIQUE-CAPACITY" xml:space="preserve">
+    <value>O gerador não tem valores distintos suficientes para a quantidade de linhas exigida pela unicidade. Reduza as linhas, aumente os valores do template ou use outro gerador.</value>
+  </data>
 
   <!-- Planejamento relacional (PLN-) -->
   <data name="PLN-FK-PARENT-EXCLUDED" xml:space="preserve">
@@ -233,9 +263,6 @@
   </data>
   <data name="PLN-KEY-OFFLINE" xml:space="preserve">
     <value>A faixa de chaves não foi verificada diretamente contra o banco de dados de destino.</value>
-  </data>
-  <data name="PLN-UNIQUE-CAPACITY" xml:space="preserve">
-    <value>A quantidade de linhas solicitada excede a capacidade de valores únicos disponíveis no template ou gerador.</value>
   </data>
   <data name="PLN-UNIQUE-EXISTING" xml:space="preserve">
     <value>Existem registros pré-existentes no banco que podem colidir com valores únicos gerados.</value>
@@ -412,4 +439,16 @@
     <value>Projeto não confiável: execução de consultas de referência SQL desabilitada por segurança.</value>
   </data>
 
+  <data name="CAT-MIG-FAILED" xml:space="preserve">
+    <value>A migração do catálogo falhou e foi revertida; o catálogo permanece na versão anterior.</value>
+  </data>
+  <data name="CAT-STG-SESSION" xml:space="preserve">
+    <value>Sessão de importação inexistente ou já finalizada.</value>
+  </data>
+  <data name="CAT-PROFILE-SECRET" xml:space="preserve">
+    <value>O perfil de conexão contém um campo de segredo; senhas não são gravadas no catálogo.</value>
+  </data>
+  <data name="CAT-BACKUP-FAILED" xml:space="preserve">
+    <value>Não foi possível gerar o backup do catálogo; a operação foi cancelada.</value>
+  </data>
 </root>

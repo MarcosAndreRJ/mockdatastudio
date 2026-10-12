@@ -7,4 +7,9 @@
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Cópia do contrato público docs/contracts/schemas/digest-1.0.schema.json (TASK-01.03). -->
+    <EmbeddedResource Include="Digest\digest-1.0.schema.json" />
+  </ItemGroup>
 </Project>
