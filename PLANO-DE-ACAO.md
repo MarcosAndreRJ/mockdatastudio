@@ -247,9 +247,9 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
 - [x] **A2.0** Início da sprint conforme §3.1. · Concluído em: 2026-10-12 · Evidência: branch criada a partir da `main` (0ddb318); dependência A1 ✅ na `main`
-- [ ] **A2.1** `DependencyGraph` + Tarjan iterativo, com ordem determinística. *(TASK-07.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **A2.2** `KeyPlanner` (Explicit/DatabaseDefault, reserva de faixa, overflow, modo offline) e `KeyOracle`. *(TASK-07.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **A2.3** `CycleResolver` (NullThenUpdate + bloqueio `PLN-CYCLE-UNBREAKABLE`) e autorreferência anulável. *(TASK-07.02)* · Concluído em: ____ · Evidência: ____
+- [x] **A2.1** `DependencyGraph` + Tarjan iterativo, com ordem determinística. *(TASK-07.01)* · Concluído em: 2026-10-12 · Evidência: `Generation/Planning/DependencyGraph.cs`; T-REL-GRAPHUNIT-001..005 aprovados (inclui cadeia de 20 mil nós sem estouro de pilha)
+- [ ] **A2.2** `KeyPlanner` (Explicit/DatabaseDefault, reserva de faixa, overflow, modo offline) e `KeyOracle`. *(TASK-07.03)* · Concluído em: ____ · ⏳ PARCIAL: `KeyPlanner.PlanExplicitRange` (faixa, overflow `PLN-KEY-OVERFLOW`, offline `PLN-KEY-OFFLINE`, sobrescrita) com T-REL-KEYUNIT-001..004. Falta `KeyOracle` (`GetKey`, `ExistingPool`) e a execução de `RUN-KEY-RANGE-TAKEN`
+- [ ] **A2.3** `CycleResolver` (NullThenUpdate + bloqueio `PLN-CYCLE-UNBREAKABLE`) e autorreferência anulável. *(TASK-07.02)* · Concluído em: ____ · ⏳ PARCIAL: `CycleResolver` (NullThenUpdate, DeferredConstraint, DisableChecks; busca exaustiva até 12 arestas, gulosa acima) e `PLN-CYCLE-UNBREAKABLE` com T-REL-CYCUNIT-001..005. Autorreferência anulável só gera diagnóstico `PLN-SELF-REF`; a hierarquia por índice anterior (16 §4) não foi implementada
 - [ ] **A2.4** `rel.key`, `rel.fk` ChildDriven, FKs compostas e sobrepostas, `rel.child_seq`. *(TASK-07.04)* · Concluído em: ____ · Evidência: ____
 - [ ] **A2.5** `IGenerationEngine.RunAsync(GenerationPlan, …)` multi-tabela com passos, updates adiados e função `parent()`; a execução por tabela vira interna (DA-052). *(TASK-06.07, SAN-A.2, SAN-A.5)* · Concluído em: ____ · Evidência: ____
 - [ ] **A2.6** `GenerationPlanner`: diagnósticos `PLN-*`, estimativas, `PlanHash`; snapshots de plano para os **4 digests** de `docs/examples` (T-REL-PLAN-001). *(TASK-07.05)* · Concluído em: ____ · Evidência: ____
@@ -261,7 +261,7 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 - [ ] Mesma saída com MaxDOP 1 e 8 (hash registrado); B-GEN-001 ≥ 100 mil linhas/s (sem writer)
 - [ ] Encerramento conforme §3.3
 
-**Relatório da sprint:** ____
+**Relatório da sprint:** `sprint/A2-planejamento-relacional` (2026-10-12) — **PARCIAL, não concluída**. Feito: grafo de dependências com Tarjan iterativo, `CycleResolver`, `KeyPlanner` (faixa explícita), `GenerationPlanner` com diagnósticos e `PlanHash`, com 21 testes unitários (T-REL-*UNIT). Não feito: `KeyOracle`, `IGenerationEngine.RunAsync(GenerationPlan)` e `IRowSink` (C06), planejamento de Existing/Fixed/Dataset/Query, ParentDriven, 1:1, FKs compostas, autorreferência anulável, `PreflightValidator`, snapshots dos 4 digests e teste E2E em SQLite (A2.8, depende de A3/Output). Testes (Release, solução inteira, worktree `MockDataStudio-A2`): Core 109, Generation 101, Mapping 22, SqlTooling 32, Catalog 21, Application 53, Output 6, Architecture 10, ContractTests 24 aprovados e 3 ignorados, IntegrationTests 3, App.UiTests 1; 0 falhas nesta rodada. O smoke de UI falhou em uma rodada completa anterior (13 s, sem mensagem capturada) e passou nesta e nas isoladas; ver PV-102. NuGet: sem pacotes vulneráveis. Decisões: DA-100..104. Pendências: PV-100..102. Hash de merge: não aplicável (sprint não concluída, não mesclada na `main`)
 
 ---
 

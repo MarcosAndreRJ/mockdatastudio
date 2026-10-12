@@ -91,6 +91,11 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 
 | ID | Decisão | Referência |
 |---|---|---|
+| DA-100 | `DependencyGraphBuilder.Build` recebe `TableSettings` (origem de cada FK) em vez de `bindings`, como descrito em C06. Os bindings não alteram o grafo; a origem da FK é que decide se gera aresta (16 §1) | C06; 16 §1; `DependencyGraph.cs` |
+| DA-101 | Tarjan iterativo (sem recursão) com nós e arestas ordenados por `CanonicalId`. Os componentes saem com pais antes dos filhos e cada componente sai ordenado | 16 §2; `DependencyGraph.cs` |
+| DA-102 | Faixa de chave Explicit: `start = max(MAX, sequence, 0) + 1 + KeyOffset` (ou `KeyStartOverride`). Overflow usa a largura inteira do tipo (`IntegerBits`); tipo sem largura conhecida não tem checagem de overflow | 16 §5.2; `KeyPlanner.cs` |
+| DA-103 | Resolução de ciclos: busca exaustiva (menor conjunto de arestas, desempate por custo da estratégia) até 12 arestas candidatas; acima disso, guloso que só remove arestas dentro de um componente cíclico restante. A heurística gulosa pode não ser mínima | 16 §3; `CycleResolver.cs` |
+| DA-104 | `GenerationPlan` não inclui `SessionSetupStep`/`SessionTeardownStep`: as instruções dependem do dialeto e entram na A3. `PlanHash` é SHA-256 do texto canônico do plano. Autorreferência só gera o diagnóstico `PLN-SELF-REF`; a geração é responsabilidade do gerador | C06; 16 §4; `GenerationPlanner.cs` |
 
 ### 1.2 Trilha B — Providers, SQL e testes de integração (DA-200..299)
 
@@ -175,6 +180,9 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | ID | Verificação | Como verificar | Fallback se negativo | Sprint |
 |---|---|---|---|---|
+| PV-100 | `IGenerationEngine.RunAsync(GenerationPlan, …)` e `IRowSink`/`RowBatch` (C06) ainda não existem: o motor continua com a API por tabela (DA-052). Output (A3) precisa consumir o plano, então exige coordenação com a trilha A na própria A3 | Implementar A2.5 e revisar com A3 | Manter a API por tabela até A3 e registrar a divergência no relatório | A2 / A3 |
+| PV-101 | Snapshots de plano para os 4 digests de `docs/examples` (T-REL-PLAN-001) não foram feitos: falta importar os digests para `SchemaModel` na suíte de testes | Importar `digest-*.json` (Core.Digest) e gerar o plano de `loja` por SGBD | Registrar snapshot parcial só para PostgreSQL e manter o restante pendente | A2 |
+| PV-102 | Smoke de UI (`App.UiTests`) falhou uma vez na suíte completa (timeout em 13 s, sem mensagem capturada) e passou em todas as execuções isoladas. Causa provável: `Thread.Sleep(1200)` fixo e início lento do app sob carga. O teste é da trilha C | Repetir a suíte completa e capturar a mensagem; trocar o sleep por espera pelo marcador | Não marcar o smoke como verde sem a captura; trilha C decide a correção | Trilha C (C1) |
 
 ### 5.2 Trilha B (PV-200..299)
 
@@ -212,6 +220,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
+| 2026-10-12 | DA-100..104, PV-100..102 | Sprint A2 parcial: grafo com Tarjan, resolução de ciclos, faixa de chaves e planejador com diagnósticos e PlanHash | Pedido do responsável em 2026-10-12 |
 
 ### 6.2 Trilha B
 
