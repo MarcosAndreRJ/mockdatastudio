@@ -41,7 +41,7 @@ Ver [22 §3](22-project-file-format.md). Verificação automatizada T-SEC-002: s
 ## 5. Proteção contra operações destrutivas e banco errado
 
 ### 5.1 Ambientes
-`EnvironmentTag` obrigatório; padrão `Unknown` (tratado como Production). Production marca `IsReadOnly=true` por padrão; desmarcar exige confirmação.
+`ConnectionEnvironment` obrigatório; padrão `Unknown` (tratado como Production). Production marca `IsReadOnly=true` por padrão; desmarcar exige confirmação.
 
 ### 5.2 Matriz de decisão do `ExecutionGuard`
 

@@ -6,9 +6,9 @@
 | Escopo | Visão, requisitos, arquitetura, especificação técnica, UX, plano de implementação, qualidade e governança. |
 | Revisão | 1.0 — 2026-10-11 |
 | Público | Responsável pelo produto e IA Executora (implementação) |
-| Status | Especificação concluída; implementação **não iniciada** |
+| Status | Especificação concluída. Implementação em andamento: Sprints 0–6 executados (ver [37](37-implementation-audit.md)); restante em trilhas paralelas |
 
-> **IA Executora**: comece por [33-executor-instructions](33-executor-instructions.md) e execute os sprints do [Plano de Ação](../PLANO-DE-ACAO.md) (que segue o [28-implementation-backlog](28-implementation-backlog.md)), marcando cada etapa concluída.
+> **IA Executora**: comece por [33-executor-instructions](33-executor-instructions.md) (§18: execução paralela em branches) e execute as sprints da sua trilha no [Plano de Ação](../PLANO-DE-ACAO.md). O conteúdo de cada tarefa está no [28-implementation-backlog](28-implementation-backlog.md).
 
 ## Resumo em uma página
 
@@ -73,7 +73,9 @@
 | [33-executor-instructions](33-executor-instructions.md) | Regras para a IA Executora |
 | [34-glossary](34-glossary.md) | Glossário |
 | [35-traceability-matrix](35-traceability-matrix.md) | Requisito → Módulo → Contrato → Tarefa → Teste → Aceite |
-| [36-audit-report](36-audit-report.md) | Auditoria independente, correções e riscos residuais |
+| [36-audit-report](36-audit-report.md) | Auditoria independente da especificação, correções e riscos residuais |
+| [37-implementation-audit](37-implementation-audit.md) | Auditoria da implementação (2026-10-12): o que foi feito, achados e o que falta |
+| [progress/](progress/plano-sequencial-sprints-0-6.md) | Plano sequencial arquivado (Sprints 0–6) e evidências por sprint |
 
 ## 5. Exemplos
 

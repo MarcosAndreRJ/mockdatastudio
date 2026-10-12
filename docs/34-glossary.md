@@ -3,7 +3,7 @@
 | Termo | Definição | Ver |
 |---|---|---|
 | **Alias** | Nome alternativo de coluna que aponta para um template ou campo de template | 13 §3 |
-| **Ambiente (EnvironmentTag)** | Classificação do perfil de conexão: Development, Test, Staging, Production, Unknown | 23 §5 |
+| **Ambiente (`ConnectionEnvironment`, conceitualmente EnvironmentTag)** | Classificação do perfil de conexão: Development, Test, Staging, Production, Unknown | 23 §5 |
 | **Autorização de execução** | Token emitido após confirmação, vinculado ao fingerprint do destino e ao PlanHash, válido 10 min | 19 §2 |
 | **Binding (ColumnBinding)** | Vínculo de uma coluna a um gerador com parâmetros, taxa de nulos e origem | 08 §5 |
 | **Binding estrutural** | Binding determinado pela estrutura (PK identity, FK, coluna gerada) | 14 §3 |

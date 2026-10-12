@@ -138,3 +138,7 @@ Formato por problema: **Cenário · Riscos · Alternativas · Trade-offs · Solu
 | R-10 | `Microsoft.Data.Sqlite`/bundle sem JSON1 | B | M | Teste em 04.01 | TASK-04.01 | Aberto |
 | R-11 | Dependência de terceiros abandonada (Dapper, Serilog) | B | M | Uso restrito, substituível | — | Aceito |
 | R-12 | COPY binário PG e identity ALWAYS | M | B | Fallback INSERT | TASK-15.02 | Aberto |
+| R-13 | Comportamentos de MySQL/PostgreSQL/Firebird nunca exercitados: sem Docker local, smoke de integração falso (docs/37 A-01/A-03) | A | A | Testcontainers real + CI de integração bloqueante; máquina com Docker para as IAs da trilha B | Sprint B1 | Aberto |
+| R-14 | Vulnerabilidades em dependências transitivas (SQLitePCLRaw alta; SSH.NET alta; System.Drawing.Common crítica) | M | A | Atualizar/forçar versões corrigidas; bloquear release se em `src/` | Sprint B1, Gate V1 | Aberto |
+| R-15 | Conflitos de merge e decisões divergentes entre IAs em paralelo | A | M | Posse de diretórios por trilha, faixas de numeração, merge frequente da `main`, sprints de gate | DA-054, PLANO-DE-ACAO.md | Aberto |
+| R-16 | Duas trilhas mudam o mesmo contrato público (C01–C09) sem coordenação | M | A | Contrato só muda pela trilha dona (tabela de posse do plano); mudança cross-trilha vira PV "requer coordenação" e é resolvida no gate | PLANO-DE-ACAO.md | Aberto |

@@ -12,13 +12,6 @@ public sealed class HomeViewModel(IDesignDataSource data)
     public IReadOnlyList<ActivityItem> RecentActivity { get; } = data.RecentActivity;
 }
 
-public sealed class ConnectionsViewModel(IDesignDataSource data)
-{
-    public IReadOnlyList<SavedConnection> SavedConnections { get; } = data.SavedConnections;
-    public IReadOnlyList<ConnectionTest> RecentConnectionTests { get; } = data.RecentConnectionTests;
-    public IReadOnlyList<ConnectionActivity> ConnectionActivities { get; } = data.ConnectionActivities;
-}
-
 public sealed class ExplorerViewModel(IDesignDataSource data, SqlEditorViewModel sqlEditor, SqlResultsViewModel sqlResults)
 {
     public IReadOnlyList<TreeNode> ExplorerTree { get; } = data.ExplorerTree;

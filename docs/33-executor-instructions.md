@@ -108,6 +108,8 @@ Exatamente a Definition of Done de [29 §1](29-acceptance-criteria.md). Em parti
 - Não inventar APIs de bibliotecas: verificar na documentação/código do pacote; se não for possível verificar, registrar PV.
 - Não executar operações destrutivas em bancos reais: testes usam somente containers/arquivos temporários criados pelo próprio teste.
 - Não fazer refatorações fora do escopo sem motivo demonstrável (ex.: bug bloqueante), registrado no relatório.
+- Não transformar teste que não executou em teste aprovado: sem Docker/sessão interativa → `Skip` com motivo (DA-055).
+- "Build sem warnings" inclui os avisos de auditoria NuGet (NU190x): informe-os no relatório, nunca os omita.
 
 ## 16. Código de teste × protótipo × produção
 | Tipo | Local | Regras |
@@ -117,6 +119,20 @@ Exatamente a Definition of Done de [29 §1](29-acceptance-criteria.md). Em parti
 | Protótipo/spike | `spikes/<tema>/` (fora da solução principal) | Descartável; conclusões registradas em 32 (PV resolvida); **nunca** copiado para `src/` sem reescrita conforme padrões |
 
 ## 17. Primeira sessão recomendada
-1. Ler 00, 01, 05, 07, 08, contracts/README, 28 (M0–M1), este documento.
-2. Executar TASK-00.01 → 00.04 → 00.02 → 00.03 → 00.05.
-3. Produzir relatório do marco M0.
+> Histórico: as tarefas do M0–M3 iniciais já foram executadas (ver [37](37-implementation-audit.md)). Uma IA que entra agora segue o §18 e começa pela primeira sprint disponível da sua trilha no [Plano de Ação](../PLANO-DE-ACAO.md).
+
+1. Ler 00, 01, 05, 07, 08, contracts/README, 37, este documento e a seção da sua trilha no Plano de Ação.
+2. Confirmar o build e a suíte rápida na `main` antes de criar a branch.
+
+## 18. Execução paralela em branches (DA-054)
+
+O trabalho restante é executado por **2 ou 3 IAs** em paralelo, cada uma numa **trilha** (A — Motor/Planejamento/Saída; B — Providers/SQL/Integração; C — Aplicação/Projeto/Interface). O [Plano de Ação](../PLANO-DE-ACAO.md) é a fonte do protocolo. Resumo obrigatório:
+
+1. **Uma branch por sprint**: `sprint/<ID>-<slug>` criada a partir da `main` atualizada (`git pull`). Nunca trabalhar direto na `main`.
+2. **Dependências**: só iniciar a sprint quando todas as sprints listadas em "Depende de" estiverem com status ✅ **na `main`**.
+3. **Posse de diretórios**: alterar somente os diretórios da sua trilha. Arquivos compartilhados (lista no plano) só recebem **acréscimos** na seção da trilha. Se precisar alterar código de outra trilha, registre a necessidade no relatório e no PV da sua faixa; não altere.
+4. **Numeração**: DA/PV/PA na faixa da trilha ([32](32-decisions-and-assumptions.md), tabela de numeração), acrescentados só na subseção da trilha.
+5. **Marcação**: marcar `[x]` em cada etapa concluída, com data e evidência, e atualizar a linha **Status** da sprint. Editar somente a seção da própria sprint no plano.
+6. **Fim de sprint**: commit final → `git fetch` → `git merge origin/main` na branch → resolver conflitos (regras no plano) → build + testes → merge `--no-ff` na `main` → build + testes na `main` → `git push origin main` → status ✅ com o hash do merge.
+7. **Push rejeitado** (outra IA mesclou antes): `git pull --no-rebase` na `main`, refazer build/testes e repetir o push. Nunca usar `push --force` na `main`.
+8. **Conflito que exige decisão de outra trilha**: não resolver por conta própria. Abortar o merge (`git merge --abort`), registrar `⚠ BLOQUEADO` na sprint e descrever o conflito no relatório.

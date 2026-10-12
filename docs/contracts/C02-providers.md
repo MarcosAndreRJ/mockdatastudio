@@ -1,14 +1,18 @@
 # C02 — Contratos de providers (`MockDataStudio.Providers.Abstractions`)
 
-> **Localização de tipos de dados puros:** `ConnectionSettings`, `ConnectionProfile`, `EnvironmentTag` e `ProviderCapabilities` são definidos em **`MockDataStudio.Core.Connections`** (consumidos por Catalog, Generation e Application, que não podem referenciar Providers.Abstractions — AR-02). Estão reproduzidos abaixo por conveniência.
+> **Localização de tipos de dados puros:** `ConnectionSettings`, `ConnectionProfile`, `ConnectionEnvironment` e `ProviderCapabilities` são definidos em **`MockDataStudio.Core.Connections`** (consumidos por Catalog, Generation e Application, que não podem referenciar Providers.Abstractions — AR-02). Estão reproduzidos abaixo por conveniência.
+>
+> **Nome do tipo de ambiente (DA-034):** o código usa `ConnectionEnvironment`. "EnvironmentTag", que aparece nos documentos de domínio (08, 23), é o nome conceitual do mesmo tipo.
+>
+> **Organização em arquivos (DA-033):** um tipo por arquivo no namespace `MockDataStudio.Providers`; modelos auxiliares em `MockDataStudio.Providers.Models`. `IMdsModule` segue [31 §2](../31-extension-strategy.md).
 
 ```csharp
 namespace MockDataStudio.Core.Connections;
 
-public enum EnvironmentTag { Development, Test, Staging, Production, Unknown }
+public enum ConnectionEnvironment { Development, Test, Staging, Production, Unknown }
 
 public sealed record ConnectionProfile(Guid Id, string Name, DatabaseEngine Engine, ConnectionSettings Settings,
-    EnvironmentTag Environment, string? ColorHex, bool IsReadOnly, bool PromptPassword, string? Notes);
+    ConnectionEnvironment Environment, string? ColorHex, bool IsReadOnly, bool PromptPassword, string? Notes);
 
 public sealed record ConnectionSettings(
     string? Host, int? Port, string Database, string? User,
@@ -47,6 +51,9 @@ public interface IDatabaseProvider
     IBulkInserter CreateBulkInserter(DbConnection connection, string serverVersion);
     ITargetInspector CreateTargetInspector(DbConnection connection, string serverVersion);
     IErrorTranslator ErrorTranslator { get; }
+    /// Coloca a sessão em modo somente leitura no servidor (20 §8, 23 §5): PG/MySQL `SET SESSION ... READ ONLY`,
+    /// Firebird transação `read`. SQLite: retorna false (exige reabrir com Mode=ReadOnly). Acrescentado em 2026-10-12 (Sprint B5).
+    Task<bool> ApplySessionReadOnlyAsync(DbConnection connection, CancellationToken ct);
 }
 
 public sealed record ConnectionSettingDefinition(string Key, string Label, string Type /*string|int|bool|enum*/, string? Default, IReadOnlyList<string>? Options);
@@ -91,6 +98,10 @@ public interface ISqlDialect
     IReadOnlyList<string> ResyncSequenceStatements(ObjectName table, ColumnModel column, string? sequenceName, long nextValue);
     string BuildInsert(ObjectName table, IReadOnlyList<string> columns, IReadOnlyList<IReadOnlyList<string>> literalRows, string? overrideClause);
     int RecommendedRowsPerInsert { get; }                  // 1 para Firebird
+    /// Comando que falha se a faixa reservada de chaves estiver ocupada (EmitGuards, 16 §5.2, 18 §1).
+    /// null = dialeto sem suporte (SQLite, MySQL, Firebird → o writer emite só comentário). PG: bloco DO $$ … RAISE EXCEPTION.
+    /// Acrescentado em 2026-10-12: implementado pela trilha B (B1 SQLite, B2 PostgreSQL…), consumido pela trilha A (A3).
+    string? BuildKeyRangeGuard(ObjectName table, string column, long start, long end);
 }
 
 /// Subconjunto de OutputSettings (C06) relevante para o dialeto; construído pelo SqlScriptWriter a partir do perfil — não persistido.

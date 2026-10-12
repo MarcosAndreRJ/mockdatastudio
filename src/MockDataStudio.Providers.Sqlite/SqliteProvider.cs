@@ -22,6 +22,9 @@ public sealed class SqliteProvider : IDatabaseProvider
 
     public string DisplayName => "SQLite";
 
+    public bool RequiresHostPort => false;
+    public string? LogoResourceName => "sqlite";
+
     public IReadOnlyList<ConnectionSettingDefinition> ExtraSettings { get; } =
     [
         new ConnectionSettingDefinition("foreignKeys", "Verificar chaves estrangeiras", "bool", "true", null),
@@ -63,7 +66,9 @@ public sealed class SqliteProvider : IDatabaseProvider
 
     public async Task<DbConnection> OpenConnectionAsync(ConnectionSettings settings, string? password, CancellationToken ct)
     {
-        if (ParseMode(settings.Extra) == SqliteOpenMode.ReadOnly && !File.Exists(settings.Database))
+        var isMemory = string.Equals(settings.Database, ":memory:", StringComparison.OrdinalIgnoreCase);
+        var createNew = ParseBool(settings.Extra, "createNew", defaultValue: false);
+        if (!isMemory && !createNew && !File.Exists(settings.Database))
         {
             throw new FileNotFoundException($"Arquivo SQLite não encontrado: {settings.Database}", settings.Database);
         }
@@ -72,6 +77,12 @@ public sealed class SqliteProvider : IDatabaseProvider
         await connection.OpenAsync(ct);
         _dateStorage.AddOrUpdate(connection, ParseDateStorage(settings.Extra));
         return connection;
+    }
+
+    public Task<bool> ApplySessionReadOnlyAsync(DbConnection connection, CancellationToken ct)
+    {
+        // SQLite não possui comando 'SET SESSION READ ONLY'; a garantia exige abrir a conexão com Mode=ReadOnly (C02, docs/20 §8).
+        return Task.FromResult(false);
     }
 
     public async Task<ServerInfo> GetServerInfoAsync(DbConnection connection, CancellationToken ct)

@@ -18,7 +18,11 @@
 | Desempenho | BenchmarkDotNet + cenários | Marcos | Metas NFR-PERF |
 | Snapshot | Verify (`*.verified.json/.sql/.txt`) | Todo build | Digests, scripts, planos, saídas de geradores |
 
-Categorias via `[Trait("Category", "Unit|Contract|Integration|UI|Benchmark")]` e `[Trait("Id","T-...")]`.
+Categorias via `[Trait("Category", "Unit|Contract|Integration|UI|Benchmark|Statistical|Corpus")]` e `[Trait("Id","T-...")]`.
+
+**Regra de honestidade dos testes (DA-055):** um teste que não pode executar no ambiente (sem Docker, sem sessão interativa, sem servidor) termina como **Skip com motivo** (xUnit v3: `Assert.Skip("motivo")`/`[Fact(SkipUnless = …)]`), **nunca** como aprovado por `return` antecipado. Relatórios de sprint informam aprovados, falhos e ignorados separadamente. Teste de integração "smoke" deve iniciar o container de fato (Testcontainers), conectar e executar `SELECT 1`.
+
+**Encerramento do host de testes:** toda suíte deve terminar sozinha. Conexões, pools (`SqliteConnection.ClearAllPools()`, `NpgsqlConnection.ClearAllPools()` etc.) e containers são liberados em `IAsyncLifetime.DisposeAsync`/fixtures. Um host que não encerra é defeito (docs/37 A-06).
 
 ## 2. Ambientes reproduzíveis
 
@@ -106,6 +110,9 @@ FLOW-001 SQLite ponta a ponta só teclado · FLOW-002 importação de catálogo 
 ### 5.14a Application (T-APP)
 001 ConnectionService (CRUD/teste com provider fake) · 002 DigestService (captura/exportação/importação) · 003 MappingService (contexto, AutoBindAll, SetBinding com aprendizado) · 004 GenerationService (plano → validação → execução em sink de memória) · 005 ReferenceDataSource (Generated/Fixed) — todos com fakes, sem banco.
 
+### 5.14c IDs criados durante a implementação (Sprints 0–6)
+T-NAM-001/002 round-trip de `ObjectName`/`ColumnRef` (10.000 casos, seed fixa) · T-SQL-SPLIT-CORPUS corpus por dialeto · T-UI-SMOKE-001 abre o app e navega por todas as telas · T-PRV-NNN-xxx IDs da suíte abstrata de contrato (`NNN` = SGBD na classe concreta) · T-SMOKE-* smoke de infraestrutura (**a substituir na Sprint B1** por smoke real com Testcontainers; DA-055).
+
 ### 5.14b Adições relacionais
 T-REL-PLAN-002 snapshot de plano com `NaturalKeyLookup` e execução do script resultante (PG e MySQL).
 
@@ -129,7 +136,11 @@ B-RNG-001, B-GEN-001, B-MEM-001, B-INT-001, B-START-001, B-MAP-001, B-SQL-001, B
 | `ui` | windows-latest (sessão interativa) | FlaUI — **premissa PA-012**: runners hospedados permitem automação UIA; se falhar, executar em máquina dedicada |
 | `nightly` | ambos | Matriz completa de versões |
 
-Critério de merge: `build-unit` verde; `integration` verde se o PR toca Providers/Output/Application.
+Critério de merge: `build-unit` verde; `integration` verde se o PR toca Providers/Output/Application. O job `integration` **não** usa `continue-on-error` (falha de integração reprova o pipeline).
+
+**Auditoria de dependências:** `NuGetAudit` ativo; avisos NU1901–NU1904 aparecem no resumo do build. Vulnerabilidade **alta ou crítica** em pacote usado por `src/` bloqueia o release (Gate V1); em pacote usado só por `tests/`, exige registro em docs/32 com mitigação ou atualização do pacote.
+
+**Execução paralela por IAs (DA-054):** cada sprint roda em branch própria. Antes do merge em `main`, a IA executa no mínimo a suíte rápida completa (`Category=Unit|Architecture|Contract`) após incorporar a `main` mais recente. Se tocou Providers/Output/Application, executa também `Category=Integration` (ou declara que não pôde, por falta de Docker, com o job de CI como evidência).
 
 ## 9. Dados de teste
 Nenhum dado real. Fixtures de mapeamento (`mapping-corpus`) contêm apenas **nomes de colunas**, coletados de schemas públicos/sintéticos.

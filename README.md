@@ -4,8 +4,8 @@ Aplicação desktop para Windows que conecta a bancos **SQLite, MySQL, PostgreSQ
 
 Funciona **offline** e não depende de IA. Uma IA externa pode ser usada, de forma opcional, para produzir scripts que alimentam o catálogo de templates.
 
-> **Status (2026-10-12):** especificação completa em [`docs/`](docs/00-index.md). Há uma **interface protótipo** em WPF, construída a partir dos mockups, com dados fixos. Ainda não existe backend: nenhuma conexão, geração ou persistência real.
-> A execução segue o [**Plano de Ação**](PLANO-DE-ACAO.md).
+> **Status (2026-10-12):** especificação completa em [`docs/`](docs/00-index.md). Implementados e testados: núcleo de schema e Schema Digest, SqlTooling, provider **SQLite**, catálogo interno, mapeamento semântico e motor de geração (258 testes aprovados). A interface WPF já usa MVVM, mas ainda mostra dados de exemplo. Ainda faltam: planejamento relacional, saída SQL, providers PostgreSQL/Firebird/MySQL, serviços de aplicação e a interface ligada a dados reais. Situação detalhada na [auditoria de implementação](docs/37-implementation-audit.md).
+> O trabalho restante segue o [**Plano de Ação**](PLANO-DE-ACAO.md), em **três trilhas paralelas** (uma branch por sprint, executadas por 2 ou 3 IAs).
 
 ---
 
@@ -44,38 +44,55 @@ Justificativas em [docs/06-technology-decisions.md](docs/06-technology-decisions
 ## Como compilar e executar
 
 ```bash
-dotnet build MockDataStudio.sln -c Release
+dotnet build MockDataStudio.slnx -c Release
 ```
 
 ```bash
 dotnet run --project src/MockDataStudio.App
 ```
 
-Testes (quando os projetos de teste existirem, a partir do Sprint 0):
+Suíte rápida (unitários, arquitetura e contrato SQLite):
 
 ```bash
-dotnet test -c Release --filter "Category=Unit|Category=Architecture"
+dotnet test MockDataStudio.slnx -c Release --filter "Category=Unit|Category=Architecture|Category=Contract"
 ```
+
+Integração com MySQL/PostgreSQL/Firebird (exige Docker):
+
+```bash
+dotnet test MockDataStudio.slnx -c Release --filter "Category=Integration"
+```
+
+Alternativamente, os scripts `build.ps1` e `test.ps1` na raiz.
 
 ## Estrutura do repositório
 
 ```text
 MockDataStudio/
-├── README.md                  # este arquivo
-├── PLANO-DE-ACAO.md           # sprints em ordem de execução (com checklist)
-├── MockDataStudio.sln
-├── docs/                      # especificação completa (fonte de verdade)
-├── images/                    # mockups de referência da interface
-└── src/
-    └── MockDataStudio.App/    # WPF — protótipo de interface (dados de exemplo em Samples/)
-        ├── Views/             # Home, Connections, Explorer, Schema Digest, Templates, Mapping, Placeholder
-        ├── Controls/          # SearchField, extensões de TreeView
-        ├── Themes/            # Colors.xaml, Styles.xaml
-        ├── Resources/         # realce SQL (sql.xshd), logos dos SGBDs
-        └── Samples/           # SampleData.cs — dados fixos dos mockups (temporário)
+├── README.md                     # este arquivo
+├── PLANO-DE-ACAO.md              # trilhas paralelas, sprints e checklist
+├── MockDataStudio.slnx           # solução (.NET 10)
+├── Directory.Build.props / Directory.Packages.props / global.json
+├── build.ps1 / test.ps1          # scripts locais equivalentes ao CI
+├── .github/workflows/ci.yml      # CI (GitHub Actions)
+├── docs/                         # especificação (fonte de verdade), auditorias e progresso
+├── images/                       # mockups de referência da interface
+├── src/
+│   ├── MockDataStudio.Core/                  # modelo canônico, digest, hash, diff, tipos comuns   [implementado]
+│   ├── MockDataStudio.SqlTooling/            # lexer, splitter, classificador SQL               [implementado]
+│   ├── MockDataStudio.Providers.Abstractions/# contratos de providers                          [implementado]
+│   ├── MockDataStudio.Providers.Sqlite/      # provider SQLite                                 [implementado]
+│   ├── MockDataStudio.Providers.{PostgreSql,Firebird,MySql}/                               [a fazer]
+│   ├── MockDataStudio.Catalog/               # banco interno, staging, pack pt-BR              [implementado]
+│   ├── MockDataStudio.Mapping/               # mapeamento semântico                            [implementado]
+│   ├── MockDataStudio.Generation/            # RNG, geradores, MDS-Expr, motor                 [parcial]
+│   ├── MockDataStudio.{Output,Projects,Application,Infrastructure}/                       [a fazer]
+│   └── MockDataStudio.App/                   # WPF (MVVM; dados de exemplo em Samples/)        [protótipo]
+├── tests/                        # testes por projeto + fixtures (schemas, snapshots, corpus)
+└── tools/docker/                 # compose para bancos de teste
 ```
 
-A estrutura completa, com os demais projetos (Core, Providers, Catalog, Mapping, Generation, Output, SqlTooling, Projects, Application, Infrastructure e testes), está em [docs/07-solution-structure.md](docs/07-solution-structure.md). Ela é criada no Sprint 0 do plano.
+Detalhes de cada projeto e das regras de dependência: [docs/07-solution-structure.md](docs/07-solution-structure.md).
 
 ## Documentação
 
@@ -95,6 +112,7 @@ A estrutura completa, com os demais projetos (Core, Providers, Catalog, Mapping,
 3. Nenhum segredo (senha, connection string) em projetos, logs ou repositório.
 4. Testes **nunca** usam bancos reais. Usam apenas containers ou arquivos temporários criados pelo próprio teste.
 5. Novas dependências exigem licença permissiva e registro em `docs/dependencies.md`.
+6. Trabalho em branches `sprint/<ID>-<slug>`, uma por sprint, mescladas na `main` com `--no-ff` ao fim da sprint. Nunca use `push --force` na `main` ([PLANO-DE-ACAO.md §3](PLANO-DE-ACAO.md)).
 
 ## Licença
 

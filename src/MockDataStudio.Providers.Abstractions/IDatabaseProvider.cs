@@ -12,6 +12,11 @@ public interface IDatabaseProvider
 {
     DatabaseEngine Engine { get; }
     string DisplayName { get; }
+    /// <summary>
+    /// Indica se o provedor opera sobre rede (host/porta) ou arquivo local (SQLite).
+    /// </summary>
+    bool RequiresHostPort => true;
+    string? LogoResourceName => null;
     IReadOnlyList<ConnectionSettingDefinition> ExtraSettings { get; }
     ProviderCapabilities GetCapabilities(string serverVersion);
     string BuildConnectionString(ConnectionSettings settings, string? password);
@@ -23,4 +28,10 @@ public interface IDatabaseProvider
     IBulkInserter CreateBulkInserter(DbConnection connection, string serverVersion);
     ITargetInspector CreateTargetInspector(DbConnection connection, string serverVersion);
     IErrorTranslator ErrorTranslator { get; }
+
+    /// <summary>
+    /// Coloca a sessão em modo somente leitura no servidor (20 §8, 23 §5, C02).
+    /// Retorna true se a restrição no servidor foi aplicada com sucesso, ou false se não suportado em nível de sessão.
+    /// </summary>
+    Task<bool> ApplySessionReadOnlyAsync(DbConnection connection, CancellationToken ct) => Task.FromResult(false);
 }

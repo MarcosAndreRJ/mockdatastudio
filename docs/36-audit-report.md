@@ -6,6 +6,8 @@
 | Escopo | Todos os arquivos de `docs/` na revisão 1.0 (2026-10-11). |
 | Natureza | **Revisão conceitual e verificações automatizadas de artefatos**. Nenhum componente do produto foi implementado nem validado empiricamente. |
 
+> **Continuação:** a auditoria da **implementação** (código × especificação), feita em 2026-10-12 após os Sprints 0–6, está em [37-implementation-audit](37-implementation-audit.md).
+
 ## 1. Método
 
 1. Leitura cruzada dos documentos contra os contratos e as regras de dependência (AR-*).

@@ -9,7 +9,7 @@ using MockDataStudio.App.Resources;
 
 namespace MockDataStudio.App;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     private static readonly Action<ILogger, Exception?> LogUnhandledUiException =
         LoggerMessage.Define(LogLevel.Error, new EventId(1, nameof(OnDispatcherUnhandledException)), "Exceção não tratada na interface.");

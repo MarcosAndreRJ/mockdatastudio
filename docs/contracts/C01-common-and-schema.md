@@ -92,7 +92,7 @@ public sealed record TableModel(
 
 public sealed record ViewModel(string Name, IReadOnlyList<ColumnModel> Columns, bool? IsUpdatable = null);
 public sealed record SequenceModel(string Name, long? Start = null, long? Increment = null, long? MinValue = null, long? MaxValue = null, bool IsCycle = false);
-public sealed record TriggerModel(string Name, string? Table, TriggerTiming Timing, TriggerEvents Events, bool IsActive = true, int? Position = null);
+public sealed record TriggerModel(string Name, ObjectName? Table, TriggerTiming Timing, TriggerEvents Events, bool IsActive = true, int? Position = null); // DA-030
 public sealed record RoutineModel(string Name, RoutineKind Kind, int ParameterCount, string? ReturnType = null);
 
 public sealed record NamespaceModel(
@@ -130,9 +130,11 @@ public sealed record DigestWriteOptions(bool Indented = false, bool IncludeComme
 
 public interface IDigestValidator
 {
-    IReadOnlyList<DigestValidationError> Validate(string json);   // vazio = válido
+    IReadOnlyList<DigestValidationError> Validate(string json);   // vazio = válido; avisos não invalidam
 }
-public sealed record DigestValidationError(string JsonPath, string Code, string Message);
+public enum DigestSeverity { Warning, Error }
+// DA-030: severidade distingue avisos (ex.: DIG-FK-EXTERNAL, DIG-HASH-MISMATCH) de erros (12 §7).
+public sealed record DigestValidationError(string JsonPath, string Code, string Message, DigestSeverity Severity = DigestSeverity.Error);
 ```
 
 ```csharp

@@ -128,6 +128,11 @@ public sealed record DeferredUpdateBatch(ObjectName Table, string ForeignKeyName
 
 public sealed record RunProgress(string Phase, ObjectName? Table, long RowsDone, long RowsTotal, double RowsPerSecond);
 
+// ESTADO DA IMPLEMENTAÇÃO (auditoria 2026-10-12, DA-052): o código tem uma API intermediária por tabela —
+// GenerationEngine.RunAsync(TablePlan, IRowSink), IRowSink só com WriteBatchAsync, RowBatch(Table, StartRow, …).
+// Este contrato continua NORMATIVO: a Sprint A1 completa IRowSink/RowBatch como abaixo (StartRow → FirstRowIndex),
+// e a Sprint A2 expõe IGenerationEngine.RunAsync(GenerationPlan, …). A execução por tabela vira detalhe interno.
+
 /// Destino das linhas geradas. Definido em Generation; MockDataStudio.Output implementa (IOutputWriter : IRowSink).
 public interface IRowSink
 {

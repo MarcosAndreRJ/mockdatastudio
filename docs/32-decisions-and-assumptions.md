@@ -13,6 +13,20 @@ Classificação (briefing §17):
 - **BT — Bloqueio técnico**: impede especificação/implementação.
 - **PV — Verificação pendente**: fato técnico a confirmar empiricamente ou em fonte oficial.
 
+### Numeração na execução paralela (a partir de 2026-10-12)
+
+Várias IAs trabalham em branches diferentes ([PLANO-DE-ACAO.md](../PLANO-DE-ACAO.md)). Para que dois registros nunca recebam o mesmo número, cada trilha usa uma faixa própria e acrescenta linhas **somente** na subseção da sua trilha (§1.1–1.4, §5.1–5.4, §6.1–6.4):
+
+| Trilha | DA | PV | PA |
+|---|---|---|---|
+| Base (até a auditoria de 2026-10-12) | DA-001..099 | PV-001..099 | PA-001..099 |
+| A — Motor, planejamento e saída | DA-100..199 | PV-100..199 | PA-100..199 |
+| B — Providers, SQL e testes de integração | DA-200..299 | PV-200..299 | PA-200..299 |
+| C — Aplicação, projeto e interface | DA-300..399 | PV-300..399 | PA-300..399 |
+| Integração/gates (sprints de gate) | DA-400..499 | PV-400..499 | PA-400..499 |
+
+Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. Uma IA que precise de um DP **não o numera**: registra a questão como PV da sua faixa, com a etiqueta "requer DP", e o responsável promove a DP.
+
 ## 1. Decisões autônomas (DA)
 
 | ID | Decisão | Referência |
@@ -68,6 +82,30 @@ Classificação (briefing §17):
 | DA-049 | Pendências declaradas da Sprint 6: distribuições `normal` e `zipf`; `core.lorem.*`; `core.weighted` e `core.switch`; geradores `br.*`; `rel.*` (Sprint 7); estratégia 4 (sufixo, T-GEN-UQ-003 em `Skip`); `weekdays`/`hours` em `core.date.range`; passo de data com anos/meses; funções `cpf`, `cnpj` e `parent`. T-GEN-UQ-001 varre N ≤ 4.096 e N ∈ {65.535, 65.536, 1.000.003}, não todo N ≤ 65.536 (custo) | Sprint 6, 15 §6, §8 |
 | DA-050 | Snapshots de `T-GEN-LIB` (`tests/fixtures/generation-snapshots/*.v1.txt`) são gravados pela própria implementação e revisados como arquivos versionados: detectam regressão, não provam a especificação. O teste de semântica do UUID v4 foi acrescentado porque o snapshot inicial registrou um bug de versão | Sprint 6, 26 §5.5 |
 | DA-051 | Parâmetros numéricos aceitam `long`, `double` e `decimal` no JSON do binding (representação não é fixada pelo contrato); a leitura normaliza para o tipo pedido | Sprint 6, C05 §4 |
+| DA-052 | A API atual do motor (`GenerationEngine.RunAsync(TablePlan, IRowSink)`, `IRowSink` só com `WriteBatchAsync`, `RowBatch.StartRow`) é **intermediária**, por tabela. C06 continua normativo: a Sprint A1 completa `IRowSink`/`RowBatch` conforme C06, e a Sprint A2 expõe `IGenerationEngine.RunAsync(GenerationPlan, …)`. A execução por tabela permanece como detalhe interno | Auditoria 2026-10-12 (docs/37 A-05), C06 |
+| DA-053 | As fixtures `tests/fixtures/schemas/loja.<engine>.sql` passam a ser **a mesma estrutura** de `docs/examples/digest-<engine>.json` (nomes no singular, tabela `entrega` com FK composta). A fixture SQLite deriva de `docs/examples/schema-loja-sqlite.sql`. A divergência atual (plural, sem `entrega`) é defeito a corrigir na Sprint B1 | Auditoria 2026-10-12 (docs/37 A-02) |
+| DA-054 | Execução paralela: três trilhas (A, B, C) com posse de diretórios, uma branch por sprint, merge em `main` ao fim da sprint, faixas de numeração por trilha (tabela acima) | PLANO-DE-ACAO.md, docs/33 §18 |
+| DA-055 | Teste que não pode executar no ambiente (sem Docker, sem sessão interativa) deve terminar como **Skip** com motivo, nunca como aprovado. Afeta `ContainerSmokeTests` e as suítes de integração e de UI | Auditoria 2026-10-12 (docs/37 A-03), docs/26 §1 |
+
+### 1.1 Trilha A — Motor, planejamento e saída (DA-100..199)
+
+| ID | Decisão | Referência |
+|---|---|---|
+
+### 1.2 Trilha B — Providers, SQL e testes de integração (DA-200..299)
+
+| ID | Decisão | Referência |
+|---|---|---|
+
+### 1.3 Trilha C — Aplicação, projeto e interface (DA-300..399)
+
+| ID | Decisão | Referência |
+|---|---|---|
+
+### 1.4 Integração e gates (DA-400..499)
+
+| ID | Decisão | Referência |
+|---|---|---|
 
 ## 2. Premissas (PA)
 
@@ -95,7 +133,7 @@ Classificação (briefing §17):
 | DP-001 | Nome comercial definitivo | "Mock Data Studio" | Namespaces/instalador (renomear antes do V1) |
 | DP-002 | Modelo de licenciamento do produto (proprietário, open-source, freemium) | Dependências todas permissivas — compatível com qualquer escolha | Licença do repositório, EULA |
 | DP-003 | Empacotamento: MSIX, instalador (WiX/Inno) ou portátil | Instalador self-contained + zip portátil | TASK-19.04 |
-| DP-004 | Plataforma de repositório/CI | GitHub Actions (scripts locais equivalentes) | TASK-00.03 |
+| DP-004 | Plataforma de repositório/CI | **RESOLVIDA (2026-10-12):** GitHub (`origin` = github.com/MarcosAndreRJ/mockdatastudio) + GitHub Actions (`.github/workflows/ci.yml`), com scripts locais `build.ps1`/`test.ps1` | TASK-00.03 |
 | DP-005 | Idiomas da UI no V1 | Somente pt-BR | Esforço de tradução |
 | DP-006 | Incluir anonimização no V2 e com que escopo | Escopo restrito (27 §5 item 23) | Riscos LGPD |
 | DP-007 | Telemetria opt-in no futuro | Nenhuma | NFR-PLAT-002 |
@@ -127,7 +165,29 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | PV-015 | Pacote JSON1 presente no `SQLitePCLRaw.bundle_e_sqlite3` atual (RESOLVIDO em 2026-10-12: `CHECK json_valid(...)` da V0001 aplica-se sem erro; T-CAT-001 verde) | Teste em 04.01 | Validação de JSON em C# | TASK-04.01 |
 | PV-017 | `SQLitePCLRaw.lib.e_sqlite3` 2.1.11, dependência transitiva do Microsoft.Data.Sqlite 10, tem alerta NU1903 (GHSA-2m69-gcr7-jv3q) | Build de Catalog e Providers.Sqlite | Atualizar Microsoft.Data.Sqlite quando houver versão com a biblioteca corrigida; decidir antes do release | Sprint 3 |
 | PV-018 | Cobertura High do corpus sintético (48,1%) abaixo da meta de 70%. Causa: variantes com prefixo de tipo (`DS_`, `TX_`, `NM_`, `VL_`) e aliases de vários tokens com sobreposição total recebem TokenOverlap 70 (14 §5); com tipo (+5) e comprimento (+3) o escore é 78, abaixo de 80, logo Medium. Decisão necessária: (a) aceitar a regra e revisar a meta para o caso sem prefixo (~86%); (b) acrescentar evidência para igualdade do núcleo com pontos definidos (alteraria a calibração de 14 §5: exige registro e atualização do 14); (c) medir com corpus real anonimizado (14 §11) antes de escolher | Sprint 5, T-MAP-CORPUS | RESOLVIDO em 2026-10-12: opção (a), ver DA-044 | TASK-05.04 |
-| PV-016 | Idioma dos rótulos de navegação e da UI: DA-026 e DP-005 preveem pt-BR, mas os mockups usam inglês ("Connections", "Schema Digest" etc.). `Strings.resx` mantém os textos dos mockups até decisão do responsável | Revisão do responsável (DP-005) | Manter textos do mockup | TASK-00.04, Sprint 1.7 |
+| PV-016 | Idioma dos rótulos de navegação e da UI: DA-026 e DP-005 preveem pt-BR, mas os mockups usam inglês ("Connections", "Schema Digest" etc.). `Strings.resx` mantém os textos dos mockups até decisão do responsável | Revisão do responsável (DP-005) — decisão **D-01** do Plano de Ação | Manter textos do mockup | TASK-00.04, Sprint C1 |
+
+> PV-017 (vulnerabilidades NuGet) foi ampliada pela auditoria de 2026-10-12: há também `SSH.NET` 2024.2.0 (alta, via Testcontainers) e `System.Drawing.Common` 5.0.2 (**crítica**, via FlaUI). Tratamento na Sprint B1.
+
+### 5.1 Trilha A (PV-100..199)
+
+| ID | Verificação | Como verificar | Fallback se negativo | Sprint |
+|---|---|---|---|---|
+
+### 5.2 Trilha B (PV-200..299)
+
+| ID | Verificação | Como verificar | Fallback se negativo | Sprint |
+|---|---|---|---|---|
+
+### 5.3 Trilha C (PV-300..399)
+
+| ID | Verificação | Como verificar | Fallback se negativo | Sprint |
+|---|---|---|---|---|
+
+### 5.4 Integração e gates (PV-400..499)
+
+| ID | Verificação | Como verificar | Fallback se negativo | Sprint |
+|---|---|---|---|---|
 
 ## 6. Histórico de alterações de decisões
 
@@ -144,3 +204,24 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | 2026-10-12 | DA-029..032 | Execução da Sprint 2 (Core: nomes, schema, digest, hash, diff) | Sprint 2 |
 | 2026-10-12 | PV-008 | Resolvido: AvalonEdit 6.3.0.90 compila e funciona em net10.0-windows | Verificação empírica no build Release do protótipo |
 | 2026-10-12 | PV-009 | Resolvido: Imagem Firebird fixada `firebird:5.0` com fallback | TASK-00.05 / Sprint 0.10 |
+| 2026-10-12 | DA-052..055, DP-004 resolvida, PV-017 ampliada | Auditoria de implementação (docs/37) e passagem para execução paralela em trilhas | docs/37, PLANO-DE-ACAO.md |
+
+### 6.1 Trilha A
+
+| Data | Item | Alteração | Motivo |
+|---|---|---|---|
+
+### 6.2 Trilha B
+
+| Data | Item | Alteração | Motivo |
+|---|---|---|---|
+
+### 6.3 Trilha C
+
+| Data | Item | Alteração | Motivo |
+|---|---|---|---|
+
+### 6.4 Integração e gates
+
+| Data | Item | Alteração | Motivo |
+|---|---|---|---|

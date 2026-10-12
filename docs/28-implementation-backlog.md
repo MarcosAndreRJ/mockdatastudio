@@ -6,6 +6,8 @@
 | Escopo | MVP (M0–M4) detalhado tarefa a tarefa; V1 (M5–M10) detalhado; V2 em nível de épico. |
 | Relacionados | [27](27-development-roadmap.md), [29](29-acceptance-criteria.md), [33](33-executor-instructions.md), [35](35-traceability-matrix.md) |
 
+> **Execução (atualizado em 2026-10-12):** este backlog continua sendo a **referência de conteúdo** de cada tarefa. A **ordem e a distribuição** entre IAs estão no [Plano de Ação](../PLANO-DE-ACAO.md), em três trilhas paralelas (A, B, C) com uma branch por sprint. As tarefas de M0 a M3 já executadas, e o que ficou pendente nelas, estão em [37](37-implementation-audit.md). As novas tarefas de **saneamento** recebem IDs `SAN-<trilha>.<n>` no plano.
+
 ## 0. Como ler
 
 Cada tarefa possui: **Objetivo · Contexto (docs) · Arquivos/módulos · Pré-requisitos · Contratos · Passos · Regras obrigatórias · Testes · Aceite · Evidências · Riscos**.
@@ -156,7 +158,7 @@ Regras comuns a **todas** as tarefas (não repetidas): build Release sem warning
 - **Arquivos**: `Providers.Abstractions/*`, `Core/Connections/*`.
 - **Pré-requisitos**: 01.02.
 - **Contratos**: C02.
-- **Passos**: interfaces; `ConnectionProfile`/`ConnectionSettings`/`ProviderCapabilities`/`EnvironmentTag` em Core.Connections.
+- **Passos**: interfaces; `ConnectionProfile`/`ConnectionSettings`/`ProviderCapabilities`/`ConnectionEnvironment` em Core.Connections.
 - **Testes**: compila; T-ARC.
 - **Aceite**: contratos idênticos a C02 (revisão por diff).
 - **Evidências**: diff contrato × código.

@@ -15,7 +15,7 @@ flowchart LR
     M[Mapeamento<br/>ColumnBinding, MappingSuggestion]
     G[Geração<br/>GeneratorSpec, Plan, Run]
     P[Projeto<br/>MdsProject, GenerationProfile]
-    X[Conexões<br/>ConnectionProfile, EnvironmentTag]
+    X[Conexões<br/>ConnectionProfile, ConnectionEnvironment]
     S --> M
     C --> M
     M --> P
@@ -84,9 +84,9 @@ flowchart LR
 
 | Entidade | Atributos | Invariantes |
 |---|---|---|
-| `ConnectionProfile` | `Id: Guid`, `Name`, `Engine`, `Settings: ConnectionSettings`, `Environment: EnvironmentTag`, `ColorHex?`, `IsReadOnly`, `PromptPassword`, `Notes?` (o segredo protegido fica apenas em `connection_profile.secret`, nunca no objeto de domínio) | Nome único; Production ⇒ `IsReadOnly=true` por padrão |
+| `ConnectionProfile` | `Id: Guid`, `Name`, `Engine`, `Settings: ConnectionSettings`, `Environment: ConnectionEnvironment`, `ColorHex?`, `IsReadOnly`, `PromptPassword`, `Notes?` (o segredo protegido fica apenas em `connection_profile.secret`, nunca no objeto de domínio) | Nome único; Production ⇒ `IsReadOnly=true` por padrão |
 | `ConnectionSettings` | `Host`, `Port`, `Database` (ou caminho de arquivo), `User`, `Ssl`, `Charset`, `ConnectTimeoutSec`, `CommandTimeoutSec`, `Extra: Dictionary<string,string>` (allow-list por provider) | Nunca contém senha |
-| `EnvironmentTag` | `Development`, `Test`, `Staging`, `Production`, `Unknown` | `Unknown` é tratado como `Production` para proteções (premissa conservadora) |
+| `ConnectionEnvironment` (conceitualmente "EnvironmentTag") | `Development`, `Test`, `Staging`, `Production`, `Unknown` | `Unknown` é tratado como `Production` para proteções (premissa conservadora) |
 
 ## 4. Contexto Catálogo
 

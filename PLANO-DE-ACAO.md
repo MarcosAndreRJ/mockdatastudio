@@ -1,567 +1,828 @@
-# Plano de Ação — Mock Data Studio
+# Plano de Ação — Mock Data Studio (execução paralela por trilhas)
 
 | Campo | Valor |
 |---|---|
-| Objetivo | Sequência de execução em sprints, do estado atual (protótipo de UI) até a V1. |
-| Base | Backlog detalhado em [docs/28-implementation-backlog.md](docs/28-implementation-backlog.md) (cada etapa cita a `TASK-xx.yy` correspondente) |
-| Regras da IA executora | [docs/33-executor-instructions.md](docs/33-executor-instructions.md) |
-| Definição de concluído | [docs/29-acceptance-criteria.md §1](docs/29-acceptance-criteria.md) |
-| Criado em | 2026-10-12 |
+| Objetivo | Concluir o MVP e a V1 com **2 ou 3 IAs trabalhando em paralelo**, cada sprint numa branch própria, com commit e merge na `main` ao final da sprint. |
+| Ponto de partida | `main` em `d9f3bf9` (Sprints 0–6 do plano sequencial executados). Situação verificada na [auditoria de implementação](docs/37-implementation-audit.md). |
+| Plano anterior | [docs/progress/plano-sequencial-sprints-0-6.md](docs/progress/plano-sequencial-sprints-0-6.md) (arquivado, com evidências) |
+| Conteúdo das tarefas | [docs/28-implementation-backlog.md](docs/28-implementation-backlog.md) (os `TASK-xx.yy` citados aqui) |
+| Regras da IA | [docs/33-executor-instructions.md](docs/33-executor-instructions.md) (em especial o §18) · Definition of Done: [docs/29 §1](docs/29-acceptance-criteria.md) |
+| Revisão | 2026-10-12 |
 
 ---
 
-## 🤖 Instruções obrigatórias para a IA executora
+## 1. Instruções obrigatórias para toda IA executora
 
-1. **Execute os sprints na ordem** em que aparecem. Dentro de um sprint, siga a ordem das etapas, salvo quando a etapa disser que pode correr em paralelo.
-2. **Ao concluir cada etapa, marque o checkbox** trocando `- [ ]` por `- [x]` e preencha os campos da própria linha:
-   `Concluído em: AAAA-MM-DD · Evidência: <link/arquivo/resumo>`.
-3. **Só marque `[x]` quando a etapa estiver realmente concluída**: build Release sem warnings, testes da etapa executados e passando, documentação afetada atualizada. Nunca marque etapas parciais.
-4. Se a etapa estiver **bloqueada**, deixe `[ ]` e acrescente `⚠ BLOQUEADO: <motivo>` na linha. Registre o bloqueio em [docs/32](docs/32-decisions-and-assumptions.md).
-5. Se a etapa foi feita só em parte, deixe `[ ]` e acrescente `⏳ PARCIAL: <o que falta>`.
-6. Ao fim de cada sprint, marque os itens de **"Verificação do sprint"** e preencha o **"Relatório do sprint"**: o que foi feito, testes (passados/falhos/ignorados), decisões registradas, pendências e riscos.
-7. Não comece um sprint enquanto a verificação do sprint anterior não estiver toda marcada, salvo autorização explícita do responsável.
-8. Tudo o que **não** foi verificado deve ser declarado como não verificado. Nunca afirme sucesso sem evidência.
+1. **Você é responsável por uma trilha** (A, B ou C; ver §4). Execute **somente** as sprints da sua trilha, **na ordem** em que aparecem.
+2. **Uma sprint = uma branch = uma IA.** Siga o protocolo Git do §3 no início e no fim de toda sprint.
+3. **Não comece uma sprint** enquanto todas as sprints em "Depende de" não estiverem com **Status ✅ na `main`** (confira após `git pull`). Se estiver bloqueada por dependência, aguarde. Não adiante trabalho de outra trilha.
+4. **Ao concluir cada etapa, marque o checkbox** trocando `- [ ]` por `- [x]` e preencha na própria linha: `Concluído em: AAAA-MM-DD · Evidência: <arquivo/teste/resumo>`.
+5. **Só marque `[x]` quando a etapa estiver realmente concluída**: build Release sem erros, testes da etapa executados e passando, documentação afetada atualizada. Etapa parcial: deixe `[ ]` e escreva `⏳ PARCIAL: <o que falta>`. Etapa impedida: deixe `[ ]` e escreva `⚠ BLOQUEADO: <motivo>`.
+6. **Atualize a linha "Status"** da sprint: `⬜ Não iniciada` → `🔄 Em andamento (branch, IA, data)` → `✅ Mesclada na main (data)`.
+7. **Edite neste arquivo apenas a seção da sua sprint.** Não altere seções de outras sprints nem das tabelas gerais. Isso evita conflitos de merge.
+8. Tudo o que **não** foi verificado deve ser declarado como não verificado. Teste que não pôde executar é **Skip com motivo**, nunca aprovado (DA-055). Avisos NuGet (NU190x) também entram no relatório.
+9. Registre decisões e verificações pendentes em [docs/32](docs/32-decisions-and-assumptions.md), **na faixa de numeração e na subseção da sua trilha** (A: 100–199, B: 200–299, C: 300–399, gates: 400–499).
+10. Ao final de cada sprint, preencha o **Relatório da sprint**: o que foi feito, testes (aprovados/falhos/ignorados por projeto), decisões (IDs), pendências, riscos e o hash do commit de merge.
 
 ### Legenda
-`- [ ]` pendente · `- [x]` concluído · `⚠ BLOQUEADO` · `⏳ PARCIAL`
+`- [ ]` pendente · `- [x]` concluído · `⏳ PARCIAL` · `⚠ BLOQUEADO` · Status: `⬜` não iniciada · `🔄` em andamento · `✅` mesclada na `main`
 
 ---
 
-## Estado atual (ponto de partida)
+## 2. Situação atual (resumo da auditoria de 2026-10-12)
 
-| Item | Situação em 2026-10-12 |
+| Área | Situação |
 |---|---|
-| Especificação | Completa em `docs/` |
-| Solução | `MockDataStudio.sln` com **um único projeto**: `src/MockDataStudio.App` (WPF, net10.0-windows, AvalonEdit 6.3.0.90). Compila sem erros nem warnings |
-| Interface | Protótipo construído a partir dos mockups (`images/`). Telas prontas: Home, Connections, Explorer (reaproveitada para "SQL Editor"), Schema Digest, Templates, Mapping. Generation, History e Settings são `PlaceholderView` |
-| Dados da UI | Fixos, em `Samples/SampleData.cs`, ligados por `x:Static` no XAML. Sem MVVM, sem injeção de dependência (DI), navegação em code-behind |
-| Backend | Inexistente |
-| Controle de versão | Ainda **não** é repositório Git |
+| Testes executados | 261: **258 aprovados, 3 ignorados com motivo, 0 falhas** (Core 100, Generation 62+1, Mapping 21, Catalog 21, SqlTooling 32, Architecture 10, ContractTests SQLite 12+2) |
+| Pronto | Core (exceto `Core.Profiles`), digest, hash, diff, SqlTooling, provider SQLite, catálogo, mapeamento, RNG/geradores/MDS-Expr/unicidade, motor por tabela, shell WPF em MVVM com dados de exemplo |
+| Vazio | Application, Infrastructure, Output, Projects, Providers MySQL/PostgreSQL/Firebird |
+| Achados principais | Integração real nunca executada e smoke de integração falso (A-01, A-03); fixtures `loja.*` divergentes da especificação (A-02); vulnerabilidades NuGet (A-04); API do motor diferente de C06 (A-05); host dos testes de contrato não encerra (A-06) |
 
-**Diretriz para a UI existente:** preservar o visual dos mockups. As telas passam a ser alimentadas por ViewModels, e o `SampleData` só sai quando a respectiva fonte real existir. A UI nunca deve ficar quebrada entre sprints.
+Detalhes, achados A-01..A-12 e o que falta: [docs/37](docs/37-implementation-audit.md).
 
 ---
 
-## Visão geral dos sprints
+## 3. Protocolo Git (vale para toda sprint)
 
-| Sprint | Tema | Marco |
-|---|---|---|
-| 0 | Fundação do repositório e alinhamento da UI existente | M0 |
-| 1 | Base MVVM/DI da interface | M0 |
-| 2 | Modelo canônico e Schema Digest | M1 |
-| 3 | SqlTooling e provider SQLite | M1 |
-| 4 | Catálogo interno | M2 |
-| 5 | Mapeamento semântico | M2 |
-| 6 | Motor de geração | M3 |
-| 7 | Planejamento relacional e validação | M3 |
-| 8 | Saída SQL + providers PostgreSQL e Firebird | M4 |
-| 9 | Projeto, Application e Infraestrutura | M4 |
-| 10 | Integração da UI (fluxo MVP) e **Gate MVP** | **MVP** |
-| 11 | MySQL e segurança de conexões | M5 |
-| 12 | Explorer real | M5 |
-| 13 | Editor SQL | M6 |
-| 14 | Projetos avançados e evolução de schema | M7 |
-| 15 | Inserção direta | M8 |
-| 16 | Relacional avançado e validação L4 | M8 |
-| 17 | Catálogo V1 | M9 |
-| 18 | Volume e formatos | M10 |
-| 19 | Hardening, acessibilidade e release — **Gate V1** | **V1** |
+### 3.1 Início da sprint
+```bash
+git checkout main
+```
+```bash
+git pull origin main
+```
+Confira na `main` que as dependências da sprint estão ✅. Depois:
+```bash
+git checkout -b sprint/<ID>-<slug>
+```
+Atualize o Status da sprint para 🔄 e faça o primeiro commit: `<ID>: início da sprint`.
 
----
+### 3.2 Durante a sprint
+- Commits pequenos e verificáveis, mensagem iniciando pelo ID: `A2: KeyOracle e reserva de faixa (TASK-07.03)`.
+- Faça `git fetch origin` e `git merge origin/main` na sua branch **pelo menos uma vez por dia** e sempre que outra sprint for mesclada, para reduzir conflitos no fim.
+- Nunca faça commit direto na `main` durante a sprint.
 
-## Sprint 0 — Fundação do repositório e alinhamento da UI existente
+### 3.3 Fim da sprint (commit e merge)
+1. Preencha os checkboxes, o Status (`✅ Mesclada na main (data)`) e o Relatório da sprint. Commit: `<ID>: conclusão da sprint`.
+2. Incorpore a `main` mais recente na branch e resolva conflitos (§3.4):
+   ```bash
+   git fetch origin
+   ```
+   ```bash
+   git merge origin/main
+   ```
+3. Na branch: build Release + suíte rápida (`Category=Unit|Architecture|Contract`) + integração se a sprint tocou Providers/Output/Application. Tudo verde (ou Skip justificado).
+4. Mescle na `main` preservando o histórico da sprint:
+   ```bash
+   git checkout main
+   ```
+   ```bash
+   git pull origin main
+   ```
+   ```bash
+   git merge --no-ff sprint/<ID>-<slug> -m "Merge sprint <ID>: <título>"
+   ```
+5. Build + suíte rápida **na `main`**. Se falhar, corrija na branch e repita o passo 4. Nunca deixe a `main` quebrada.
+6. Publique:
+   ```bash
+   git push origin main
+   ```
+   Se o push for rejeitado (outra IA mesclou antes): `git pull --no-rebase origin main`, repita o passo 5 e o push. **Nunca** use `--force` na `main`.
+7. Anote o hash do commit de merge no Relatório da sprint (commit `<ID>: registra merge` direto na `main`, que é a única exceção permitida). A branch pode ser removida depois do push: `git branch -d sprint/<ID>-<slug>`.
 
-**Objetivo:** transformar o protótipo numa base versionada, com a estrutura de projetos, as regras de build e as verificações automáticas da especificação, **sem alterar o comportamento visual**.
-**Referências:** docs/07, docs/05 §3, docs/26 §2–3, docs/28 (EPIC-00).
+### 3.4 Regras de resolução de conflitos
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [x] **0.1** Inicializar Git (`git init`), criar `.gitignore` para .NET/VS (bin/obj, `.vs`, `*.user`, `Thumbs.db`) e fazer o commit inicial do estado atual. · Concluído em: 2026-10-12 · Evidência: Repositório inicializado, `.gitignore` completo e commit inicial `46bdeaa`.
-- [x] **0.2** Inventariar a UI: produzir `docs/ui-inventory.md` relacionando cada view/controle ao S01–S19 de [docs/21](docs/21-user-interface-ux.md), com as diferenças (ex.: "SQL Editor" usa `ExplorerView`; logos têm MariaDB e não MySQL; navegação em inglês × UI pt-BR especificada) e a decisão para cada uma. Registrar as decisões como DA em docs/32. · Concluído em: 2026-10-12 · Evidência: `docs/ui-inventory.md` criado e decisões DA-024..026 registradas em `docs/32-decisions-and-assumptions.md`.
-- [x] **0.3** Atualizar a documentação com o estado real: AvalonEdit **6.3.0.90** compila em net10.0-windows (atualizar docs/06 §3.3 e PV-008 em docs/32); decidir manter `.sln` ou migrar para `.slnx` e registrar. · Concluído em: 2026-10-12 · Evidência: `docs/06 §3.3` atualizado, PV-008 resolvido e DA-023 registrado em `docs/32-decisions-and-assumptions.md`.
-- [x] **0.4** Criar `global.json` (SDK 10.0.x), `Directory.Build.props` (Nullable, `TreatWarningsAsErrors`, LangVersion 14, Deterministic) e `Directory.Packages.props` (Central Package Management), migrando a referência do AvalonEdit para o CPM. O App continua compilando sem warnings. *(TASK-00.01)* · Concluído em: 2026-10-12 · Evidência: `global.json`, `Directory.Build.props` e `Directory.Packages.props` criados; `MockDataStudio.App` compilando com CPM sem warnings.
-- [x] **0.5** Criar os projetos de [docs/07 §2](docs/07-solution-structure.md) (Core, Providers.Abstractions, Providers.Sqlite/MySql/PostgreSql/Firebird, Catalog, Mapping, Generation, Output, SqlTooling, Projects, Application, Infrastructure) e os de teste, com as referências **exatamente** como especificado. *(TASK-00.01)* · Concluído em: 2026-10-12 · Evidência: 14 projetos `src/*` e 13 projetos `tests/*` criados e integrados à `MockDataStudio.slnx`, compilando em Release.
-- [x] **0.6** Registrar pacotes com versão, licença e data de verificação em `docs/dependencies.md`. · Concluído em: 2026-10-12 · Evidência: `docs/dependencies.md` criado com catálogo completo de dependências de produção e testes auditadas.
-- [x] **0.7** Primitivas comuns: `Result<T>`, `MdsError`, `ErrorCodes`, `IClock`, `Strings.resx`. Teste T-ERR-001. *(TASK-00.04)* · Concluído em: 2026-10-12 · Evidência: `src/MockDataStudio.Core/Common/*` criado e teste `T-ERR-001` verde em `MockDataStudio.Core.Tests`.
-- [x] **0.8** Testes de arquitetura T-ARC-001..007, incluindo a demonstração de que uma referência proibida faz o teste falhar. *(TASK-00.02)* · Concluído em: 2026-10-12 · Evidência: `tests/MockDataStudio.Architecture.Tests/ArchitectureTests.cs` (10 testes) verde; violação forçada e detectada com sucesso em T-ARC-006 e T-ARC-007 antes da reversão.
-- [x] **0.9** CI (`build-unit` no Windows, `integration` no Ubuntu) e scripts locais equivalentes `build.ps1`/`test.ps1`. *(TASK-00.03; plataforma conforme DP-004)* · Concluído em: 2026-10-12 · Evidência: `.github/workflows/ci.yml`, `build.ps1` e `test.ps1` criados e validados localmente com sucesso.
-- [x] **0.10** Fixtures de schema (`loja`, `cycles`, `selfref`, `composite-keys`) para os 4 SGBDs, `tools/docker/compose.test.yml` e um teste de fumaça Testcontainers. Pode correr em paralelo com 0.7–0.9. *(TASK-00.05)* · Concluído em: 2026-10-12 · Evidência: 16 schemas em `tests/fixtures/schemas/`, `tests/containers.json`, `tools/docker/compose.test.yml`, PV-009 resolvido em `docs/32` e smoke test passando em `MockDataStudio.Providers.IntegrationTests`.
-
-**Verificação do sprint**
-- [x] `dotnet build -c Release` sem warnings em toda a solução
-- [x] T-ARC-* e T-ERR-001 verdes
-- [x] App abre e todas as telas existentes continuam idênticas aos mockups (capturas antes/depois em `docs/progress/`)
-- [x] CI verde no último commit (scripts locais e workflow .github/workflows/ci.yml prontos e testados)
-
-**Relatório do sprint:**
-- **O que foi feito:**
-  - Repositório Git inicializado com `.gitignore` adequado para .NET 10 / WPF.
-  - Inventário completo da UI documentado em `docs/ui-inventory.md` mapeando views para S01–S19 de docs/21.
-  - Atualização do estado empírico do AvalonEdit 6.3.0.90 em `docs/06 §3.3` e resolução de PV-008.
-  - Migração da solução para `MockDataStudio.slnx` (DA-023) e implantação de `global.json`, `Directory.Build.props` (LangVersion 14, Nullable, TreatWarningsAsErrors) e `Directory.Packages.props` (CPM).
-  - Criação de todos os 14 projetos de produto (`src/`) e 13 projetos de testes (`tests/`) conforme docs/07 §2.
-  - Criação do catálogo de dependências auditadas em `docs/dependencies.md`.
-  - Implementação das primitivas comuns do núcleo em `src/MockDataStudio.Core/Common/` (`Result<T>`, `MdsError`, `ErrorCodes`, `DatabaseEngine`, `IClock`, `Guard`, `Strings.resx`) e teste `T-ERR-001`.
-  - Implementação da suíte de testes de arquitetura `T-ARC-001..007` com reflexão e inspeção estática, com demonstração prática de detecção de falha.
-  - Criação de scripts PowerShell locais `build.ps1` e `test.ps1` e pipeline do GitHub Actions `.github/workflows/ci.yml`.
-  - Criação de todas as 16 fixtures de schemas nos 4 dialetos (`loja`, `cycles`, `selfref`, `composite-keys`), definição de `tests/containers.json` (resolução de PV-009), `tools/docker/compose.test.yml` e teste de fumaça de infraestrutura.
-- **Testes:** 19 executados na solução (6 unitários em Core, 10 de arquitetura, 3 de integração/smoke), 19 aprovados, 0 falhas, 0 ignorados.
-- **Decisões registradas:** DA-023 (`MockDataStudio.slnx`), DA-024 (`SqlEditorView` separada de `ExplorerView`), DA-025 (`mysql.png`), DA-026 (localização pt-BR via `Strings.resx`), PV-008 (resolvido), PV-009 (resolvido).
-- **Pendências e riscos:** Nenhum. Sprint 0 100% aprovado e verificado; pronto para início da Sprint 1.
+| Arquivo | Regra |
+|---|---|
+| `PLANO-DE-ACAO.md` | Cada IA editou só a sua sprint: mantenha as duas versões, cada uma na sua seção |
+| `docs/32-decisions-and-assumptions.md` | Cada trilha acrescenta só na sua subseção: mantenha todas as linhas |
+| `src/MockDataStudio.Core/Common/ErrorCodes.cs`, `src/*/Resources/Strings.resx` | União: mantenha todos os códigos/chaves; se o mesmo código tiver significados diferentes, **pare** e registre ⚠ BLOQUEADO |
+| `Directory.Packages.props` | União de pacotes novos. Versão de pacote existente só a trilha B altera; em conflito de versão prevalece a da `main` e a divergência vai para o relatório |
+| `docs/26`, `docs/35`, `docs/dependencies.md` | Acréscimos: mantenha ambos |
+| Código de outra trilha | Não resolva por conta própria: `git merge --abort`, marque ⚠ BLOQUEADO e descreva o conflito |
 
 ---
 
-## Sprint 1 — Base MVVM/DI da interface
+## 4. Trilhas, posse de código e configuração das IAs
 
-**Objetivo:** preparar a UI existente para receber dados reais (Generic Host, DI, CommunityToolkit.Mvvm, navegação por ViewModel), mantendo os dados de exemplo **atrás de interfaces**.
-**Referências:** docs/05 §5–6, docs/21 §1–3, docs/07 §4, ADR-001.
+### 4.1 Trilhas e posse de diretórios
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+| Trilha | Tema | Diretórios que pode alterar | Contratos de que é dona |
+|---|---|---|---|
+| **A** | Motor, planejamento e saída | `src/MockDataStudio.Generation`, `src/MockDataStudio.Output`, `src/MockDataStudio.Mapping`, `src/MockDataStudio.Core/{Profiles,Bindings,Templates,Schema,Naming,Digest,Hashing,Diff,Types}`, `tests/MockDataStudio.{Generation,Output,Mapping,Core}.Tests`, `tests/MockDataStudio.Benchmarks/Generation`, `tests/fixtures/{generation-snapshots,mapping-corpus,plans}` | C01, C04, C05, C06, C07, C08; docs 12, 14, 15, 16, 17, 18 |
+| **B** | Providers, SQL e testes de integração | `src/MockDataStudio.Providers.*`, `src/MockDataStudio.SqlTooling` (exceto `Completion/`), `tests/MockDataStudio.Providers.*`, `tests/MockDataStudio.SqlTooling.Tests`, `tests/MockDataStudio.Benchmarks/Providers`, `tests/fixtures/{schemas,sql-split}`, `tests/containers.json`, `tools/docker`, `.github/workflows`, `Directory.Packages.props` (versões) | C02; docs 10, 11, 20 §4–5, 06 §7, `docs/dependencies.md` |
+| **C** | Aplicação, projeto e interface | `src/MockDataStudio.{Application,Projects,Infrastructure,Catalog,App}`, `src/MockDataStudio.Core/{Connections,Common}`, `src/MockDataStudio.SqlTooling/Completion`, `tests/MockDataStudio.{Application,Projects,Catalog,App.UiTests}`, `images/`, `README.md` | C03, C09; docs 09, 13, 19, 20 §6–11, 21, 22, 23, `docs/ui-inventory.md` |
 
-- [x] **1.1** Configurar `Microsoft.Extensions.Hosting` no `App.xaml.cs`: composition root em `App/Composition/ServiceRegistration.cs`, ciclo de vida e handler global de exceções ([docs/05 §9](docs/05-system-architecture.md)). · Concluído em: 2026-10-12 · Evidência: `App/Composition/ServiceRegistration.cs` (Generic Host, DI); `App.xaml.cs` (Start/Stop do host, handlers globais de exceção com `LoggerMessage`).  
-- [x] **1.2** Adicionar CommunityToolkit.Mvvm e criar `ShellViewModel` com a navegação, hoje no code-behind de `MainWindow`, usando `DataTemplate` por ViewModel. Os botões da janela continuam funcionando. · Concluído em: 2026-10-12 · Evidência: `ViewModels/ShellViewModel.cs` (`NavEntry`, página atual) e `DataTemplate` por ViewModel em `App.xaml`. `MainWindow.xaml.cs` mantém só os botões da janela (testados em T-UI-SMOKE-001 no fluxo de navegação).  
-- [x] **1.3** Criar um ViewModel por tela existente (Home, Connections, Explorer, SchemaDigest, Templates, Mapping) e trocar os `x:Static SampleData.*` por bindings. Os dados vêm de `IDesignDataSource` (implementação `SampleDesignDataSource` sobre o `SampleData` atual). · Concluído em: 2026-10-12 · Evidência: `Data/IDesignDataSource.cs`, `Data/SampleDesignDataSource.cs` (única classe que usa `SampleData`), `ViewModels/Screens.cs`. Views sem `x:Static SampleData`.  
-- [x] **1.4** Separar a tela "SQL Editor" da "Explorer" (`SqlEditorView` própria, com o AvalonEdit e o `sql.xshd`), conforme decisão da etapa 0.2. · Concluído em: 2026-10-12 · Evidência: `Views/SqlEditorView`, `SqlResultsView`, `SqlEditorPageView` (nav "SQL Editor"); `ExplorerView` compõe os mesmos controles. Registrado em DA-028.  
-- [ ] **1.5** Alinhar `Themes/Colors.xaml` aos tokens de [docs/21 §2.1](docs/21-user-interface-ux.md) (incluindo cores de ambiente, severidade e confiança), sem mudar o visual aprovado. Divergências entre mockup e doc são resolvidas a favor do mockup, com o doc atualizado. ⏳ PARCIAL: `Themes/Tokens.xaml` criado (tokens claros, valores dos mockups, DA-027) e `Colors.xaml` referencia os tokens. Faltam o tema escuro e a atualização de docs/21 §2.1 com as divergências de ambiente. · Concluído em: ____ · Evidência: ____
-- [x] **1.6** Criar os componentes padronizados ainda ausentes: `EnvironmentChip`, `SeverityBadge`, `ConfidenceBadge`, `ProgressPanel`, `DiagnosticsList`, `ConfirmDialog`/`TypedConfirmDialog` ([docs/21 §2.2](docs/21-user-interface-ux.md)). · Concluído em: 2026-10-12 · Evidência: `Controls/EnvironmentChip`, `SeverityBadge`, `ConfidenceBadge`, `ProgressPanel`, `DiagnosticsList`, `ConfirmDialog`, `TypedConfirmDialog` (compilam; ainda não usados pelas telas).  
-- [ ] **1.7** Externalizar os textos da UI para `Strings.resx` (pt-BR), incluindo os rótulos de navegação. ⏳ PARCIAL: `Resources/Strings.resx` e `Strings.cs` cobrem navegação, placeholder e erro inesperado. Os demais textos das views ainda são fixos. Idioma pendente (PV-016). · Concluído em: ____ · Evidência: ____
-- [x] **1.8** Projeto `MockDataStudio.App.UiTests` (FlaUI) com teste de fumaça: abre o app e navega por todas as telas sem exceção. · Concluído em: 2026-10-12 · Evidência: `tests/MockDataStudio.App.UiTests/SmokeTests.cs` (T-UI-SMOKE-001) verde em Release. Limitação: confirma navegação e ausência de janelas extras; não cobre erros de binding TwoWay (o bug encontrado nas capturas não foi reproduzido pela automação).  
+- `ErrorCodes.cs` e `Strings.resx` do Core (dono: C) aceitam **acréscimos** de qualquer trilha, no bloco do seu prefixo (A: `GEN-`, `PLN-`, `VAL-`, `OUT-`, `MAP-`, `DIG-`; B: `PRV-`, `SQL-`; C: `CAT-`, `PRJ-`, `SEC-`, `RUN-`, `APP-`).
+- Testes de arquitetura (`tests/MockDataStudio.Architecture.Tests`) só mudam com registro DA, por qualquer trilha.
+- Mudança em contrato de **outra** trilha: registre PV "requer coordenação" na sua faixa, descreva no relatório e aguarde a trilha dona (ou o gate).
 
-**Verificação do sprint**
-- [x] Nenhuma view referencia `SampleData` diretamente (só `SampleDesignDataSource` o faz)
-- [x] Teste de fumaça de UI verde
-- [ ] Visual idêntico ao do Sprint 0 (capturas comparadas): 5 de 6 telas idênticas; Connections com 2% na primeira linha da tabela; SQL Editor mudou por DA-028 e aguarda aprovação
-- [x] T-ARC-003/005 verdes (WPF e Providers só no App/composition root)
+### 4.2 Distribuição entre IAs
 
-**Relatório do sprint 1 (2026-10-12):**
-- **Feito:** Generic Host e DI (`Composition/ServiceRegistration.cs`), handlers globais de exceção; `ShellViewModel` com navegação por `DataTemplate`; ViewModels por tela alimentados por `IDesignDataSource` (única implementação usa `SampleData`); SQL Editor separado (`SqlEditorView`, `SqlResultsView`, `SqlEditorPageView`); tokens claros em `Themes/Tokens.xaml`; sete componentes padronizados; `Strings.resx` com a navegação; teste de fumaça FlaUI.
-- **Testes:** Architecture 10/10 (inclui T-ARC-003 e T-ARC-005), Core 6/6, UI smoke T-UI-SMOKE-001 1/1. Nenhum teste ignorado.
-- **Visual (`docs/progress/sprint-1/antes|depois`):** Home, Explorer, Schema Digest, Templates, Mapping e as telas de placeholder com diferença de 0%. Connections com 2% de diferença, concentrada na primeira linha da tabela (destaque de seleção). SQL Editor mudou de propósito (DA-028) e aguarda aprovação.
-- **Decisões:** DA-027 (tokens e divergências de ambiente), DA-028 (SQL Editor separado), PV-016 (idioma dos rótulos).
-- **Pendências:** tema escuro e atualização de docs/21 §2.1 (1.5); demais textos das views em `Strings.resx` (1.7); logo do MySQL, que ainda não foi enviado (DA-025); 26 avisos NU1903/NU1904 de dependências transitivas (SQLitePCLRaw, SSH.NET, System.Drawing.Common), que contrariam "sem warnings" do plano.
-- **Riscos:** o teste de fumaça não reproduz erros de binding TwoWay (o bug em `SchemaDigestView` foi achado nas capturas e corrigido). Nenhuma alteração foi commitada.
+| Configuração | IA-1 | IA-2 | IA-3 |
+|---|---|---|---|
+| **3 IAs** (recomendada) | Trilha A: A1 → A2 → A3 → A4 → A5 → A6 | Trilha B: B1 → B2 → B3 → B4 → B5 → B6 | Trilha C: C1 → C2 → C3 → C4 → C5 → C6 → C7 → C8 → C9 |
+| **2 IAs** | Trilhas A e B intercaladas: A1 → B1 → A2 → B2 → B3 → A3 → B4 → A4 → B5 → A5 → A6 → B6 | Trilha C: C1 → … → C9 | — |
 
+Com 2 IAs, a IA-1 continua seguindo a posse de diretórios de cada trilha na sprint que estiver executando.
 
----
+### 4.3 Dependências entre sprints
 
-## Sprint 2 — Modelo canônico e Schema Digest
+```mermaid
+flowchart LR
+    A1[A1 Saneamento do motor] --> A2[A2 Planejamento relacional]
+    A2 --> A3[A3 Saída SQL]
+    B1 --> A3
+    A3 --> A4[A4 Relacional avançado]
+    A4 --> A5[A5 BR, mapeamento avançado, formatos]
+    A5 --> A6[A6 Inserção direta - motor]
+    B1[B1 Integração real e saneamento] --> B2[B2 PostgreSQL]
+    B1 --> B3[B3 Firebird]
+    B1 --> B4[B4 MySQL]
+    B2 & B3 & B4 --> B5[B5 Bulk, read-only, QueryExecutor]
+    B5 --> B6[B6 Matriz de versões]
+    B5 --> A6
+    C1[C1 Saneamento UI + Infra] --> C2[C2 Projeto + serviços]
+    A1 --> C2
+    C2 --> C3[C3 UI do fluxo MVP]
+    A3 & B2 & B3 & C3 --> C4{{C4 Geração E2E + GATE MVP}}
+    C4 --> C5[C5 Segurança + Explorer]
+    C5 & B5 --> C6[C6 Editor SQL]
+    C4 & A4 & B5 --> C7[C7 Evolução, relacionamentos, L4]
+    C7 & A5 & A6 --> C8[C8 Catálogo V1 + inserção direta UI]
+    C8 & A6 & B6 --> C9{{C9 Hardening + GATE V1}}
+```
 
-**Objetivo:** núcleo de schema independente de SGBD, com serialização, validação, hash e diff do digest.
-**Referências:** docs/08 §2, docs/12, docs/contracts/C01, schemas/digest-1.0, examples/digest-*.json.
+### 4.4 Pontos de sincronização (gates)
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [x] **2.1** `ObjectName`/`ColumnRef`/`CanonicalId` com testes de round-trip. *(TASK-01.01)* · Concluído em: 2026-10-12 · Evidência: `Naming/ObjectName.cs`, `Naming/CanonicalFormat.cs`; T-NAM-001/002 (10.000 casos cada) verdes.  
-- [ ] **2.2** Records do `SchemaModel` com invariantes e `Core.Connections`/`Core.Bindings`/`Core.Profiles`/`Core.Templates`. *(TASK-01.02, TASK-02.01 parte Core)* ⏳ PARCIAL: `Schema/Model.cs` e `Enums.cs` (records com `Create` e invariantes), `Connections/ConnectionEnvironment.cs`. Faltam `Core.Bindings`, `Core.Profiles` e `Core.Templates` (Sprints 4, 5 e 9). · Concluído em: ____ · Evidência: ____
-- [x] **2.3** `DigestSerializer.Serialize`. *(TASK-01.03)* · Concluído em: 2026-10-12 · Evidência: `Digest/DigestSerializer.cs`; T-DIG-001 valida a saída pelo JSON Schema de referência (teste). Escrita via `JsonNode`, ver DA-031.  
-- [x] **2.4** `Deserialize` + `DigestValidator` com todos os códigos `DIG-*`. Os 4 exemplos de `docs/examples` fazem round-trip. *(TASK-01.04)* · Concluído em: 2026-10-12 · Evidência: `Digest/DigestValidator.cs` (13 códigos `DIG-*`); T-DIG-002 (4 SGBDs), T-DIG-007 (uma fixture por código), T-DIG-010.  
-- [x] **2.5** `StructureHasher`, `ExpressionNormalizer` e `ColumnFingerprint`. *(TASK-01.05)* · Concluído em: 2026-10-12 · Evidência: `Hashing/StructureHasher.cs`, `ExpressionNormalizer.cs`; T-DIG-003 (invariância) e T-DIG-004 (25 mudanças estruturais) verdes.  
-- [x] **2.6** `SchemaDiffer` com severidades e candidatos de renomeação. *(TASK-01.06)* · Concluído em: 2026-10-12 · Evidência: `Diff/SchemaDiffer.cs`, `JaroWinkler.cs`; T-DIG-005 (classificação exata) e T-DIG-006 (candidato não aplicado) verdes.  
-
-**Verificação do sprint**
-- [x] T-DIG-001..007 e T-DIG-010 verdes (Core: 100/100)
-- [x] Hashes reais dos 4 exemplos calculados; `docs/examples/` atualizado e nota "hash ilustrativo" removida de docs/12 §10
-- [x] Cobertura do Core ≥ 70% (87,4% de linhas, coverlet)
-
-**Relatório do sprint 2 (2026-10-12):**
-- **Feito:** nomes canônicos com quoting e parse (`Naming/`); records do `SchemaModel` com construtores `Create` que validam invariantes; serializador do digest 1.0 e desserialização; validador codificado com os 13 códigos `DIG-*`; hash estrutural v1, normalizador de expressões e impressão digital de coluna; `SchemaDiffer` com severidades e candidatos de renomeação (Jaro-Winkler local).
-- **Testes (Core):** 100/100 verdes. T-NAM-001/002 (10.000 casos cada, seed fixa); T-DIG-001 (saída válida pelo JSON Schema de referência); T-DIG-002 (round-trip nos 4 SGBDs); T-DIG-003/004 (invariância e sensibilidade a 25 mudanças estruturais); T-DIG-005/006 (diff exato e candidato não aplicado); T-DIG-007 (cada código `DIG-*` provocado por fixture); T-DIG-010 (validador codificado × JSON Schema). Cobertura de linhas do Core: 87,4% (meta ≥70%).
-- **Exemplos:** hashes dos 4 exemplos recalculados e gravados em `docs/examples/`; nota "hash ilustrativo" substituída em docs/12 §10.
-- **Decisões:** DA-029 (igualdade por forma canônica), DA-030 (`Severity` no erro do digest e `TriggerModel.Table` como `ObjectName`), DA-031 (validação e leitura via `JsonDocument`/`JsonNode`), DA-032 (regra de normalização de expressões).
-- **Pendências:** 2.2 parcial (Bindings, Profiles e Templates ficam para as Sprints 4, 5 e 9); T-DIG-020 não aplicável (só existe a versão 1.0); fixtures `loja-v1`/`loja-v2` montados em código, não como arquivos JSON; `NamespaceFilter` não é persistido no digest (o schema não tem essa chave).
-- **Fora desta sprint, mas observado:** T-ARC-007 está falhando por código de `MockDataStudio.SqlTooling` (lexer e splitter ramificam sobre `DatabaseEngine`), trabalho da outra IA na Sprint 3. O Core não tem mais nenhuma ocorrência.
-- **Riscos:** o hash v1 já tem valores publicados nos exemplos; qualquer mudança futura da normalização exige `sha256v2:` (12 §6). Nada foi commitado.
-
+| Gate | Sprint | Exige na `main` | Verificação |
+|---|---|---|---|
+| **MVP** | C4 | A3, B2, B3, C3 | [docs/29 §2](docs/29-acceptance-criteria.md) (G-MVP-1..10) |
+| **V1** | C9 | A6, B6, C8 (e todas as anteriores) | [docs/29 §3](docs/29-acceptance-criteria.md) (G-V1-1..10) |
 
 ---
 
-## Sprint 3 — SqlTooling e provider SQLite
+## 5. Decisões do responsável pelo produto
 
-**Objetivo:** lexer/splitter por dialeto e o primeiro provider completo, validado pela suíte de contrato.
-**Referências:** docs/20 §4–5, docs/10 §3, docs/11, docs/contracts/C02, ADR-007.
+Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório que as IAs usam enquanto ela estiver aberta. **Marcação pelo responsável** (não pela IA).
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [x] **3.1** Contratos de `Providers.Abstractions`, `ProviderRegistry` e `IMdsModule`. *(TASK-02.01)* · Concluído em: 2026-10-12 · Evidência: contratos C02 em arquivos por tipo (`src/MockDataStudio.Providers.Abstractions`), `ProviderRegistry` (rejeita engine duplicado), `IMdsModule.Register` (docs/31 §2). Desvios em DA-033/034.
-- [x] **3.2** Lexer SQL para os 4 dialetos. *(TASK-03.01)* · Concluído em: 2026-10-12 · Evidência: `SqlLexer` + `SqlDialectFeatures` (DA-035); `T-SQL-SPLIT-CORPUS` com `tests/fixtures/sql-split/<dialeto>/sample.sql`. ⏳ **PARCIAL:** corpus com um arquivo por dialeto; casos adicionais de comentários MySQL `/*! */` e dollar-quoting aninhado seguem no corpus ampliado.
-- [x] **3.3** Splitter (`SET TERM`, `DELIMITER`, BEGIN/END, `$$`) e classificador de comandos destrutivos. *(TASK-03.02)* · Concluído em: 2026-10-12 · Evidência: `SqlScriptSplitter` (regras de rotina por dialeto); testes `SET TERM ^` (Firebird), `DELIMITER` (MySQL), `$$` (PostgreSQL) e `T-SQL-CLASS-001` (incl. CTE de escrita) verdes. ⏳ **PARCIAL:** mesmo corpus ampliado do item 3.2.
-- [x] **3.4** SQLite: conexão, `ServerInfo`/fingerprint, `TypeMapper`. *(TASK-02.02)* · Concluído em: 2026-10-12 · Evidência: `SqliteProvider` (`Foreign Keys`, `Mode`, `dateStorage`), `ServerInfo` com fingerprint SHA-256 estável; `SqliteTypeMapper`; T-PRV-SQLITE-001 e 003 verdes.
-- [x] **3.5** SQLite: `SchemaExtractor`. O digest do schema `loja` bate com `examples/digest-sqlite.json`. *(TASK-02.03)* · Concluído em: 2026-10-12 · Evidência: `SqliteSchemaExtractor` + `SqliteDdl`; T-PRV-SQLITE-002 e 004 e 005 verdes (digest igual ao exemplo fora hash/capturedAt/server). Ajustes ao exemplo em DA-036.
-- [x] **3.6** SQLite: dialeto, literais, `TargetInspector`, `BulkInserter`, `ErrorTranslator`. *(TASK-02.04)* · Concluído em: 2026-10-12 · Evidência: `SqliteDialect`/`SqliteLiteralFormatter`, `SqliteTargetInspector`, `SqliteBulkInserter` (10.000 linhas, T-PRV-SQLITE-006), `SqliteErrorTranslator` (T-PRV-SQLITE-008), T-PRV-SQLITE-007/009/010, `T-OUT-LIT-SQLITE` e `T-PRV-SQLITE-DATE-001` verdes.
-- [x] **3.7** Suíte abstrata `ProviderContractTests` passando para SQLite. *(TASK-02.05)* · Concluído em: 2026-10-12 · Evidência: `tests/MockDataStudio.Providers.ContractTests`: 12 aprovados, 2 `Skip` com motivo (011 e DataTooLong, N/A no SQLite; DA-039), 0 falhas.
-
-**Verificação do sprint**
-- [x] T-SQL-SPLIT-* (4 dialetos) e T-SQL-CLASS-001 verdes (32/32 em SqlTooling.Tests, 2026-10-12)
-- [x] T-PRV-SQLITE-001..011 e T-OUT-LIT-SQLITE verdes, exceto 011 e DataTooLong (N/A no SQLite, `Skip` justificado — DA-039)
-- [x] PV-013 e PV-015 resolvidas em docs/32 (PV-017 aberta: alerta NU1903 transitivo)
-
-**Relatório do sprint:** 2026-10-12 — SqlTooling sem dependência de engine (T-ARC-007 verde, 10/10). Providers.Sqlite completo com suíte de contrato: 12 aprovados, 2 N/A. Pendências declaradas: corpus SQL ampliado (3.2/3.3); integração do `dateStorage` com o ScriptWriter (Sprint 10, DA-037); `IQueryExecutor` sem implementação (Sprint 11); alerta NU1903 (PV-017). Providers MySQL, PostgreSQL e Firebird não iniciados.
+- [ ] **D-01** Idioma da interface: pt-BR (especificação) ou inglês (mockups) — PV-016. *Padrão:* manter os textos dos mockups, todos externalizados em `Strings.resx`.
+- [ ] **D-02** Aprovar o SQL Editor como tela separada (DA-028, capturas em `docs/progress/sprint-1/`). *Padrão:* manter separada.
+- [ ] **D-03** Rótulos de ambiente: os do mockup (Development/QA/Local/Production) ou os do domínio (Development/Test/Staging/Production/Unknown). *Padrão:* domínio, com as cores do mockup.
+- [ ] **D-04** Logo MySQL (marca de terceiros). *Padrão:* ícone genérico de banco com o texto "MySQL".
+- [ ] **D-05** Licença do pack de dados `CORE_PTBR` e do produto (DP-002). *Padrão:* dados autorais; licença definida até o Gate V1.
 
 ---
 
-## Sprint 4 — Catálogo interno
+## 6. Pendências herdadas dos Sprints 0–6 (saneamento)
 
-**Objetivo:** `catalog.db` com migrações, repositórios, importação por staging isolado, backup e pack inicial pt-BR.
-**Referências:** docs/09, docs/13, docs/contracts/C03, ADR-004, ADR-016, examples/catalog-import-example.sql.
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [x] **4.1** `CatalogDatabase`, pragmas, `CatalogMigrator` e `V0001__init.sql` idêntico a docs/09 §3. *(TASK-04.01)* · Concluído em: 2026-10-12 · Evidência: `Migrations/V0001__init.sql` copiado de docs/09 §3; `CatalogMigrator` (checksum SHA-256, uma transação por migração); T-CAT-001 (4 testes) verde.
-- [x] **4.2** Repositórios (templates, campos, aliases, valores, registros, presets, regras, feedback, perfis sem segredo, histórico, execuções). *(TASK-04.02)* · Concluído em: 2026-10-12 · Evidência: `Repositories/TemplateRepository.cs`, `OtherRepositories.cs` (regras, presets, perfis com recusa de segredo, histórico) e `FeedbackAndRunRepositories.cs` (feedback e `generation_run`, adicionados nesta data); teste `Repositorios_FeedbackEExecucoes_PersistemEConsultam` verde.
-- [x] **4.3** Staging: análise do script com todos os códigos `CAT-STG-*`/`CAT-IMP-*`. *(TASK-04.03)* · Concluído em: 2026-10-12 · Evidência: `Staging/StagingImporter.cs` implementa os códigos `CAT-IMP-*` e `CAT-STG-*`; T-CAT-003/T-SEC-009 (comandos proibidos) e T-CAT-004 (cada código provocado + exemplo oficial sem erros) verdes. ⏳ **PARCIAL:** `CAT-IMP-SIZE` (limite 200 MB) está implementado mas **sem teste**, pois o fixture de 200 MB é custoso demais para a suíte unitária.
-- [x] **4.4** Merge transacional com os modos `InsertOnly`/`Upsert`/`ReplaceTemplateData` e backup `premerge`. *(TASK-04.04)* · Concluído em: 2026-10-12 · Evidência: `StagingImporter.MergeInto` transacional; T-CAT-005 (comportamento por modo) e T-CAT-006 (backup e restauração recuperam o estado anterior) verdes.
-- [x] **4.5** Integridade, backup e restauração. *(TASK-04.05)* · Concluído em: 2026-10-12 · Evidência: `Maintenance/CatalogMaintenance.cs` (`VACUUM INTO`, `quick_check`, `foreign_key_check`, preservação do catálogo atual como `*_replaced_*`); T-CAT-006 e T-CAT-007 (desabilita regra inválida sem excluir) verdes.
-- [x] **4.6** `CatalogTemplateDataSource` (`TemplateDataSet` ordenado + `ContentHash`). *(TASK-04.07)* · Concluído em: 2026-10-12 · Evidência: `Data/CatalogTemplateDataSource.cs`; T-CAT-009 (hash independe da ordem de inserção; fonte entrega ordenado com pesos) verde.
-- [x] **4.7** Pack `CORE_PTBR` (subconjunto MVP) instalado via staging, com `Seeds/SOURCES.md` de procedência e licença. *(TASK-04.06)* · Concluído em: 2026-10-12 · Evidência: `Packs/BuiltInPackInstaller.cs` instala por staging (`MergeMode.Upsert`); `Seeds/pack-core-ptbr.json` com NOME 200, SOBRENOME 150, EMAIL_DOMINIO 20, UF 27, TELEFONE 20, ENDERECO 200; `Seeds/SOURCES.md` com procedência. ⏳ **PARCIAL:** licença do pacote **pendente** (DP-002); volumes completos de 09 §6 ficam para versões seguintes. T-CAT-010 (instalação e segunda instalação idempotente; contagens MVP) verde.
-
-**Verificação do sprint**
-- [x] T-CAT-001..007, 009, 010 e T-SEC-009 verdes — `dotnet test tests/MockDataStudio.Catalog.Tests -c Release`: 21/21 aprovados (2026-10-12). T-CAT-008 não está no escopo da sprint.
-- [x] `examples/catalog-import-example.sql` importa sem erros (`T_CAT_004_ExemploOficial_AnalisaSemErros`: 3 templates novos, zero erros). Um script com `DROP` é rejeitado sem alterar o catálogo (T-SEC-009)
-- [x] Teste de migração com falha injetada preserva o catálogo (T-CAT-001 `MigracaoComFalhaInjetada_PreservaCatalogoAnterior`)
-
-**Relatório do sprint:** 2026-10-12 — Catálogo implementado em `src/MockDataStudio.Catalog`, 21 testes verdes. Pendências declaradas: teste de `CAT-IMP-SIZE`; licença do pacote (DP-002); volumes completos do pack; T-CAT-008 (exportação/importação de pacote) fora do escopo. Os testes de SqlTooling (T-ARC-007) não foram alterados por esta sprint.
-
----
-
-## Sprint 5 — Mapeamento semântico
-
-**Objetivo:** sugestões determinísticas e explicáveis de template/gerador por coluna.
-**Referências:** docs/14, docs/contracts/C04.
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **5.1** `NameNormalizer` (tabela de docs/14 §2 + 200 casos). *(TASK-05.01)* · Concluído em: 2026-10-12 · Evidência: `src/MockDataStudio.Mapping/NameNormalizer.cs` implementa os passos 1–7 de docs/14 §2 (NFD, camelCase, siglas, dicionário, ruído, Ordinal); T-MAP-001 com os 5 exemplos da tabela e 10 casos adicionais verdes. ⏳ **PARCIAL:** 15 casos de 200 escritos; a tabela de 200 casos ainda não foi autorada.
-- [x] **5.2** `MappingKnowledge` e `StructuralBinder`. *(TASK-05.02)* · Concluído em: 2026-10-12 · Evidência: `MappingKnowledge` (índices por Compact, ExpandedCompact e CoreToken); `StructuralBinder` (§3: geração, identity, FK, PK uuid e inteira; PK composta fica semântica). T-MAP-002 verde.
-- [x] **5.3** Pontuação, evidências, desempate, faixas de confiança, ambiguidade, fallback e slots. *(TASK-05.03)* · Concluído em: 2026-10-12 · Evidência: `MappingEngine`/`CandidateSet` (§4–5, pontos da tabela de docs/14 §5), matriz de tipos (§6), desempate (§7), faixas e ambiguidade, fallback por tipo, `MappingSlots`, `AutoBind`. T-MAP-003, 004, 005, 006, 008 verdes. ⏳ **PARCIAL:** evidências `HistoryMatch`, `CheckConstraintHint` e `UniqueCapacity` não implementadas (dependem de feedback da Sprint 17 e do perfil; DA-041). Snapshots dos 4 digests (`cliente`) pendentes.
-- [x] **5.4** Corpus `mapping-corpus` (≥ 1.500 nomes) e medição das metas. *(TASK-05.04)* · Concluído em: 2026-10-12 · Evidência: `tests/fixtures/mapping-corpus/corpus-core-ptbr.csv` (2.724 linhas, gerado por `generate-corpus.js`) e `T-MAP-CORPUS` com métricas em `TestResults/mapping-corpus-metrics.json`. ⏳ **PARCIAL:** corpus **sintético** (não é corpus real anonimizado exigido por docs/14 §11). Meta revisada (DA-044): cobertura High sem prefixo de tipo 86,2% (meta ≥ 70%); precisão High 100% (meta ≥ 95%); 0 violações de tipo. Cobertura total 48,1% reportada sem meta.
-
-**Verificação do sprint**
-- [x] T-MAP-001..006 e 008 verdes (20/20 testes do projeto `MockDataStudio.Mapping.Tests`, 2026-10-12). T-MAP-007 (aprendizado) é da Sprint 17 (TASK-17.04) e não entra aqui.
-- [x] T-MAP-CORPUS: ≥ 70% High sem prefixo de tipo e precisão ≥ 95% (meta revisada, DA-044; PV-018 resolvida). Corpus sintético: cobertura 86,2%, precisão 100%. Corpus real anonimizado segue pendente (docs/14 §11).
-- [x] Caso `ZAP → TELEFONE` com confiança High comprovado (T-MAP-003: escore 96 = alias exato 88 + tipo compatível 5 + comprimento 3; sem concorrente).
-
-**Relatório do sprint:** 2026-10-12 — Mapeamento implementado (`Core.Bindings`, `MockDataStudio.Mapping`) com 20 testes verdes. Pendências declaradas: 185 casos do normalizador; evidências `HistoryMatch`/`CheckConstraintHint`/`UniqueCapacity` (DA-041); snapshots dos digests; corpus real; meta de cobertura revisada para nomes sem prefixo (86,2%, DA-044) — corpus sintético; corpus real pendente; T-MAP-007 na Sprint 17.
+| ID | Origem | Pendência | Sprint |
+|---|---|---|---|
+| SAN-A.1 | 2.2 | `Core.Profiles` (records de C06) | A1 |
+| SAN-A.2 | Auditoria A-05 | `IRowSink`/`RowBatch` conforme C06; motor multi-tabela | A1, A2 |
+| SAN-A.3 | 6.2, 6.3 (DA-049) | Distribuições normal/zipf; `core.weighted`/`switch`/`lorem`; `weekdays`/`hours`; datas com anos/meses | A1 |
+| SAN-A.4 | 6.6 | Estratégia de sufixo (T-GEN-UQ-003 em Skip); base mista para UNIQUE composto | A1 |
+| SAN-A.5 | 6.5 | Funções `cpf`, `cnpj` (A1) e `parent` (A2) | A1, A2 |
+| SAN-A.6 | 5.1 | Normalizador: 185 casos restantes de T-MAP-001 | A1 |
+| SAN-A.7 | 5.3 (DA-041) | Evidências `HistoryMatch`, `CheckConstraintHint`, `UniqueCapacity` | A5 |
+| SAN-A.8 | Auditoria A-10 | Métricas do corpus versionadas em `docs/progress/` | A1 |
+| SAN-B.1 | Auditoria A-02 | Fixtures `loja.*` iguais à especificação (DA-053) | B1 |
+| SAN-B.2 | Auditoria A-01/A-03 | Testcontainers real; smoke falso removido; CI de integração bloqueante | B1 |
+| SAN-B.3 | Auditoria A-04 (PV-017) | Vulnerabilidades NuGet | B1 |
+| SAN-B.4 | Auditoria A-06 | Host de testes de contrato não encerra | B1 |
+| SAN-B.5 | 3.2, 3.3 | Corpus de split ampliado | B1 |
+| SAN-C.1 | 1.5 | Tema escuro; docs/21 §2.1 com DA-027/D-03 | C1 |
+| SAN-C.2 | 1.7 | Textos das views em `Strings.resx` (D-01) | C1 |
+| SAN-C.3 | 1.6, verificação S1 | Usar os componentes padronizados nas telas; diferença visual de 2% em Connections; aprovação D-02 | C1 |
+| SAN-C.4 | DA-025 | Logo/ícone MySQL (D-04) | C1 |
+| SAN-C.5 | 4.3 | Teste de `CAT-IMP-SIZE` | C1 |
 
 ---
 
-## Sprint 6 — Motor de geração
+## 7. Trilha A — Motor, planejamento e saída
 
-**Objetivo:** RNG determinístico, geradores, MDS-Expr, unicidade e engine em streaming.
-**Referências:** docs/15, docs/contracts/C05, ADR-005, ADR-013, ADR-014.
+### Sprint A1 — Saneamento do motor e convergência com C06
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/A1-saneamento-motor` |
+| Depende de | — (pode iniciar imediatamente) |
+| Desbloqueia | A2, C2 |
+| Referências | C05, C06, docs/15, docs/14 §2, DA-049, DA-052 |
 
-- [x] **6.1** `StreamKey` + `DeterministicRandom`, reproduzindo os vetores de docs/15 §4.1. *(TASK-06.01)* · Concluído em: 2026-10-12 · Evidência: `Random/StreamKey.cs`, `Random/DeterministicRandom.cs`; T-GEN-RNG-001 (3 vetores por linha) verde. Desvios: DA-045, DA-046.
-- [x] **6.2** Infraestrutura de geradores: registry, descriptors, validação de parâmetros, `ValueCoercer`, `WeightedIndex`, distribuições, `IsoDuration`. *(TASK-06.02)* · Concluído em: 2026-10-12 · Evidência: `Generators/GeneratorContracts.cs`, `ParameterSet.cs` (GEN-PARAM-*), `GeneratorFactory.cs`, `Coercion/ValueCoercer.cs` (§5), `IsoDuration.cs`, `Random/WeightedIndex.cs` (Vose); T-GEN-COERCE-001 verde. ⏳ **PARCIAL:** distribuições `normal` e `zipf` não implementadas (DA-049).
-- [x] **6.3** Geradores `core.*` básicos com snapshots. *(TASK-06.03)* · Concluído em: 2026-10-12 · Evidência: 21 geradores em `Generators/*.cs` com snapshots de 1.000 valores (`tests/fixtures/generation-snapshots`, T-GEN-LIB, regressão); semântica do UUID v4 verificada. ⏳ **PARCIAL:** `core.lorem.*`, `core.weighted`, `core.switch` e `br.*` pendentes (DA-049).
-- [x] **6.4** `catalog.template`, `catalog.template.field` e slots de `RowContext`. *(TASK-06.04)* · Concluído em: 2026-10-12 · Evidência: `Generators/CatalogGenerators.cs`, `RowContext.GetOrSelectSlotRecord`; T-GEN-COMP-001 verde (colunas do mesmo slot leem o mesmo registro de ENDERECO). `ParentIndex` fica para a Sprint 7.
-- [x] **6.5** MDS-Expr (lexer, parser, avaliador, funções), `core.format` e `core.expr`. *(TASK-06.05)* · Concluído em: 2026-10-12 · Evidência: `Expressions/MdsExprParser.cs` (EBNF §9.1), `MdsExprEvaluator.cs` (nulos, tipos, funções), `ExpressionGenerator.cs`; T-GEN-EXPR-001..003 verdes. ⏳ **PARCIAL:** `cpf`, `cnpj` e `parent` não implementadas (DA-049).
-- [x] **6.6** Unicidade: Feistel, base mista, estratégias 1–5 e verificação de capacidade. *(TASK-06.06)* · Concluído em: 2026-10-12 · Evidência: `Unique/FeistelPermutation.cs` (§8.3), `Engine/GenerationEngine.cs` (estratégias 1, 2, 3 e 5); T-GEN-UQ-001, 002 e 004 verdes. ⏳ **PARCIAL:** estratégia 4 (sufixo) pendente (T-GEN-UQ-003 em `Skip`); base mista de composto (§8.4) pendente, fica com a Sprint 7.
+**Status:** ⬜ Não iniciada
 
-**Verificação do sprint**
-- [x] T-GEN-RNG-001/002, T-GEN-LIB-*, T-GEN-DET-001, T-GEN-UQ-001..004 (003 em Skip), T-GEN-EXPR-001..003, T-GEN-COMP-001, T-GEN-NULL-001 e T-GEN-COERCE-001 verdes — `dotnet test tests/MockDataStudio.Generation.Tests`: 62 aprovados, 1 Skip (2026-10-12). T-GEN-LIB é regressão (DA-050).
-- [x] B-RNG-001 executado e registrado (2026-10-12): 125.037.199 linhas/s, 1 RNG por linha com 2 saídas, 5 M linhas, Release (`tests/MockDataStudio.Benchmarks`). Medição com `Stopwatch`, sem meta numérica definida em docs/24.
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Relatório do sprint:** 2026-10-12 — Motor de geração implementado (`MockDataStudio.Generation`): RNG, 21 geradores, coerção, MDS-Expr, unicidade e motor em lotes com determinismo entre paralelismos. 62 testes verdes, 1 Skip. Pendências declaradas (DA-049): distribuições normal/zipf, lorem, weighted/switch, br.*, rel.* (Sprint 7), estratégia de sufixo, funções cpf/cnpj/parent e base mista de composto.
+- [ ] **A1.0** Início da sprint conforme §3.1 (branch criada, Status 🔄, commit de início). · Concluído em: ____ · Evidência: ____
+- [ ] **A1.1** `Core.Profiles`: todos os records/enums de C06 (`KeyStrategy` … `GenerationProfile`, incluindo `ReferenceInstantMode`, `TimeZoneId` e `OutputSettings` completo), com invariantes e testes. *(SAN-A.1)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.2** `IRowSink` e `RowBatch` conforme C06 (`FirstRowIndex`, `ExecuteSessionStepAsync`, `BeginTableAsync`, `EndTableAsync`, `WriteDeferredUpdatesAsync`) e tipos `PlanStep`; adaptar o motor e os testes; atualizar DA-052. *(SAN-A.2)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.3** Distribuições `normal` e `zipf`; `weekdays`/`hours` em `core.date.range`; passo com anos/meses em `core.date.sequence`. Saída de gerador existente que mudar exige nova versão (15 §4.4). *(SAN-A.3)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.4** `core.weighted`, `core.switch`, `core.lorem.words`, `core.lorem.paragraph`, com snapshots. *(SAN-A.3)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.5** Estratégia 4 de unicidade (sufixo), com T-GEN-UQ-003 sem Skip; base mista para UNIQUE composto (15 §8.4) com teste. *(SAN-A.4)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.6** Cálculo de dígitos verificadores CPF/CNPJ; geradores `br.cpf` e `br.cnpj`; funções MDS-Expr `cpf()` e `cnpj()`; T-GEN-BR-001 (parte CPF/CNPJ). *(SAN-A.5)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.7** Normalizador: tabela completa de 200 casos (T-MAP-001). *(SAN-A.6)* · Concluído em: ____ · Evidência: ____
+- [ ] **A1.8** Métricas do corpus gravadas em `docs/progress/A1/mapping-corpus-metrics.json` (versionado). *(SAN-A.8)* · Concluído em: ____ · Evidência: ____
 
----
+**Verificação da sprint**
+- [ ] Core, Generation, Mapping e Architecture verdes; nenhum `Skip` novo sem motivo
+- [ ] Pendências de DA-049 resolvidas, ou as restantes registradas em docs/32 §1.1
+- [ ] Encerramento conforme §3.3 (merge na `main`, build e testes na `main`, push)
 
-## Sprint 7 — Planejamento relacional e validação
-
-**Objetivo:** grafo de dependências, ciclos, chaves, cardinalidade, FKs compostas, plano completo, validador L2/L3 e engine ponta a ponta em memória.
-**Referências:** docs/16, docs/17, docs/contracts/C06–C07, ADR-008.
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **7.1** `DependencyGraph` + Tarjan iterativo. *(TASK-07.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **7.2** `KeyPlanner` (Explicit/DatabaseDefault) e `KeyOracle`. *(TASK-07.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **7.3** `CycleResolver` (NullThenUpdate + bloqueio) e autorreferência anulável. *(TASK-07.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **7.4** `rel.fk` ChildDriven, FKs compostas, sobreposição e `rel.child_seq`. *(TASK-07.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **7.5** `GenerationEngine` (chunks paralelos ordenados, `IRowSink`, preview). *(TASK-06.07)* · Concluído em: ____ · Evidência: ____
-- [ ] **7.6** `GenerationPlanner` completo: diagnósticos `PLN-*`, estimativas e `PlanHash`. *(TASK-07.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **7.7** `PreflightValidator` L2/L3 e interpretador de CHECK. *(TASK-07.06)* · Concluído em: ____ · Evidência: ____
-
-**Verificação do sprint**
-- [ ] T-REL-001/002/005/006/007/012, T-REL-PLAN-001, T-GEN-DET-002/003, T-VAL-LOJA e T-VAL-CHECK-001 verdes
-- [ ] Mesma saída com MaxDOP 1 e 8 (hash registrado)
-- [ ] B-GEN-001 preliminar ≥ 100 k linhas/s (sem writer)
-
-**Relatório do sprint:** ____
+**Relatório da sprint:** ____
 
 ---
 
-## Sprint 8 — Saída SQL + providers PostgreSQL e Firebird
+### Sprint A2 — Planejamento relacional e validação
 
-**Objetivo:** scripts SQL executáveis nos três SGBDs do MVP.
-**Referências:** docs/18, docs/10 §5–6, docs/11, examples/output-*.sql.
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/A2-planejamento-relacional` |
+| Depende de | A1 |
+| Desbloqueia | A3 |
+| Referências | docs/16, docs/17, C06, C07, TASK-07.01..07.06, TASK-06.07 |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **8.1** `SqlScriptWriter` + `SegmentedTextSink` (cabeçalho, transações, resync). *(TASK-08.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **8.2** Provider PostgreSQL completo e suíte de contrato. *(TASK-08.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **8.3** Provider Firebird completo (heurística `tsq`, resync por versão) e suíte de contrato em FB 5, com resultados em FB 3/4 registrados. *(TASK-08.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **8.4** Corpus adversarial de literais e round-trip nos 3 SGBDs. · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint**
-- [ ] T-PRV-PG-*, T-PRV-FB-* (incl. FB-KEY-001..003), T-OUT-001/002/006, T-OUT-LIT-* e T-OUT-ROUNDTRIP-* (SQLite/PG/FB) verdes
-- [ ] PV-004, PV-005, PV-009, PV-012 e PV-014 resolvidas em docs/32
-- [ ] `examples/output-postgresql.sql` e `output-firebird.sql` atualizados com saídas reais
+- [ ] **A2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **A2.1** `DependencyGraph` + Tarjan iterativo, com ordem determinística. *(TASK-07.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.2** `KeyPlanner` (Explicit/DatabaseDefault, reserva de faixa, overflow, modo offline) e `KeyOracle`. *(TASK-07.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.3** `CycleResolver` (NullThenUpdate + bloqueio `PLN-CYCLE-UNBREAKABLE`) e autorreferência anulável. *(TASK-07.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.4** `rel.key`, `rel.fk` ChildDriven, FKs compostas e sobrepostas, `rel.child_seq`. *(TASK-07.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.5** `IGenerationEngine.RunAsync(GenerationPlan, …)` multi-tabela com passos, updates adiados e função `parent()`; a execução por tabela vira interna (DA-052). *(TASK-06.07, SAN-A.2, SAN-A.5)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.6** `GenerationPlanner`: diagnósticos `PLN-*`, estimativas, `PlanHash`; snapshots de plano para os **4 digests** de `docs/examples` (T-REL-PLAN-001). *(TASK-07.05)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.7** `PreflightValidator` L2/L3 e interpretador de CHECK. *(TASK-07.06)* · Concluído em: ____ · Evidência: ____
+- [ ] **A2.8** Teste ponta a ponta do motor em SQLite: gerar o schema `docs/examples/schema-loja-sqlite.sql` usando `ISqlDialect.BuildInsert` do provider SQLite e verificar FKs, UNIQUEs e CHECKs (inclui T-REL-002 em SQLite). · Concluído em: ____ · Evidência: ____
 
-**Relatório do sprint:** ____
+**Verificação da sprint**
+- [ ] T-REL-001/002 (SQLite)/005/006/007/012, T-REL-PLAN-001, T-GEN-DET-002/003, T-VAL-LOJA e T-VAL-CHECK-001 verdes
+- [ ] Mesma saída com MaxDOP 1 e 8 (hash registrado); B-GEN-001 ≥ 100 mil linhas/s (sem writer)
+- [ ] Encerramento conforme §3.3
 
----
-
-## Sprint 9 — Projeto, Application e Infraestrutura
-
-**Objetivo:** persistência do projeto (`.mdsproj`), serviços de aplicação sem UI e infraestrutura (segredos, logs).
-**Referências:** docs/22, docs/23 §3 e §6, docs/contracts/C09.
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **9.1** `MdsProject`, serializer e validator. `examples/project-loja.mdsproj` faz round-trip. *(TASK-09.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **9.2** Infraestrutura: `DpapiSecretStore`, settings e Serilog com redação. *(TASK-09.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **9.3** Serviços MVP: Connection, Digest, Mapping, Generation e `ReferenceDataSource` (Generated/Fixed). *(TASK-09.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **9.4** E2E sem UI: T-E2E-SQLITE/PG/FB-001 e T-E2E-003. *(TASK-08.04)* · Concluído em: ____ · Evidência: ____
-
-**Verificação do sprint**
-- [ ] T-PRJ-001/002/003/005/006/010, T-SEC-002/004/012 e T-APP-001..005 verdes
-- [ ] E2E: scripts gerados executados via `sqlite3`/`psql`/`isql` sem erro, com FKs/UNIQUEs/CHECKs verificados
-
-**Relatório do sprint:** ____
+**Relatório da sprint:** ____
 
 ---
 
-## Sprint 10 — Integração da UI (fluxo MVP) e Gate MVP
+### Sprint A3 — Saída em script SQL
 
-**Objetivo:** ligar as telas do protótipo aos serviços reais e entregar o fluxo completo: conexão → digest → mapeamento → plano → script.
-**Referências:** docs/21 (S02, S06, S10, S11, S12, S14, S15, S16), docs/29 §2, docs/28 (TASK-09.04..09.07).
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/A3-saida-sql` |
+| Depende de | A2, **B1** (`ISqlDialect.BuildKeyRangeGuard`) |
+| Desbloqueia | A4, **C4 (gate MVP)** |
+| Referências | docs/18, C08, TASK-08.01, TASK-18.01 |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **10.1** **Connections** com dados reais (SQLite/PG/FB): CRUD, testar conexão, ambiente, somente leitura e senha protegida. Remover a fonte de exemplo desta tela. *(TASK-09.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **10.2** **Schema Digest** real: capturar (com progresso/cancelar), importar e exportar, árvore do digest. *(S06)* · Concluído em: ____ · Evidência: ____
-- [ ] **10.3** **Templates** lendo o catálogo real (somente consulta neste sprint; edição completa no Sprint 17). · Concluído em: ____ · Evidência: ____
-- [ ] **10.4** **Mapping** real: tabelas do projeto, sugestões com evidências e confiança, aceitar/alterar binding, editor de gerador gerado pelo descriptor com preview ao vivo, desfazer/refazer. *(TASK-09.06, S10–S12)* · Concluído em: ____ · Evidência: ____
-- [ ] **10.5** Substituir o placeholder **Generation** pelas telas de plano/validação, preview e geração de script (S14, S15, S16 — só script). *(TASK-09.07)* · Concluído em: ____ · Evidência: ____
-- [ ] **10.6** **Home** com projetos e conexões recentes reais. Novo/abrir/salvar projeto. · Concluído em: ____ · Evidência: ____
-- [ ] **10.7** Remover `SampleData`/`SampleDesignDataSource` das telas do fluxo MVP. Telas ainda não integradas (Explorer, SQL Editor, History, Settings) ficam marcadas na UI como "Em desenvolvimento". · Concluído em: ____ · Evidência: ____
-- [ ] **10.8** Teste T-UI-FLOW-001 (fluxo SQLite completo só por teclado) e T-UI-PERF-002. · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint — Gate MVP ([docs/29 §2](docs/29-acceptance-criteria.md))**
-- [ ] G-MVP-1 — schema `loja` em SQLite, PostgreSQL 17 e Firebird 5: ponta a ponta sem erros
-- [ ] G-MVP-2 — contagens, FKs (compostas/autorreferência), UNIQUEs e CHECKs verificados
+- [ ] **A3.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **A3.1** `SqlScriptWriter`: cabeçalho, preâmbulo, transações e commits periódicos, INSERT por `ISqlDialect`, updates adiados, resync de sequences. *(TASK-08.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **A3.2** `ISegmentedTextSink` (nunca corta comando), `RunManifest` e escrita atômica (`.partial` → renomear). *(TASK-18.01 parte)* · Concluído em: ____ · Evidência: ____
+- [ ] **A3.3** `CleanupScriptBuilder` por faixas de chave e por tuplas (18 §7). · Concluído em: ____ · Evidência: ____
+- [ ] **A3.4** Guardas: `EmitGuards` usa `ISqlDialect.BuildKeyRangeGuard` (C02, acrescentado pela B1); quando o dialeto retorna `null`, emite só o comentário de verificação. · Concluído em: ____ · Evidência: ____
+- [ ] **A3.5** `IOutputWriterFactory` (script); T-OUT-001 (snapshot SQLite), T-OUT-002, T-OUT-003, T-OUT-004 e T-OUT-006 executando o script em SQLite real; `docs/examples/output-sqlite.sql` atualizado com saída real. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Testes de Output verdes; script `loja` SQLite executa sem erro e a limpeza devolve as contagens originais
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint A4 — Relacional avançado (motor)
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/A4-relacional-avancado` |
+| Depende de | A3 |
+| Desbloqueia | A5, C7 |
+| Referências | docs/16 §3–9, TASK-16.01..16.04 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **A4.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **A4.1** `DeferredConstraint` e `DisableChecks` (opt-in) no planner e no writer; autorreferência NOT NULL de acordo com os resultados de PV-007 (sprint B4). Para SGBD ainda não verificado, mantenha o bloqueio `PLN-SELF-NOTNULL`. *(TASK-16.01 parte motor)* · Concluído em: ____ · Evidência: ____
+- [ ] **A4.2** ParentDriven, Zipf, Poisson, 1:1 e `PLN-PARENTDRIVEN-MULTI`. *(TASK-16.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **A4.3** Fontes Existing/Fixed/Dataset/Query no motor, via `IReferenceDataSource` e `KeyPool`. A leitura em banco é implementada pela trilha C (C7); aqui, testes com fonte fake. *(TASK-16.03 parte motor)* · Concluído em: ____ · Evidência: ____
+- [ ] **A4.4** `NaturalKeyLookup` (T-REL-PLAN-002 com execução em SQLite). *(TASK-16.04)* · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] T-REL-003 (nível de plano)/004/008/009/010 (fonte fake) e T-REL-PLAN-002 verdes
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint A5 — Geradores BR, mapeamento avançado e formatos
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/A5-br-mapeamento-formatos` |
+| Depende de | A4 |
+| Desbloqueia | A6, C8 |
+| Referências | docs/15 §6, docs/14 §5 e §8, docs/18 §9, docs/24, TASK-17.04/17.05/18.02/18.03 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **A5.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **A5.1** `br.phone`, `br.placa`, `core.uuid` v7; T-GEN-BR-001 completo. CNPJ alfanumérico conforme PV-011 (ou adiado com registro). *(TASK-17.05 resto)* · Concluído em: ____ · Evidência: ____
+- [ ] **A5.2** Evidências `HistoryMatch`, `CheckConstraintHint` e `UniqueCapacity`, e o lado do motor do aprendizado (entrada de feedback e regras pelo `MappingKnowledge`). A persistência no catálogo é da trilha C (C8). *(SAN-A.7, TASK-17.04 parte A)* · Concluído em: ____ · Evidência: ____
+- [ ] **A5.3** Writers CSV e JSON Lines com manifesto. *(TASK-18.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **A5.4** Benchmarks e volume: B-GEN-001, B-MEM-001, B-OUT-001/002, T-GEN-VOL-001; resultados em `docs/benchmarks/`. *(TASK-18.03 parte A)* · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] T-GEN-BR-001, T-MAP-003 (novas evidências), T-OUT-005 e T-GEN-VOL-001 verdes; T-MAP-CORPUS reavaliado
+- [ ] NFR-PERF-001/002/009 medidos (desvios registrados em docs/32 §1.1)
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint A6 — Inserção direta (motor e saída)
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/A6-insercao-direta` |
+| Depende de | A5, **B5** |
+| Desbloqueia | C8, C9 |
+| Referências | docs/19, docs/16 §5, TASK-15.03, 15.04, 15.05 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **A6.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **A6.1** `DirectInsertWriter`: transações PerBatch/Single, falhas, cancelamento, nova tentativa do batch em deadlock. *(TASK-15.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **A6.2** Estratégia Captured + `KeyRegistry` (arquivo temporário acima de 10 milhões de chaves). *(TASK-15.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **A6.3** Limpeza por faixas confirmadas por batch e por chaves capturadas; `RunOutcome` completo. *(TASK-15.05 parte motor)* · Concluído em: ____ · Evidência: ____
+- [ ] **A6.4** T-DIR-<X>-001 e T-DIR-002..005 com containers (SQLite, PostgreSQL, Firebird, MySQL). · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] T-DIR-* verdes nos 4 SGBDs (ou Skip local justificado + CI verde)
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+## 8. Trilha B — Providers, SQL e testes de integração
+
+### Sprint B1 — Integração real e saneamento da infraestrutura de testes
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/B1-integracao-real` |
+| Depende de | — (pode iniciar imediatamente). **Requer máquina com Docker** (containers Linux); sem Docker, a sprint só pode ser concluída com o CI do GitHub como evidência |
+| Desbloqueia | B2, B3, B4 |
+| Referências | docs/26 §1–3 e §8, DA-053, DA-055, docs/37 A-01..A-06 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **B1.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **B1.1** Reescrever `tests/fixtures/schemas/loja.{sqlite,postgresql,mysql,firebird}.sql` com a estrutura de `docs/examples` (singular, tabela `entrega` com FK composta). Verificar: o digest extraído da fixture SQLite é igual a `docs/examples/digest-sqlite.json` (exceto hash, data e versão). *(SAN-B.1, DA-053)* · Concluído em: ____ · Evidência: ____
+- [ ] **B1.2** Fixtures Testcontainers reais (PostgreSQL 17, MySQL 8.4, Firebird 5), com banco novo por teste e `SELECT 1`; sem Docker → Skip com motivo. Remover o `ContainerSmokeTests` atual. *(SAN-B.2, DA-055)* · Concluído em: ____ · Evidência: ____
+- [ ] **B1.3** Corrigir o travamento do host de `Providers.ContractTests` (liberar pools e conexões em `DisposeAsync`); a suíte deve terminar em menos de 60 s. *(SAN-B.4)* · Concluído em: ____ · Evidência: ____
+- [ ] **B1.4** CI: job de integração sem `continue-on-error`, executando `Category=Contract|Integration`; `NuGetAudit` visível no resumo. *(SAN-B.2)* · Concluído em: ____ · Evidência: ____
+- [ ] **B1.5** Vulnerabilidades: atualizar ou forçar versões corrigidas de `SQLitePCLRaw.*`, `SSH.NET` e `System.Drawing.Common`; registrar os resíduos em PV-017 e `docs/dependencies.md`. *(SAN-B.3)* · Concluído em: ____ · Evidência: ____
+- [ ] **B1.6** Implementar `ISqlDialect.BuildKeyRangeGuard` (C02) no SQLite, retornando `null`. Coordene com a trilha A se A3 já estiver em andamento. · Concluído em: ____ · Evidência: ____
+- [ ] **B1.7** Corpus de split ampliado: MySQL `/*! */`, dollar-quoting com tag, `CASE … END` em PSQL, comentários e terminadores dentro de strings. *(SAN-B.5)* · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Smoke de integração real verde no CI (link da execução) e Skip com motivo localmente sem Docker
+- [ ] ContractTests encerra sozinho; T-SQL-SPLIT-* verdes
+- [ ] Nenhum aviso NU1903/NU1904 em projetos de `src/` (ou registrado com mitigação)
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint B2 — Provider PostgreSQL
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/B2-postgresql` |
+| Depende de | B1 |
+| Desbloqueia | B5, **C4 (gate MVP)** |
+| Referências | docs/10 §5, docs/11, C02, TASK-08.02 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **B2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **B2.1** Conexão, `ServerInfo`/fingerprint e `TypeMapper` (tipos curtos de 11 §5). · Concluído em: ____ · Evidência: ____
+- [ ] **B2.2** `SchemaExtractor`: o digest de `loja` é igual a `docs/examples/digest-postgresql.json` (exceto hash, data e versão). · Concluído em: ____ · Evidência: ____
+- [ ] **B2.3** Dialeto e literais (T-OUT-LIT-PG), `OVERRIDING SYSTEM VALUE`, resync com `setval`, `BuildKeyRangeGuard` com `DO $$`. · Concluído em: ____ · Evidência: ____
+- [ ] **B2.4** `TargetInspector`, `ErrorTranslator`, cancelamento e `IBulkInserter` com INSERT multi-linha parametrizado (COPY fica no B5). · Concluído em: ____ · Evidência: ____
+- [ ] **B2.5** Suíte de contrato T-PRV-PG-001..011 e T-OUT-ROUNDTRIP-PG (via `BuildInsert` do dialeto). · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Contrato PostgreSQL 17 verde no CI; registro em docs/32 §5.2 do que ficou pendente
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint B3 — Provider Firebird
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/B3-firebird` |
+| Depende de | B1 |
+| Desbloqueia | B5, **C4 (gate MVP)** |
+| Referências | docs/10 §6, docs/11 §4.4, TASK-08.03, PV-004/005/012/014 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **B3.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **B3.1** Conexão, versão, fingerprint (`MON$GUID`, PV-012) e `TypeMapper` (domínios, charsets, OCTETS). · Concluído em: ____ · Evidência: ____
+- [ ] **B3.2** `SchemaExtractor` com heurística `tsq` (11 §4.4) e CHECK via `RDB$TRIGGERS`; digest de `loja` igual a `docs/examples/digest-firebird.json`. · Concluído em: ____ · Evidência: ____
+- [ ] **B3.3** Dialeto e literais (T-OUT-LIT-FB), um INSERT por linha, `OVERRIDING SYSTEM VALUE` (PV-004), resync por versão (PV-005). · Concluído em: ____ · Evidência: ____
+- [ ] **B3.4** `TargetInspector`, `ErrorTranslator`, cancelamento (PV-014) e `IBulkInserter` com prepared statement. · Concluído em: ____ · Evidência: ____
+- [ ] **B3.5** Suíte de contrato T-PRV-FB-001..011 e T-PRV-FB-KEY-001..003 em FB 5; resultados em FB 3 e FB 4 registrados. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Contrato Firebird 5 verde no CI; PV-004, PV-005, PV-012 e PV-014 resolvidas em docs/32
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint B4 — Provider MySQL
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/B4-mysql` |
+| Depende de | B1 |
+| Desbloqueia | B5 |
+| Referências | docs/10 §4, TASK-10.01..10.03, PV-007, PV-010 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **B4.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **B4.1** Conexão (`AllowLoadLocalInfile=false`), tipos (`tinyint(1)`, unsigned, enum), leitura de `sql_mode`. *(TASK-10.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **B4.2** `SchemaExtractor` (PV-010): digest de `loja` igual a `docs/examples/digest-mysql.json`. · Concluído em: ____ · Evidência: ____
+- [ ] **B4.3** Dialeto, literais e escapes com e sem `NO_BACKSLASH_ESCAPES` (T-PRV-MYSQL-ESC-001). *(TASK-10.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **B4.4** `TargetInspector`, `ErrorTranslator`, bulk multi-linha e contrato em MySQL 8.4. *(TASK-10.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **B4.5** PV-007: testes SQL de autorreferência NOT NULL na mesma linha nos **4 SGBDs** (T-REL-SELF-NN-<X>); resultado registrado em docs/32 para a trilha A. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Contrato MySQL 8.4 verde no CI; PV-007 e PV-010 resolvidas
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint B5 — Bulk, somente leitura e execução de consultas
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/B5-bulk-readonly-query` |
+| Depende de | B2, B3, B4 |
+| Desbloqueia | A6, B6, C6, C7 |
+| Referências | docs/19 §4, docs/20 §7–9, C02, TASK-11.02, 11.03, 15.02 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **B5.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **B5.1** Bulk completo: COPY binário no PostgreSQL (PV-006), multi-linha ajustado ao pacote no MySQL, API de batch no Firebird 4+ (PV-002) ou prepared statement; benchmarks B-DIR-<X>. *(TASK-15.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **B5.2** `ApplySessionReadOnlyAsync` (C02) nos 4 providers; T-SEC-006 no nível de provider. *(TASK-11.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **B5.3** Configurações avançadas (allow-list), nova tentativa na abertura (2×), timeouts. *(TASK-11.03 parte provider)* · Concluído em: ____ · Evidência: ____
+- [ ] **B5.4** Implementação de `IQueryExecutor`: paginação, múltiplos result sets, cancelamento, posição do erro. · Concluído em: ____ · Evidência: ____
+- [ ] **B5.5** Savepoints (para a validação L4), `AllKeysExistAsync` e `ReadKeysAsync` completos nos 4 SGBDs. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] T-PRV-<X>-006..010 verdes nos 4 SGBDs; PV-002 e PV-006 resolvidas
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint B6 — Matriz de versões e robustez
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/B6-matriz-versoes` |
+| Depende de | B5 |
+| Desbloqueia | C9 (gate V1) |
+| Referências | docs/06 §7, docs/26 §3, B-INT-001 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **B6.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **B6.1** Workflow nightly com a matriz oficial: PostgreSQL 14–18, MySQL 8.4 e 9.x, Firebird 3/4/5; MySQL 8.0 e MariaDB em melhor esforço (falha não bloqueia, mas é registrada). · Concluído em: ____ · Evidência: ____
+- [ ] **B6.2** B-INT-001: schema `big` (1.000 tabelas) extraído em ≤ 30 s (PostgreSQL e Firebird). · Concluído em: ____ · Evidência: ____
+- [ ] **B6.3** Corrigir as falhas encontradas pela matriz e registrar os resultados em docs/06 §7. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Matriz oficial verde (G-V1-2); NFR-PERF-003 medido
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+## 9. Trilha C — Aplicação, projeto e interface
+
+### Sprint C1 — Saneamento da UI e infraestrutura
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C1-saneamento-ui-infra` |
+| Depende de | — (pode iniciar imediatamente; usa os padrões provisórios de D-01..D-04 se ainda não decididos) |
+| Desbloqueia | C2 |
+| Referências | docs/21, docs/ui-inventory.md, docs/23 §3 e §6, TASK-09.03 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **C1.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C1.1** Tema escuro a partir de `Themes/Tokens.xaml`; docs/21 §2.1 atualizado com DA-027 e a decisão D-03. *(SAN-C.1)* · Concluído em: ____ · Evidência: ____
+- [ ] **C1.2** Todos os textos das views em `Strings.resx`, conforme D-01 (ou o padrão provisório). *(SAN-C.2)* · Concluído em: ____ · Evidência: ____
+- [ ] **C1.3** Componentes padronizados (`EnvironmentChip`, badges etc.) aplicados nas telas existentes; diferença de 2% em Connections resolvida ou justificada; logo/ícone MySQL (D-04). *(SAN-C.3, SAN-C.4)* · Concluído em: ____ · Evidência: ____
+- [ ] **C1.4** Infrastructure: `DpapiSecretStore` (`ISecretStore`), `IAppSettings` e Serilog com redação de segredos. *(TASK-09.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **C1.5** Catálogo: teste de `CAT-IMP-SIZE` (categoria `Slow`, fora da suíte rápida). *(SAN-C.5)* · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] T-SEC-002/004/012 e smoke de UI verdes; capturas antes/depois em `docs/progress/C1/`
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint C2 — Projeto e serviços de aplicação (sem geração)
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C2-projeto-servicos` |
+| Depende de | C1, **A1** (usa `Core.Profiles`) |
+| Desbloqueia | C3 |
+| Referências | docs/22, C09, TASK-09.01, TASK-09.02 (parte) |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **C2.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C2.1** Projects: `MdsProject`, serializer, validator e `ProjectStore` com gravação atômica; `docs/examples/project-loja.mdsproj` faz round-trip. *(TASK-09.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C2.2** `ConnectionService` (CRUD com segredo, teste, `OpenAsync` por propósito) e composição dos providers registrados. · Concluído em: ____ · Evidência: ____
+- [ ] **C2.3** `DigestService` (captura, exportação, importação, comparação). · Concluído em: ____ · Evidência: ____
+- [ ] **C2.4** `MappingService`: `MappingKnowledge` a partir do catálogo, `AutoBindAll`, `SetBinding` com persistência de feedback; serviço de leitura do catálogo. · Concluído em: ____ · Evidência: ____
+- [ ] **C2.5** T-APP-001..003 e T-PRJ-001/002/003/005/006/010. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Application.Tests e Projects.Tests verdes; T-ARC verdes (Application sem WPF)
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint C3 — Interface do fluxo MVP (parte 1)
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C3-ui-fluxo-mvp` |
+| Depende de | C2 |
+| Desbloqueia | **C4 (gate MVP)** |
+| Referências | docs/21 S01, S02, S06, S07, S10–S12, TASK-09.05, TASK-09.06 (TASK-09.04 já concluída no Sprint 1) |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **C3.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C3.1** **Connections** com dados reais: CRUD, testar conexão, ambiente, somente leitura, senha protegida (os providers disponíveis na `main` aparecem automaticamente). · Concluído em: ____ · Evidência: ____
+- [ ] **C3.2** **Schema Digest** real: captura com progresso e cancelamento, importar/exportar, árvore. · Concluído em: ____ · Evidência: ____
+- [ ] **C3.3** **Templates** lendo o catálogo real (somente consulta). · Concluído em: ____ · Evidência: ____
+- [ ] **C3.4** **Mapping** real: sugestões com evidências e confiança, aceitar/alterar binding, `GeneratorEditor` gerado pelos descriptors, preview ao vivo, desfazer/refazer. · Concluído em: ____ · Evidência: ____
+- [ ] **C3.5** **Home** e workspace do projeto (S10): novo/abrir/salvar, recentes reais. · Concluído em: ____ · Evidência: ____
+- [ ] **C3.6** Remover `IDesignDataSource` dessas telas; T-UI-FLOW-001 até o mapeamento. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint**
+- [ ] Fluxo conexão SQLite → digest → mapeamento → salvar projeto executável na UI, só por teclado
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
+
+---
+
+### Sprint C4 — Geração ponta a ponta e GATE MVP
+
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C4-geracao-gate-mvp` |
+| Depende de | **A3, B2, B3, C3** (todas ✅ na `main`) |
+| Desbloqueia | C5, C7 |
+| Referências | docs/29 §2, TASK-09.02 (resto), TASK-09.07, TASK-08.04 |
+
+**Status:** ⬜ Não iniciada
+
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
+
+- [ ] **C4.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C4.1** `GenerationService` (plano, validação, preview, execução em script), `ReferenceDataSource` (Generated/Fixed) e coleta de `TargetState`. · Concluído em: ____ · Evidência: ____
+- [ ] **C4.2** Telas S14 (plano e validação), S15 (preview) e S16 (geração de script), no lugar do placeholder Generation. · Concluído em: ____ · Evidência: ____
+- [ ] **C4.3** E2E T-E2E-SQLITE/PG/FB-001 e T-E2E-003 *(TASK-08.04)*; scripts executados pelos clientes oficiais (`sqlite3`, `psql`, `isql`) nos containers. · Concluído em: ____ · Evidência: ____
+- [ ] **C4.4** `docs/examples/output-postgresql.sql` e `output-firebird.sql` substituídos por saídas reais. · Concluído em: ____ · Evidência: ____
+- [ ] **C4.5** Telas ainda não integradas (Explorer, SQL Editor, History, Settings) marcadas "Em desenvolvimento"; T-UI-FLOW-001 completo e T-UI-PERF-002. · Concluído em: ____ · Evidência: ____
+- [ ] **C4.6** README atualizado com o status; tag `v0.1.0-mvp` criada na `main` **após** o merge (`git tag -a v0.1.0-mvp -m "MVP"` e `git push origin v0.1.0-mvp`). · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint — GATE MVP ([docs/29 §2](docs/29-acceptance-criteria.md))**
+- [ ] G-MVP-1 — `loja` em SQLite, PostgreSQL 17 e Firebird 5: ponta a ponta sem erros
+- [ ] G-MVP-2 — contagens, FKs (compostas e autorreferência), UNIQUEs e CHECKs verificados
 - [ ] G-MVP-3 — scripts idênticos com a mesma seed (MaxDOP 1 e 8)
 - [ ] G-MVP-4 — ciclo anulável gerado; ciclo NOT NULL bloqueado com diagnóstico
 - [ ] G-MVP-5 — importação de catálogo funcionando; script com `DROP` rejeitado
 - [ ] G-MVP-6 — metas do corpus de mapeamento
-- [ ] G-MVP-7 — 1 M linhas de `cliente` com CPF único: ≤ 300 MB e ≥ 100 k linhas/s
+- [ ] G-MVP-7 — 1 milhão de linhas de `cliente` com CPF único: ≤ 300 MB e ≥ 100 mil linhas/s
 - [ ] G-MVP-8 — fluxo MVP na UI executável só por teclado
-- [ ] G-MVP-9 — testes de arquitetura e segurança do MVP verdes
+- [ ] G-MVP-9 — testes de arquitetura e de segurança do MVP verdes
 - [ ] G-MVP-10 — relatório do marco e riscos residuais atualizados em docs/30
+- [ ] Encerramento conforme §3.3
 
-**Relatório do sprint / MVP:** ____
-
----
-
-## Sprint 11 — MySQL e segurança de conexões
-
-**Objetivo:** quarto SGBD obrigatório e proteções completas por ambiente.
-**Referências:** docs/10 §4, docs/23 §5, docs/28 (EPIC-10, EPIC-11).
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **11.1** Provider MySQL: conexão, tipos e extractor. Adicionar logo/ícone MySQL na UI (hoje só existe o da MariaDB). *(TASK-10.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.2** Dialeto, literais e escapes (com e sem `NO_BACKSLASH_ESCAPES`). *(TASK-10.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.3** Inspector, bulk, erros e contrato em MySQL 8.4 e 9.x. *(TASK-10.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.4** E2E MySQL e teste de autorreferência NOT NULL (resultado em PV-007). *(TASK-10.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.5** `ExecutionGuard` com a matriz completa. *(TASK-11.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.6** Somente leitura imposto também no servidor. *(TASK-11.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.7** Configurações avançadas por provider e resiliência de conexão. *(TASK-11.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **11.8** Fingerprints e alerta de servidor divergente. *(TASK-11.04)* · Concluído em: ____ · Evidência: ____
-
-**Verificação do sprint**
-- [ ] T-PRV-MYSQL-*, T-E2E-MYSQL-001, T-SQL-GUARD-001 e T-SEC-003/005/006 verdes
-
-**Relatório do sprint:** ____
+**Relatório da sprint / MVP:** ____
 
 ---
 
-## Sprint 12 — Explorer real
+### Sprint C5 — Segurança de execução e Explorer
 
-**Objetivo:** substituir os dados de exemplo da tela Explorer por navegação real nos 4 SGBDs.
-**Referências:** docs/21 (S03, S05), docs/28 (EPIC-12).
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C5-seguranca-explorer` |
+| Depende de | C4 |
+| Desbloqueia | C6 |
+| Referências | docs/23 §5, docs/19 §2, docs/21 S03/S05, TASK-11.01, TASK-11.04, TASK-12.01, TASK-12.02, TASK-12.03, TASK-15.01 |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **12.1** Árvore de objetos com carga lazy e virtualização. *(TASK-12.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **12.2** Inspetor de tabela e referências. *(TASK-12.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **12.3** Ações rápidas, refresh por nó e filtro. *(TASK-12.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **12.4** Remover `SampleData` da tela Explorer. · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint**
-- [ ] T-UI-PERF-001 (10 mil tabelas) e T-UI-FLOW-003 (parte do explorer) verdes
+- [ ] **C5.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C5.1** `ExecutionGuard` com a matriz completa (T-SQL-GUARD-001). *(TASK-11.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C5.2** `ExecutionAuthorization` vinculada ao fingerprint e ao PlanHash, com os diálogos `ConfirmDialog`/`TypedConfirmDialog` (T-SEC-001/003/011). *(TASK-15.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C5.3** Alerta de servidor divergente do registrado no projeto. *(TASK-11.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **C5.4** Explorer real: árvore lazy e virtualizada, inspetor de tabela, referências, ações rápidas, refresh e filtro; sem dados de exemplo. *(TASK-12.01, TASK-12.02, TASK-12.03)* · Concluído em: ____ · Evidência: ____
 
-**Relatório do sprint:** ____
+**Verificação da sprint**
+- [ ] T-SQL-GUARD-001, T-SEC-001/003/005/011 e T-UI-PERF-001 verdes
+- [ ] Encerramento conforme §3.3
 
----
-
-## Sprint 13 — Editor SQL
-
-**Objetivo:** editor completo, com sessões, transação manual, autocomplete, resultados, histórico e proteções.
-**Referências:** docs/20, docs/28 (EPIC-13).
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **13.1** `QuerySession`/`QueryExecutionService` (Manual/AutoCommit, paginação, cancelamento). *(TASK-13.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **13.2** Motor de autocomplete com aliases. *(TASK-13.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **13.3** UI do editor: abas por perfil, chip de ambiente, `.xshd` por dialeto (evoluindo o `sql.xshd` atual) e recuperação de abas. *(TASK-13.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **13.4** Grade de resultados, exportação, histórico e erros com posição. *(TASK-13.04)* · Concluído em: ____ · Evidência: ____
-
-**Verificação do sprint**
-- [ ] T-SQL-EXEC-001/002, T-SQL-COMP-001, T-SQL-HIST-001, T-UI-PERF-003 e T-UI-FLOW-003 verdes
-- [ ] B-SQL-001 (autocomplete p95 ≤ 50 ms)
-
-**Relatório do sprint:** ____
+**Relatório da sprint:** ____
 
 ---
 
-## Sprint 14 — Projetos avançados e evolução de schema
+### Sprint C6 — Editor SQL
 
-**Objetivo:** snapshots, diff, migração de bindings, múltiplos perfis e portabilidade.
-**Referências:** docs/12 §8–9, docs/22, docs/28 (EPIC-14).
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C6-editor-sql` |
+| Depende de | C5, **B5** (`IQueryExecutor`, `ApplySessionReadOnlyAsync`) |
+| Desbloqueia | C9 |
+| Referências | docs/20, TASK-13.01..13.04 |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **14.1** Snapshots e diff na tela Schema Digest (comparação com severidades, como no mockup). *(TASK-14.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **14.2** Migração de bindings (Active/NeedsReview/Orphaned + propostas de renomeação). *(TASK-14.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **14.3** Múltiplos perfis, migração de formato, autosave, exportação sanitizada e confiança em projetos de terceiros. *(TASK-14.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **14.4** Dependências de catálogo ao abrir o projeto. *(TASK-14.04)* · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint**
-- [ ] T-DIG-005/006/030, T-E2E-004, T-PRJ-004/007 e T-SEC-008 verdes
+- [ ] **C6.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C6.1** `QuerySession`/`QueryExecutionService`: modos Manual/AutoCommit, paginação, cancelamento, somente leitura no servidor para perfis ReadOnly. *(TASK-13.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C6.2** Motor de autocomplete em `src/MockDataStudio.SqlTooling/Completion` (posse da trilha C). *(TASK-13.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **C6.3** UI do editor: abas por perfil, chip de ambiente, `.xshd` por dialeto, recuperação de abas. *(TASK-13.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **C6.4** Grade de resultados, exportação, histórico e erros com posição. *(TASK-13.04)* · Concluído em: ____ · Evidência: ____
 
-**Relatório do sprint:** ____
+**Verificação da sprint**
+- [ ] T-SQL-EXEC-001/002, T-SQL-COMP-001, T-SQL-HIST-001, T-UI-PERF-003 e T-UI-FLOW-003 verdes; B-SQL-001 (p95 ≤ 50 ms)
+- [ ] Encerramento conforme §3.3
 
----
-
-## Sprint 15 — Inserção direta
-
-**Objetivo:** inserir os dados gerados no banco com autorização, lotes, captura de chaves e limpeza.
-**Referências:** docs/19, docs/23 §5, docs/28 (EPIC-15).
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **15.1** Autorização vinculada a fingerprint e diálogos de confirmação (incluindo confirmação digitada). *(TASK-15.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **15.2** Bulk inserters: PG COPY, MySQL multi-row, FB prepared/batch e SQLite. *(TASK-15.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **15.3** `DirectInsertWriter`: transações, falhas e cancelamento. *(TASK-15.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **15.4** Estratégia Captured + `KeyRegistry`. *(TASK-15.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **15.5** Script de limpeza, relatório, execuções interrompidas e substituição do placeholder **History** (S17). *(TASK-15.05)* · Concluído em: ____ · Evidência: ____
-
-**Verificação do sprint**
-- [ ] T-DIR-*, T-SEC-001/011, T-OUT-004 e T-E2E-<X>-002 nos 4 SGBDs verdes
-- [ ] PV-002 e PV-006 resolvidas; B-DIR-* registrados
-
-**Relatório do sprint:** ____
+**Relatório da sprint:** ____
 
 ---
 
-## Sprint 16 — Relacional avançado e validação L4
+### Sprint C7 — Evolução de schema, relacionamentos e validação L4
 
-**Objetivo:** estratégias de ciclo restantes, cardinalidades avançadas, fontes de referência e inserção de teste.
-**Referências:** docs/16, docs/17 §6, docs/28 (EPIC-16).
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C7-evolucao-relacionamentos-l4` |
+| Depende de | C4, **A4**, **B5** |
+| Desbloqueia | C8 |
+| Referências | docs/12 §8–9, docs/22, docs/16 §8–9, docs/17 §6, TASK-14.01..TASK-14.04, TASK-16.03 (parte C), TASK-16.05, tela S13 |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **16.1** DeferredConstraint, DisableChecks (opt-in) e autorreferência NOT NULL. *(TASK-16.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **16.2** ParentDriven, Zipf, Poisson e 1:1. *(TASK-16.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **16.3** Fontes Existing/Dataset/Query e verificação de chaves no destino. *(TASK-16.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **16.4** NaturalKeyLookup. *(TASK-16.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **16.5** Inserção de teste (L4) com rollback. *(TASK-16.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **16.6** Tela de Relacionamentos (S13) integrada ao fluxo de geração. · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint**
-- [ ] T-REL-003/004/008..011, T-REL-SELF-NN-*, T-REL-PLAN-002, T-VAL-001..040 (40/40) e T-VAL-TRIAL-001/002 verdes
+- [ ] **C7.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C7.1** Snapshots e diff na tela Schema Digest. *(TASK-14.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C7.2** Migração de bindings (Active/NeedsReview/Orphaned e propostas de renomeação). *(TASK-14.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **C7.3** Múltiplos perfis, migração de formato, autosave, exportação sanitizada, confiança em projetos de terceiros, dependências de catálogo. *(TASK-14.03, TASK-14.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **C7.4** `ReferenceDataSource` Existing/Query/Dataset com leitura real e verificação das chaves no destino. *(TASK-16.03 parte C)* · Concluído em: ____ · Evidência: ____
+- [ ] **C7.5** `TrialInsertRunner` (validação L4) com rollback e bloqueio em Production. *(TASK-16.05)* · Concluído em: ____ · Evidência: ____
+- [ ] **C7.6** Tela de Relacionamentos (S13) integrada à geração; T-E2E-MYSQL-001. *(S13, TASK-10.04 parte E2E)* · Concluído em: ____ · Evidência: ____
 
-**Relatório do sprint:** ____
+**Verificação da sprint**
+- [ ] T-DIG-030, T-E2E-004, T-PRJ-004/007, T-SEC-007/008, T-REL-010/011, T-VAL-TRIAL-001/002 e T-VAL-001..040 (40/40) verdes
+- [ ] Encerramento conforme §3.3
 
----
-
-## Sprint 17 — Catálogo V1
-
-**Objetivo:** manutenção completa do catálogo na UI, packs, presets, aprendizado e geradores brasileiros.
-**Referências:** docs/13, docs/14 §8–9, docs/15 §6, docs/28 (EPIC-17).
-
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
-
-- [ ] **17.1** Tela **Templates** com edição completa (S07/S08): escalares, compostos, aliases, valores e colagem em lote. Remover `SampleData` desta tela. *(TASK-17.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **17.2** Importação por script (S09) com "Copiar instruções para IA". *(TASK-17.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **17.3** Packs JSON (exportar/importar). *(TASK-17.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **17.4** Presets, regras aprendidas e diagnóstico de mapeamento. *(TASK-17.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **17.5** Geradores BR, `core.switch`, lorem e uuid v7. *(TASK-17.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **17.6** Pack `CORE_PTBR` completo e reavaliação do corpus. *(TASK-17.06)* · Concluído em: ____ · Evidência: ____
-
-**Verificação do sprint**
-- [ ] T-CAT-008, T-MAP-007, T-GEN-BR-001 e T-UI-FLOW-002 verdes; T-MAP-CORPUS reavaliado
-- [ ] PV-011 resolvida (ou CNPJ alfanumérico adiado com registro)
-
-**Relatório do sprint:** ____
+**Relatório da sprint:** ____
 
 ---
 
-## Sprint 18 — Volume e formatos
+### Sprint C8 — Catálogo V1 e inserção direta na interface
 
-**Objetivo:** grandes volumes, manifesto, CSV/JSON Lines e metas de desempenho medidas.
-**Referências:** docs/18 §6 e §9, docs/24, docs/28 (EPIC-18).
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C8-catalogo-insercao-ui` |
+| Depende de | C7, **A5**, **A6** |
+| Desbloqueia | C9 |
+| Referências | docs/13, docs/19 §7–8, docs/21 S07–S09, S16, S17, TASK-17.01..17.04, 17.06, 15.05 (parte C) |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **18.1** Manifesto, segmentação completa e guardas no script. *(TASK-18.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **18.2** Saídas CSV e JSON Lines. *(TASK-18.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **18.3** Benchmarks e testes de volume; resultados em `docs/benchmarks/`. *(TASK-18.03)* · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint**
-- [ ] T-OUT-002/003/005 e T-GEN-VOL-001 verdes
-- [ ] NFR-PERF-001..009 atendidos, ou desvios aprovados e registrados em docs/32
+- [ ] **C8.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C8.1** Templates com edição completa (S07/S08); remover os dados de exemplo da tela. *(TASK-17.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C8.2** Importação por script (S09) com "Copiar instruções para IA". *(TASK-17.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **C8.3** Packs JSON (exportar/importar, T-CAT-008). *(TASK-17.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **C8.4** Presets, regras aprendidas (persistência) e painel de diagnóstico de mapeamento. *(TASK-17.04 parte C)* · Concluído em: ____ · Evidência: ____
+- [ ] **C8.5** Pack `CORE_PTBR` completo (volumes de docs/09 §6) com `SOURCES.md` e licença (D-05). *(TASK-17.06)* · Concluído em: ____ · Evidência: ____
+- [ ] **C8.6** Fluxo de inserção direta na UI, tela History (S17) e limpeza; T-E2E-<X>-002 nos 4 SGBDs. *(TASK-15.05 parte C)* · Concluído em: ____ · Evidência: ____
 
-**Relatório do sprint:** ____
+**Verificação da sprint**
+- [ ] T-CAT-008, T-MAP-007, T-UI-FLOW-002, T-UI-FLOW-004 e T-E2E-<X>-002 verdes
+- [ ] Encerramento conforme §3.3
+
+**Relatório da sprint:** ____
 
 ---
 
-## Sprint 19 — Hardening, acessibilidade e release (Gate V1)
+### Sprint C9 — Hardening, release e GATE V1
 
-**Objetivo:** produto pronto para distribuição.
-**Referências:** docs/21 §7, docs/25, docs/04, docs/29 §3, docs/28 (EPIC-19).
+| Campo | Valor |
+|---|---|
+| Branch | `sprint/C9-hardening-gate-v1` |
+| Depende de | **A6, B6, C8** (e todas as anteriores ✅ na `main`) |
+| Desbloqueia | — (V2) |
+| Referências | docs/29 §3, docs/21 §7, docs/25, docs/04, TASK-19.01..19.05 |
 
-> 🤖 **IA: marque cada etapa com `[x]` ao concluir e preencha data e evidência.**
+**Status:** ⬜ Não iniciada
 
-- [ ] **19.1** Acessibilidade e DPI 100–200%. *(TASK-19.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **19.2** Substituir o placeholder **Settings** (S18), além de paleta de comandos e atalhos. *(TASK-19.02)* · Concluído em: ____ · Evidência: ____
-- [ ] **19.3** Logs e pacote de diagnóstico. *(TASK-19.03)* · Concluído em: ____ · Evidência: ____
-- [ ] **19.4** Instalador, `docs/licenses.md` e verificação offline (DP-003, DP-008, PV-001). *(TASK-19.04)* · Concluído em: ____ · Evidência: ____
-- [ ] **19.5** Manual do usuário local (F1). *(TASK-19.05)* · Concluído em: ____ · Evidência: ____
-- [ ] **19.6** Confirmar que não resta nenhuma referência a `Samples/SampleData` no código de produção e remover a pasta `Samples`. · Concluído em: ____ · Evidência: ____
-- [ ] **19.7** Auditoria final documentação × implementação, no formato de docs/36. · Concluído em: ____ · Evidência: ____
+> 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-**Verificação do sprint — Gate V1 ([docs/29 §3](docs/29-acceptance-criteria.md))**
+- [ ] **C9.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
+- [ ] **C9.1** Acessibilidade e DPI de 100% a 200%. *(TASK-19.01)* · Concluído em: ____ · Evidência: ____
+- [ ] **C9.2** Tela Settings (S18), paleta de comandos e atalhos. *(TASK-19.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **C9.3** Logs e pacote de diagnóstico. *(TASK-19.03)* · Concluído em: ____ · Evidência: ____
+- [ ] **C9.4** Instalador, `docs/licenses.md`, verificação offline, nenhuma vulnerabilidade alta/crítica em `src/` (DP-003, DP-008, PV-001, PV-017). *(TASK-19.04)* · Concluído em: ____ · Evidência: ____
+- [ ] **C9.5** Manual do usuário local (F1). *(TASK-19.05)* · Concluído em: ____ · Evidência: ____
+- [ ] **C9.6** Remover `Samples/SampleData` e `IDesignDataSource` do código de produção. · Concluído em: ____ · Evidência: ____
+- [ ] **C9.7** Auditoria final documentação × implementação (formato de docs/37) e tag `v1.0.0` na `main` após o merge. · Concluído em: ____ · Evidência: ____
+
+**Verificação da sprint — GATE V1 ([docs/29 §3](docs/29-acceptance-criteria.md))**
 - [ ] G-V1-1 — todos os FR MVP/V1 (M) atendidos; matriz docs/35 100% verde
 - [ ] G-V1-2 — matriz oficial de versões de SGBD verde
-- [ ] G-V1-3 — inserção direta + limpeza restaura o banco nos 4 SGBDs
+- [ ] G-V1-3 — inserção direta + limpeza devolve o banco ao estado anterior nos 4 SGBDs
 - [ ] G-V1-4 — editor SQL: guarda, transação manual e cancelamento nos 4 SGBDs
 - [ ] G-V1-5 — evolução de schema preserva bindings
-- [ ] G-V1-6 — NFRs medidos dentro das metas (ou desvio aprovado)
+- [ ] G-V1-6 — NFRs medidos e dentro das metas (ou desvio aprovado)
 - [ ] G-V1-7 — acessibilidade e DPI
-- [ ] G-V1-8 — instalação em Win10/Win11 limpas e execução offline
+- [ ] G-V1-8 — instalação em Windows 10/11 limpos e execução offline
 - [ ] G-V1-9 — licenças e procedência dos dados do pack registradas
 - [ ] G-V1-10 — auditoria final sem divergências críticas/altas abertas
+- [ ] Encerramento conforme §3.3
 
-**Relatório do sprint / V1:** ____
+**Relatório da sprint / V1:** ____
 
 ---
 
-## Depois da V1 (V2 — detalhar antes de iniciar)
+## 10. Depois da V1 (V2 — detalhar antes de iniciar)
 
-CLI · Plugins · Grafo de relacionamentos · Designer de cenários · Regras condicionais declarativas · Perfil estatístico · Anonimização restrita · Perfis de carga e cobertura · Pacotes temáticos · MariaDB oficial · Coerência entre tabelas. Ver [docs/27 §4](docs/27-development-roadmap.md).
-
-## Decisões de produto pendentes (não bloqueiam o início)
-
-DP-001 nome comercial · DP-002 licença · DP-003 empacotamento · DP-004 plataforma de CI · DP-005 idiomas · DP-006 anonimização no V2 · DP-007 telemetria · DP-008 certificado · DP-009 testes de usabilidade. Ver [docs/32 §3](docs/32-decisions-and-assumptions.md).
+CLI · Plugins · Grafo de relacionamentos · Designer de cenários · Regras condicionais declarativas · Perfil estatístico · Anonimização restrita · Perfis de carga e cobertura · Pacotes temáticos · MariaDB oficial · Coerência entre tabelas. Ver [docs/27 §4](docs/27-development-roadmap.md). As trilhas e o protocolo Git deste plano podem ser reaproveitados.
