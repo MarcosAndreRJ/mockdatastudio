@@ -614,27 +614,28 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | **C4 (gate MVP)** |
 | Referências | docs/21 S01, S02, S06, S07, S10–S12, TASK-09.05, TASK-09.06 (TASK-09.04 já concluída no Sprint 1) |
 
-**Status:** ⬜ Não iniciada
+**Status:** ✅ Concluída em 2026-10-12 (sprint/C3-ui-fluxo-mvp), com as ressalvas PV-302 e PV-303
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **C3.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **C3.1** **Connections** com dados reais: CRUD, testar conexão, ambiente, somente leitura, senha protegida (os providers disponíveis na `main` aparecem automaticamente). · Concluído em: ____ · Evidência: ____
-- [ ] **C3.2** **Schema Digest** real: captura com progresso e cancelamento, importar/exportar, árvore. · Concluído em: ____ · Evidência: ____
-- [ ] **C3.3** **Templates** lendo o catálogo real (somente consulta). · Concluído em: ____ · Evidência: ____
-- [ ] **C3.4** **Mapping** real: sugestões com evidências e confiança, aceitar/alterar binding, `GeneratorEditor` gerado pelos descriptors, preview ao vivo, desfazer/refazer. · Concluído em: ____ · Evidência: ____
-- [ ] **C3.5** **Home** e workspace do projeto (S10): novo/abrir/salvar, recentes reais. · Concluído em: ____ · Evidência: ____
-- [ ] **C3.6** Remover `IDesignDataSource` dessas telas; T-UI-FLOW-001 até o mapeamento. · Concluído em: ____ · Evidência: ____
+- [x] **C3.0** Início da sprint conforme §3.1. · Concluído em: 2026-10-12 · Evidência: worktree MockDataStudio-C3, branch sprint/C3-ui-fluxo-mvp
+- [x] **C3.1** **Connections** com dados reais: CRUD, testar conexão, ambiente, somente leitura, senha protegida (os providers disponíveis na `main` aparecem automaticamente). · Concluído em: 2026-10-12 · Evidência: ConnectionsView ligada ao ConnectionService (CRUD, teste, ambiente, somente leitura, DPAPI), defaults por provider e lista de bancos; ConnectionServiceTests e T-UI-SMOKE-001
+- [x] **C3.2** **Schema Digest** real: captura com progresso e cancelamento, importar/exportar, árvore. · Concluído em: 2026-10-12 · Evidência: SchemaDigestViewModel/View (captura com progresso e cancelamento, importar, exportar, validar, árvore, comparação); T-APP-002 e T-UI-FLOW-001
+- [x] **C3.3** **Templates** lendo o catálogo real (somente consulta). · Concluído em: 2026-10-12 · Evidência: TemplatesViewModel/View sobre TemplateBrowser e CatalogBootstrap (catálogo local, pacote embutido instalado no primeiro uso); ProjectFlowTests
+- [x] **C3.4** **Mapping** real: sugestões com evidências e confiança, aceitar/alterar binding, `GeneratorEditor` gerado pelos descriptors, preview ao vivo, desfazer/refazer. · Concluído em: 2026-10-12 · Evidência: MappingViewModel/View sobre MappingSession (sugestões com evidências, aceitar, editor de gerador pelos descriptors com GeneratorParameterBinder, preview ao vivo com GeneratorPreviewService, desfazer/refazer pelo ProjectWorkspace); testes de Application com catálogo real
+- [x] **C3.5** **Home** e workspace do projeto (S10): novo/abrir/salvar, recentes reais. · Concluído em: 2026-10-12 · Evidência: HomeViewModel/View e ProjectWorkspace (novo, abrir, salvar, salvar como, recentes reais); ProjectFlowTests
+- [x] **C3.6** Remover `IDesignDataSource` dessas telas; T-UI-FLOW-001 até o mapeamento. · Concluído em: 2026-10-12 · Evidência: IDesignDataSource e SampleData removidos; T-UI-FLOW-001 (FlowTests) percorre projeto novo → digest → mapeamento automático
 
 **Verificação da sprint**
-- [ ] Fluxo conexão SQLite → digest → mapeamento → salvar projeto executável na UI, só por teclado
-- [ ] Encerramento conforme §3.3
+- [ ] Fluxo conexão SQLite → digest → mapeamento executável na UI (verde); ⏳ PARCIAL: salvar pelo diálogo de arquivo e navegação só por teclado não automatizados (PV-302)
+- [x] Encerramento conforme §3.3 (merge na main e push em 2026-10-12)
 
-**Relatório da sprint:** ____
+**Relatório da sprint:** telas Home, Schema Digest, Templates e Mapping ligadas aos serviços reais (ProjectWorkspace, DigestService, MappingSession, TemplateBrowser, catálogo local). Correção de ids de geradores do Mapping (DA-305). Testes (Release): Application 110, Projects 8, UiTests 2 (smoke e fluxo T-UI-FLOW-001). Pendências: PV-302, PV-303. Riscos: UI sem comparação visual com os mockups; C4 bloqueada por A3, B3 e Docker.
 
 ---
 
 ### Sprint C4 — Geração ponta a ponta e GATE MVP
+> ⛔ **Bloqueada (2026-10-12):** a C4 exige A3 (saída em script SQL), B3 (Firebird) e containers Docker, que não existem nesta máquina. Nenhuma etapa foi iniciada e a tag `v0.1.0-mvp` **não** foi criada. Detalhes no relatório da C3.
 
 | Campo | Valor |
 |---|---|

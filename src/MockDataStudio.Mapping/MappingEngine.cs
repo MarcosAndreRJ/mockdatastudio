@@ -307,13 +307,13 @@ public sealed partial class MappingEngine(IStructuralBinder binder) : IMappingEn
     }
 
     internal static MappingTarget TemplateTarget(string code) =>
-        new(MappingTargetKind.Template, code, null, new GeneratorSpec("core.template", 1, new JsonObject { ["template"] = code }));
+        new(MappingTargetKind.Template, code, null, new GeneratorSpec("catalog.template", 1, new JsonObject { ["template"] = code }));
 
     internal static MappingTarget AliasTarget(KnowledgeAlias alias) =>
         alias.FieldCode is null
             ? TemplateTarget(alias.TemplateCode)
             : new MappingTarget(MappingTargetKind.TemplateField, alias.TemplateCode, alias.FieldCode,
-                new GeneratorSpec("core.template.field", 1, new JsonObject { ["template"] = alias.TemplateCode, ["field"] = alias.FieldCode }));
+                new GeneratorSpec("catalog.template.field", 1, new JsonObject { ["template"] = alias.TemplateCode, ["field"] = alias.FieldCode }));
 
     private static MappingTarget RuleTarget(KnowledgeRule rule)
     {
@@ -326,7 +326,7 @@ public sealed partial class MappingEngine(IStructuralBinder binder) : IMappingEn
                 var template = parts[0];
                 var field = parts.Length > 1 ? parts[1] : string.Empty;
                 return new MappingTarget(MappingTargetKind.TemplateField, template, field,
-                    new GeneratorSpec("core.template.field", 1, new JsonObject { ["template"] = template, ["field"] = field }));
+                    new GeneratorSpec("catalog.template.field", 1, new JsonObject { ["template"] = template, ["field"] = field }));
             case MappingTargetKind.Preset:
                 return new MappingTarget(MappingTargetKind.Preset, rule.TargetRef, null,
                     new GeneratorSpec("core.preset", 1, new JsonObject { ["preset"] = rule.TargetRef }));

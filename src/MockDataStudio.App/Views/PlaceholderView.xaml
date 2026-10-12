@@ -5,7 +5,7 @@
     <Border Style="{StaticResource Card}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" HorizontalAlignment="Center" />
-            <TextBlock Text="Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."
+            <TextBlock Text="Em desenvolvimento. Esta tela será liberada em uma próxima etapa."
                        Style="{StaticResource PageSubtitle}" HorizontalAlignment="Center" Margin="0,8,0,0" />
         </StackPanel>
     </Border>

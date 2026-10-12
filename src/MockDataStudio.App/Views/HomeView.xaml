@@ -8,6 +8,50 @@
             <TextBlock Text="Gerencie suas conexões, projetos e fluxos de geração de dados fictícios."
                        Style="{StaticResource PageSubtitle}" Margin="0,4,0,20" />
 
+            <!-- Projeto atual -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource IconTile}" Background="{StaticResource AccentSoftBrush}">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE8A1;" Foreground="{StaticResource AccentBrush}" FontSize="18" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
+                        <TextBlock Text="Projeto atual" Style="{StaticResource LabelText}" />
+                        <TextBlock Text="{Binding ProjectName}" FontSize="20" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ProjectDetail}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding ProjectState}" Foreground="{StaticResource WarningBrush}" FontSize="12" FontWeight="Medium" />
+                        <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource PrimaryButton}" Height="38" Padding="14,0" Command="{Binding NewProjectCommand}" AutomationProperties.Name="Novo projeto">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Novo projeto" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButton}" Height="38" Margin="10,0,0,0" Command="{Binding OpenProjectCommand}" AutomationProperties.Name="Abrir projeto">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Abrir…" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButton}" Height="38" Margin="10,0,0,0" Command="{Binding SaveCommand}" AutomationProperties.Name="Salvar projeto">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Salvar" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource SecondaryButton}" Height="38" Margin="10,0,0,0" Command="{Binding SaveAsCommand}" AutomationProperties.Name="Salvar projeto como">
+                            <TextBlock Text="Salvar como…" VerticalAlignment="Center" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Indicadores -->
             <UniformGrid Columns="4" Margin="0,0,0,18">
                 <UniformGrid.Resources>
@@ -17,91 +61,55 @@
                 </UniformGrid.Resources>
 
                 <Border>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource IconTile}" Background="{StaticResource TealSoftBrush}">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE8F1;" Foreground="{StaticResource TealBrush}" FontSize="18" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="14,0,0,0">
-                            <TextBlock Text="Active Connections" Style="{StaticResource LabelText}" />
-                            <TextBlock Text="4" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="↑ +1" Foreground="{StaticResource SuccessBrush}" FontSize="12" FontWeight="Medium" Margin="0,0,8,0" />
-                                <TextBlock Text="3 online • 1 offline" Style="{StaticResource MutedText}" />
-                            </StackPanel>
+                        <StackPanel Margin="14,0,0,0">
+                            <TextBlock Text="Conexões salvas" Style="{StaticResource LabelText}" />
+                            <TextBlock Text="{Binding ConnectionsCount}" FontSize="26" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ConnectionsDetail}" Style="{StaticResource MutedText}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="2" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" />
-                    </Grid>
+                    </StackPanel>
                 </Border>
 
                 <Border>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource IconTile}" Background="{StaticResource SuccessSoftBrush}">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE8A1;" Foreground="{StaticResource SuccessBrush}" FontSize="18" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="14,0,0,0">
-                            <TextBlock Text="Saved Projects" Style="{StaticResource LabelText}" />
-                            <TextBlock Text="12" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="↑ +3" Foreground="{StaticResource SuccessBrush}" FontSize="12" FontWeight="Medium" Margin="0,0,8,0" />
-                                <TextBlock Text="Updated this week" Style="{StaticResource MutedText}" />
-                            </StackPanel>
+                        <StackPanel Margin="14,0,0,0">
+                            <TextBlock Text="Projetos recentes" Style="{StaticResource LabelText}" />
+                            <TextBlock Text="{Binding ProjectsCount}" FontSize="26" FontWeight="SemiBold" />
+                            <TextBlock Text="Abertos ou salvos neste computador" Style="{StaticResource MutedText}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="2" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" />
-                    </Grid>
+                    </StackPanel>
                 </Border>
 
                 <Border>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource IconTile}" Background="{StaticResource AccentSoftBrush}">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE9F9;" Foreground="{StaticResource AccentBrush}" FontSize="18" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                        <StackPanel Margin="14,0,0,0">
                             <TextBlock Text="Templates" Style="{StaticResource LabelText}" />
-                            <TextBlock Text="8" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="↑ +2" Foreground="{StaticResource SuccessBrush}" FontSize="12" FontWeight="Medium" Margin="0,0,8,0" />
-                                <TextBlock Text="Ready to use" Style="{StaticResource MutedText}" />
-                            </StackPanel>
+                            <TextBlock Text="{Binding TemplatesCount}" FontSize="26" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding TemplatesDetail}" Style="{StaticResource MutedText}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="2" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" />
-                    </Grid>
+                    </StackPanel>
                 </Border>
 
                 <Border>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
                         <Border Style="{StaticResource IconTile}" Background="{StaticResource OrangeSoftBrush}">
-                            <TextBlock Style="{StaticResource Icon}" Text="&#xE768;" Foreground="{StaticResource OrangeBrush}" FontSize="18" />
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE8AB;" Foreground="{StaticResource OrangeBrush}" FontSize="18" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="14,0,0,0">
-                            <TextBlock Text="Recent Generations" Style="{StaticResource LabelText}" />
-                            <TextBlock Text="25" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="↑ +12" Foreground="{StaticResource SuccessBrush}" FontSize="12" FontWeight="Medium" Margin="0,0,8,0" />
-                                <TextBlock Text="Last 7 days" Style="{StaticResource MutedText}" />
-                            </StackPanel>
+                        <StackPanel Margin="14,0,0,0">
+                            <TextBlock Text="Colunas mapeadas" Style="{StaticResource LabelText}" />
+                            <TextBlock Text="{Binding MappedCount}" FontSize="26" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding MappedDetail}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
-                        <TextBlock Grid.Column="2" Style="{StaticResource Icon}" Text="&#xE76C;" FontSize="11" />
-                    </Grid>
+                    </StackPanel>
                 </Border>
             </UniformGrid>
 
@@ -114,40 +122,41 @@
 
                 <Border Style="{StaticResource Card}" Margin="0,0,14,0">
                     <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                            <TextBlock Text="Recent Projects" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
-                            <TextBlock Text="View all" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right"
-                                       VerticalAlignment="Center" FontWeight="Medium" />
-                        </DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Projetos recentes" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
+                        <TextBlock DockPanel.Dock="Top" Text="Nenhum projeto recente. Crie ou abra um projeto." Margin="0,8">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RecentProjects.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <ItemsControl ItemsSource="{Binding RecentProjects}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="62">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="10" Background="{Binding TintBg}">
-                                            <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="17"
-                                                       Foreground="{Binding Tint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="14" />
-                                            <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,30,0">
-                                            <TextBlock Text="{Binding Engine}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,30,0">
-                                            <TextBlock Text="&#xE121;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding Updated}" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                        <Button Grid.Column="4" Style="{StaticResource GhostButton}" Content="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                                Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
-                                    </Grid>
+                                    <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Stretch" Padding="4"
+                                            Command="{Binding OpenCommand}" CommandParameter="{Binding Path}" AutomationProperties.Name="{Binding Name}">
+                                        <Grid Height="54">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="40" Height="40" CornerRadius="10" Background="{Binding TintBg}">
+                                                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="17"
+                                                           Foreground="{Binding Tint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Medium" FontSize="14" />
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding Updated}" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -156,55 +165,40 @@
 
                 <Border Style="{StaticResource Card}" Grid.Column="1">
                     <StackPanel>
-                        <TextBlock Text="Quick Actions" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
+                        <TextBlock Text="Fluxo do projeto" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
 
-                        <Border CornerRadius="10" Padding="14" Background="{StaticResource AccentSoftBrush}" Margin="0,0,0,10">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Margin="12,0">
-                                    <TextBlock Text="New Connection" FontWeight="Medium" />
-                                    <TextBlock Text="Connect to a database" Style="{StaticResource MutedText}" />
+                        <Button Style="{StaticResource GhostButton}" Command="{Binding GoToCommand}" CommandParameter="connections" HorizontalContentAlignment="Stretch" Padding="0" Margin="0,0,0,10" AutomationProperties.Name="1. Conexão">
+                            <Border CornerRadius="10" Padding="14" Background="{StaticResource AccentSoftBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="1. Conexão" FontWeight="Medium" />
+                                    <TextBlock Text="Cadastre e teste o banco de origem" Style="{StaticResource MutedText}" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                            </Grid>
-                        </Border>
-
-                        <Border CornerRadius="10" Padding="14" Background="{StaticResource SuccessSoftBrush}" Margin="0,0,0,10">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Text="&#xE9F9;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource SuccessBrush}" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Margin="12,0">
-                                    <TextBlock Text="Import Digest" FontWeight="Medium" />
-                                    <TextBlock Text="Analyze database schema" Style="{StaticResource MutedText}" />
+                            </Border>
+                        </Button>
+                        <Button Style="{StaticResource GhostButton}" Command="{Binding GoToCommand}" CommandParameter="digest" HorizontalContentAlignment="Stretch" Padding="0" Margin="0,0,0,10" AutomationProperties.Name="2. Estrutura">
+                            <Border CornerRadius="10" Padding="14" Background="{StaticResource SuccessSoftBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="2. Estrutura" FontWeight="Medium" />
+                                    <TextBlock Text="Capture ou importe o Schema Digest" Style="{StaticResource MutedText}" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                            </Grid>
-                        </Border>
-
-                        <Border CornerRadius="10" Padding="14" Background="{StaticResource PurpleSoftBrush}" Margin="0,0,0,10">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource PurpleBrush}" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Margin="12,0">
-                                    <TextBlock Text="Open Project" FontWeight="Medium" />
-                                    <TextBlock Text="Browse and open a project" Style="{StaticResource MutedText}" />
+                            </Border>
+                        </Button>
+                        <Button Style="{StaticResource GhostButton}" Command="{Binding GoToCommand}" CommandParameter="mapping" HorizontalContentAlignment="Stretch" Padding="0" Margin="0,0,0,10" AutomationProperties.Name="3. Mapeamento">
+                            <Border CornerRadius="10" Padding="14" Background="{StaticResource PurpleSoftBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="3. Mapeamento" FontWeight="Medium" />
+                                    <TextBlock Text="Vincule colunas a geradores" Style="{StaticResource MutedText}" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                            </Grid>
-                        </Border>
-
-                        <Border CornerRadius="10" Padding="14" Background="{StaticResource OrangeSoftBrush}">
-                            <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1" Margin="12,0">
-                                    <TextBlock Text="New Generation" FontWeight="Medium" />
-                                    <TextBlock Text="Generate mock data" Style="{StaticResource MutedText}" />
+                            </Border>
+                        </Button>
+                        <Button Style="{StaticResource GhostButton}" Command="{Binding GoToCommand}" CommandParameter="generation" HorizontalContentAlignment="Stretch" Padding="0" AutomationProperties.Name="4. Geração">
+                            <Border CornerRadius="10" Padding="14" Background="{StaticResource OrangeSoftBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="4. Geração" FontWeight="Medium" />
+                                    <TextBlock Text="Em desenvolvimento" Style="{StaticResource MutedText}" />
                                 </StackPanel>
-                                <TextBlock Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                            </Grid>
-                        </Border>
+                            </Border>
+                        </Button>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -218,75 +212,52 @@
 
                 <Border Style="{StaticResource Card}" Margin="0,0,14,0">
                     <StackPanel>
-                        <DockPanel Margin="0,0,0,12">
-                            <TextBlock Text="Connections" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
-                            <TextBlock Text="Manage all" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right"
-                                       VerticalAlignment="Center" FontWeight="Medium" />
-                        </DockPanel>
+                        <TextBlock Text="Conexões" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
                         <ItemsControl ItemsSource="{Binding Connections}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="4" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                                BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,12,0">
-                                            <StackPanel>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Width="32" Height="32" CornerRadius="8" Background="{Binding TintBg}">
-                                                        <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="15"
-                                                                   Foreground="{Binding Tint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                                    </Border>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" />
-                                                    <TextBlock Grid.Column="2" Text="&#xE712;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
-                                                </Grid>
-                                                <StackPanel Orientation="Horizontal" Margin="0,8,0,10">
-                                                    <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
-                                                        <Ellipse.Style>
-                                                            <Style TargetType="Ellipse">
-                                                                <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Online}" Value="False">
-                                                                        <Setter Property="Fill" Value="{StaticResource DangerBrush}" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Ellipse.Style>
-                                                    </Ellipse>
-                                                </StackPanel>
-                                                <ItemsControl ItemsSource="{Binding Details}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid Margin="0,0,0,3">
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="62" /><ColumnDefinition Width="*" />
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock Text="{Binding Label}" Style="{StaticResource MutedText}" />
-                                                                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,12,12">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="32" Height="32" CornerRadius="8" Background="{Binding TintBg}">
+                                                    <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="15"
+                                                               Foreground="{Binding Tint}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />
+                                            </Grid>
+                                            <ItemsControl ItemsSource="{Binding Details}" Margin="0,10,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,3">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="62" /><ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Label}" Style="{StaticResource MutedText}" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource Card}" Grid.Column="1">
                     <StackPanel>
-                        <DockPanel Margin="0,0,0,12">
-                            <TextBlock Text="Recent Activity" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
-                            <TextBlock Text="View all" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right"
-                                       VerticalAlignment="Center" FontWeight="Medium" />
-                        </DockPanel>
+                        <TextBlock Text="Atividade recente" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
                         <ItemsControl ItemsSource="{Binding RecentActivity}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>

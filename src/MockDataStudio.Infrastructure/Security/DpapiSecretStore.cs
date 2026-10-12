@@ -42,8 +42,7 @@ public sealed class DpapiSecretStore : ISecretStore
         var path = customPath;
         if (string.IsNullOrEmpty(path))
         {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var mdsDir = Path.Combine(appData, "MockDataStudio");
+            var mdsDir = AppPaths.Root;
             Directory.CreateDirectory(mdsDir);
             path = Path.Combine(mdsDir, "install.key");
         }

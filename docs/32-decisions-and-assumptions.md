@@ -116,6 +116,11 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 | DA-302 | `IMappingService.BuildContextAsync` devolve `Result<MappingContext>` (falha PRJ-SCHEMA sem snapshot ativo) e `SetBinding` é `SetBindingAsync`, porque aprender regra grava no catálogo. `MigrateBindingsAsync` fica para a C7 | C09 §2 |
 | DA-303 | `IDigestService.Compare` devolve `Result<SchemaDiff>` (digest corrompido vira erro DIG-*). `CaptureAsync` devolve snapshot com Id provisório `snap-0000`; `DigestService.NextSnapshotId(project)` atribui o definitivo | C09 §2 |
 | DA-304 | T-PRJ-010 valida contra `project-1.0.schema.json` com o `$ref` do digest trocado por `{type: object}`: o digest embutido é validado por `DigestValidator` (PRJ-DIGEST) e pelos testes T-DIG. Divergência de hash do digest é só aviso (DA do Core), então PRJ-DIGEST usa erros estruturais | docs/22 §6 |
+| DA-305 | O `MappingEngine` emitia `core.template` e `core.template.field`, ids que o registro do motor não tem (o registro usa `catalog.template` e `catalog.template.field`, como no exemplo `project-loja.mdsproj`). Corrigido em `Mapping/MappingEngine.cs` (arquivo da Trilha A, mudança mínima e registrada) e protegido por `MappingGenerationContractTests`, que exige que todo gerador emitido pelo Mapping exista no registro | C04, C05 §4 |
+| DA-306 | `MappingService` resolve vínculos `core.preset` para o gerador e os parâmetros do preset do catálogo antes de gravar no projeto (o motor não conhece presets). `rel.key` e `rel.fk` não estão no registro por serem vínculos estruturais resolvidos pelo planejador; o editor de gerador não os lista | docs/14, C06 |
+| DA-307 | `Infrastructure/AppPaths`: a pasta de dados é `%LOCALAPPDATA%\MockDataStudio` ou o caminho de `MDS_DATA_DIR`. Os testes de UI usam uma pasta descartável e não tocam nos dados do usuário | docs/23 §3 |
+| DA-308 | `ProjectWorkspace` guarda o histórico de desfazer/refazer em memória (100 entradas, descartado ao abrir ou criar projeto), com granularidade de alteração de projeto; `IAppSettings` ganhou `RecentProjects` (10 itens). Projeto novo adota o nome do arquivo no primeiro Salvar como | docs/21 S10 |
+| DA-309 | Telas Home, Digest, Mapping e Templates usam ViewModels singleton (mantêm seleção ao navegar). `IDesignDataSource` e os dados de exemplo foram removidos; `Samples/ViewItems.cs` guarda só os itens de apresentação. A área "Schema Relationships" do Digest lista as chaves estrangeiras em tabela, no lugar do diagrama estático do mockup | docs/21 S02 |
 
 ### 1.4 Integração e gates (DA-400..499)
 
@@ -208,6 +213,8 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 |---|---|---|---|---|
 | PV-300 | T-PRJ-007 (perfis não resolvidos ao abrir em outra máquina) e as validações PRJ-GENERATOR, PRJ-PARAMS e PRJ-QUERY não implementadas: dependem do registro de geradores (A) e do SqlTooling | Teste com projeto cujo `profileId` não existe; gerador desconhecido; query não-SELECT | Aberto no ProjectValidator como TODO; a abertura não bloqueia | C2/C3 |
 | PV-301 | Autosave e arquivo de recuperação (docs/22 §7) e `ProjectMigrator` com backup `.vX.Y.bak` não implementados (só há formato 1.0) | Teste de recuperação ao reabrir; migração 1.0→1.1 quando existir | Implementar com a UI de projeto (C3) e a primeira mudança de formato | C3 |
+| PV-302 | Fluxo "só por teclado" (G-MVP-8) e salvar pelo diálogo de arquivo não foram automatizados na UI: T-UI-FLOW-001 cobre projeto novo → digest → mapeamento automático por automação de interface | Teste FlaUI com foco e Tab/Enter; diálogo de arquivo | Cobertura de Salvar/Abrir fica em Application.Tests; validar a navegação por teclado manualmente | C4 |
+| PV-303 | Telas reescritas (Home, Digest, Templates, Mapping) verificadas por testes de texto e de fluxo, sem comparação visual com os mockups; nada foi conferido a 125% e 150% de DPI | Captura e comparação visual; T-UI-DPI-001 | Ajustes de layout depois de revisão do responsável | C3/C9 |
 
 ### 5.4 Integração e gates (PV-400..499)
 
@@ -247,6 +254,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
+| 2026-10-12 | DA-305..309, PV-302..303 | Sprint C3 (telas do fluxo MVP com dados reais) | Ligar Home, Digest, Templates e Mapping aos serviços da C2; correção dos ids de geradores do Mapping |
 | 2026-10-12 | DA-300..304, PV-300..301 | Sprint C2 (Projects, DigestService, MappingService) | Implementação de C09 §1 e §2 com ajustes de assinatura registrados |
 
 ### 6.4 Integração e gates

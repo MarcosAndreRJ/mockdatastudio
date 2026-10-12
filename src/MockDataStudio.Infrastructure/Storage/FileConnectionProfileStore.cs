@@ -22,8 +22,7 @@ public sealed class FileConnectionProfileStore : IConnectionProfileStore, IDispo
     {
         if (string.IsNullOrEmpty(filePath))
         {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var mdsDir = Path.Combine(appData, "MockDataStudio");
+            var mdsDir = AppPaths.Root;
             Directory.CreateDirectory(mdsDir);
             _filePath = Path.Combine(mdsDir, "connections.json");
         }

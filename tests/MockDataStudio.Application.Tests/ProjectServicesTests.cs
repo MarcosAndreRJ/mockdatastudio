@@ -23,18 +23,18 @@ namespace MockDataStudio.Application.Tests;
 // T-APP-002 (DigestService) e T-APP-003 (MappingService): serviços com fakes de catálogo e SQLite real como origem.
 public sealed class ProjectServicesTests
 {
-    private static readonly StructureHasher Hasher = new();
-    private static readonly DigestSerializer Digests = new(Hasher);
+    internal static readonly StructureHasher Hasher = new();
+    internal static readonly DigestSerializer Digests = new(Hasher);
 
-    private sealed class FixedClock(DateTimeOffset now) : IClock
+    internal sealed class FixedClock(DateTimeOffset now) : IClock
     {
         public DateTimeOffset UtcNow { get; } = now;
     }
 
-    private static readonly FixedClock Clock = new(new DateTimeOffset(2026, 10, 12, 12, 0, 0, TimeSpan.Zero));
+    internal static readonly FixedClock Clock = new(new DateTimeOffset(2026, 10, 12, 12, 0, 0, TimeSpan.Zero));
 
     // Abre sempre o banco do workbench, qualquer que seja o perfil pedido.
-    private sealed class WorkbenchConnectionService(SqliteWorkbench workbench) : IConnectionService
+    internal sealed class WorkbenchConnectionService(SqliteWorkbench workbench) : IConnectionService
     {
         public Task<IReadOnlyList<ConnectionProfile>> ListAsync(CancellationToken ct = default) => throw new NotSupportedException();
 
@@ -58,17 +58,17 @@ public sealed class ProjectServicesTests
         }
     }
 
-    private static DigestService NewDigestService(SqliteWorkbench workbench) =>
+    internal static DigestService NewDigestService(SqliteWorkbench workbench) =>
         new(new WorkbenchConnectionService(workbench), Digests, Hasher, new SchemaDiffer(Hasher), Clock);
 
-    private static async Task<SnapshotEntry> CaptureAsync(SqliteWorkbench workbench, CancellationToken ct)
+    internal static async Task<SnapshotEntry> CaptureAsync(SqliteWorkbench workbench, CancellationToken ct)
     {
         var result = await NewDigestService(workbench).CaptureAsync(Guid.NewGuid(), new CaptureOptions(), null, ct);
         result.IsSuccess.ShouldBeTrue(result.IsSuccess ? string.Empty : result.Error.Message);
         return result.Value;
     }
 
-    private static MdsProject NewProject(SnapshotEntry? snapshot)
+    internal static MdsProject NewProject(SnapshotEntry? snapshot)
     {
         var output = new OutputSettings(OutputKind.SqlScript);
         var profile = new GenerationProfile("default", 42, Clock.UtcNow, ReferenceInstantMode.Fixed, "UTC",
@@ -155,7 +155,7 @@ public sealed class ProjectServicesTests
 
     // ---------------------------------------------------------------- T-APP-003
 
-    private sealed class FakeCatalog : ITemplateRepository, IMappingRuleRepository, IMappingFeedbackRepository
+    internal sealed class FakeCatalog : ITemplateRepository, IMappingRuleRepository, IMappingFeedbackRepository, IGeneratorPresetRepository
     {
         public List<MappingRuleInfo> SavedRules { get; } = [];
 
@@ -189,6 +189,13 @@ public sealed class ProjectServicesTests
         Task<IReadOnlyList<MappingRuleInfo>> IMappingRuleRepository.ListAsync(CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<MappingRuleInfo>>(SavedRules);
 
+        Task<IReadOnlyList<GeneratorPresetInfo>> IGeneratorPresetRepository.ListAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<GeneratorPresetInfo>>(Presets);
+
+        public List<GeneratorPresetInfo> Presets { get; } = [];
+
+        public Task<Result<long>> UpsertAsync(GeneratorPresetInfo preset, CancellationToken ct) => Task.FromResult(Result<long>.Ok(0));
+
         public Task<Result<long>> UpsertAsync(MappingRuleInfo rule, CancellationToken ct)
         {
             SavedRules.Add(rule);
@@ -207,8 +214,8 @@ public sealed class ProjectServicesTests
             Task.FromResult<IReadOnlyList<MappingFeedbackInfo>>([]);
     }
 
-    private static MappingService NewMappingService(FakeCatalog catalog) =>
-        new(catalog, catalog, catalog, new MappingEngine(new StructuralBinder()), new NameNormalizer(), Digests, Clock);
+    internal static MappingService NewMappingService(FakeCatalog catalog) =>
+        new(catalog, catalog, catalog, catalog, new MappingEngine(new StructuralBinder()), new NameNormalizer(), Digests, Clock);
 
     [Fact]
     [Trait("Category", "Unit")]

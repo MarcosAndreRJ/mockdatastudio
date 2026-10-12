@@ -21,9 +21,9 @@ public sealed class SmokeTests
         ("Schema Digest", "Database Structure"),
         ("Templates", "Template Catalog"),
         ("Mapping", "Field Mapping"),
-        ("Generation", "Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."),
-        ("History", "Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."),
-        ("Settings", "Tela sem mockup nesta etapa. Será criada quando o mockup for fornecido."),
+        ("Generation", "Em desenvolvimento. Esta tela será liberada em uma próxima etapa."),
+        ("History", "Em desenvolvimento. Esta tela será liberada em uma próxima etapa."),
+        ("Settings", "Em desenvolvimento. Esta tela será liberada em uma próxima etapa."),
     ];
 
     [Fact]
@@ -32,10 +32,13 @@ public sealed class SmokeTests
     public void T_UI_SMOKE_001_NavegaTodasAsTelas_SemErroNaInterface()
     {
         var exePath = Path.Combine(AppContext.BaseDirectory, "MockDataStudio.App.exe");
+        var dataDir = Path.Combine(Path.GetTempPath(), "mds-ui-" + Guid.NewGuid().ToString("N"));
         File.Exists(exePath).ShouldBeTrue($"Executável do app não encontrado em {exePath}.");
 
         using var automation = new UIA3Automation();
-        using var app = FlaUI.Core.Application.Launch(exePath);
+        var startInfo = new System.Diagnostics.ProcessStartInfo(exePath) { UseShellExecute = false };
+        startInfo.Environment["MDS_DATA_DIR"] = dataDir;
+        using var app = FlaUI.Core.Application.Launch(startInfo);
 
         try
         {

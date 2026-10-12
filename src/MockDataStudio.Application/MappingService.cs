@@ -30,12 +30,27 @@ public interface IMappingService
 public sealed class MappingService(
     ITemplateRepository templates,
     IMappingRuleRepository rules,
+    IGeneratorPresetRepository presets,
     IMappingFeedbackRepository feedback,
     IMappingEngine engine,
     INameNormalizer normalizer,
     IDigestSerializer digestSerializer,
     IClock clock) : IMappingService
 {
+    private Dictionary<string, GeneratorPresetInfo> _presets = [];
+
+    // O Mapping referencia presets pelo código; o motor só conhece geradores. Resolve para o gerador e os parâmetros do preset.
+    private GeneratorSpec Resolve(GeneratorSpec spec)
+    {
+        if (spec.GeneratorId == "core.preset" && spec.Parameters["preset"]?.GetValue<string>() is { } code && _presets.TryGetValue(code, out var preset))
+        {
+            var parameters = System.Text.Json.Nodes.JsonNode.Parse(preset.ParametersJson) as System.Text.Json.Nodes.JsonObject ?? new System.Text.Json.Nodes.JsonObject();
+            return new GeneratorSpec(preset.GeneratorId, preset.GeneratorVersion, parameters);
+        }
+
+        return spec;
+    }
+
     public async Task<Result<MappingContext>> BuildContextAsync(MdsProject project, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -52,6 +67,7 @@ public sealed class MappingService(
             return Result<MappingContext>.Fail(schema.Error);
         }
 
+        _presets = (await presets.ListAsync(ct)).ToDictionary(p => p.Code, StringComparer.Ordinal);
         var knowledge = await LoadKnowledgeAsync(project, ct);
         return Result<MappingContext>.Ok(new MappingContext(schema.Value, knowledge, project.Bindings, new MappingOptions()));
     }
@@ -76,7 +92,7 @@ public sealed class MappingService(
                         continue;
                     }
 
-                    bindings[key] = binding;
+                    bindings[key] = binding with { Generator = Resolve(binding.Generator) };
                 }
             }
         }
@@ -89,7 +105,7 @@ public sealed class MappingService(
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(binding);
 
-        var chosen = binding with { Origin = BindingOrigin.User, State = BindingState.Active, ConfidenceLabel = "confirmed" };
+        var chosen = binding with { Generator = Resolve(binding.Generator), Origin = BindingOrigin.User, State = BindingState.Active, ConfidenceLabel = "confirmed" };
         var bindings = new Dictionary<string, ColumnBinding>(project.Bindings, StringComparer.Ordinal)
         {
             [chosen.Column.CanonicalId] = chosen,

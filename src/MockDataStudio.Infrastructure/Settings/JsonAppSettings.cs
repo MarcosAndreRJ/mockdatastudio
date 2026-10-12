@@ -8,12 +8,14 @@ public sealed class JsonAppSettings : IAppSettings
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
+    private const int MaxRecent = 10;
+
     private readonly string _path;
 
     public JsonAppSettings(string? path = null)
     {
         _path = path ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MockDataStudio", "settings.json");
+            AppPaths.Root, "settings.json");
         Load();
     }
 
@@ -23,13 +25,39 @@ public sealed class JsonAppSettings : IAppSettings
 
     public bool DefaultReadOnly { get; set; } = true;
 
+    private readonly List<string> _recentProjects = [];
+
+    public IReadOnlyList<string> RecentProjects => _recentProjects;
+
+    public void AddRecentProject(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var full = Path.GetFullPath(path);
+        _recentProjects.RemoveAll(p => string.Equals(p, full, StringComparison.OrdinalIgnoreCase));
+        _recentProjects.Insert(0, full);
+        if (_recentProjects.Count > MaxRecent)
+        {
+            _recentProjects.RemoveRange(MaxRecent, _recentProjects.Count - MaxRecent);
+        }
+
+        Save();
+    }
+
+    public void RemoveRecentProject(string path)
+    {
+        if (_recentProjects.RemoveAll(p => string.Equals(p, path, StringComparison.OrdinalIgnoreCase)) > 0)
+        {
+            Save();
+        }
+    }
+
     public bool Save()
     {
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
             var tmp = _path + ".tmp";
-            File.WriteAllText(tmp, JsonSerializer.Serialize(new Data(Theme, Language, DefaultReadOnly), Options));
+            File.WriteAllText(tmp, JsonSerializer.Serialize(new Data(Theme, Language, DefaultReadOnly, _recentProjects), Options));
             File.Move(tmp, _path, overwrite: true);
             return true;
         }
@@ -57,6 +85,8 @@ public sealed class JsonAppSettings : IAppSettings
             Theme = data.Theme is "light" or "dark" ? data.Theme : Theme;
             Language = string.IsNullOrWhiteSpace(data.Language) ? Language : data.Language;
             DefaultReadOnly = data.DefaultReadOnly;
+            _recentProjects.Clear();
+            _recentProjects.AddRange((data.RecentProjects ?? []).Where(p => !string.IsNullOrWhiteSpace(p)).Take(MaxRecent));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -64,5 +94,5 @@ public sealed class JsonAppSettings : IAppSettings
         }
     }
 
-    private sealed record Data(string Theme, string Language, bool DefaultReadOnly);
+    private sealed record Data(string Theme, string Language, bool DefaultReadOnly, List<string>? RecentProjects = null);
 }

@@ -8,7 +8,7 @@ public static class LoggingSetup
 {
     /// <summary>Pasta padrão de logs: %LOCALAPPDATA%\MockDataStudio\logs.</summary>
     public static string DefaultLogDirectory() =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MockDataStudio", "logs");
+        AppPaths.Combine("logs");
 
     /// <summary>
     /// Arquivo rolling diário (mds-AAAAMMDD.log), retenção de 14 arquivos, 20 MB por arquivo, JSON compacto com redação de segredos
