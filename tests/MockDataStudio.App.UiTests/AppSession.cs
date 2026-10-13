@@ -35,7 +35,7 @@ internal sealed class AppSession : IDisposable
     {
         var nav = Window.FindFirstDescendant(cf => cf.ByName(item));
         nav.ShouldNotBeNull($"Item de navegação '{item}' não encontrado.");
-        nav.Click();
+        nav.Activate();
         return nav;
     }
 
@@ -52,18 +52,7 @@ internal sealed class AppSession : IDisposable
     }
 
     // Invoca pelo padrão de automação (não depende de o botão estar visível na janela); cai para o clique do mouse sem o padrão.
-    public void ClickButton(string name)
-    {
-        var element = Find(name);
-        if (element.Patterns.Invoke.IsSupported)
-        {
-            element.Patterns.Invoke.Pattern.Invoke();
-        }
-        else
-        {
-            element.Click();
-        }
-    }
+    public void ClickButton(string name) => Find(name).Activate();
 
     /// <summary>Espera o elemento ficar habilitado (por exemplo, um botão que depende de uma seleção carregada em segundo plano).</summary>
     public void WaitEnabled(string name, TimeSpan? timeout = null)
@@ -112,6 +101,26 @@ internal sealed class AppSession : IDisposable
             {
                 // Arquivo ainda aberto pelo SQLite: a pasta temporária é limpa pelo sistema.
             }
+        }
+    }
+}
+
+internal static class ElementActivation
+{
+    // Ativa pelo padrão de automação (não depende de a janela estar na frente nem do ponteiro do mouse); sem padrão, clica.
+    public static void Activate(this AutomationElement element)
+    {
+        if (element.Patterns.Invoke.IsSupported)
+        {
+            element.Patterns.Invoke.Pattern.Invoke();
+        }
+        else if (element.Patterns.SelectionItem.IsSupported)
+        {
+            element.Patterns.SelectionItem.Pattern.Select();
+        }
+        else
+        {
+            element.Click();
         }
     }
 }
