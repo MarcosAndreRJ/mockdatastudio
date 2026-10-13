@@ -1,12 +1,18 @@
+# Plano de Ação v2 — trilhas paralelas (ARQUIVADO)
+
+> **Arquivado em 2026-10-12.** Registro da execução em trilhas (A1, A2 parcial, A3, B2 parcial, C1 parcial, C2 parcial, C3, C5/C6 parciais via `sprint/EXP-explorer-completo`), com as evidências originais de cada etapa. O trabalho restante foi reorganizado em **etapas** no [PLANO-DE-ACAO.md](../../PLANO-DE-ACAO.md). **Não edite este arquivo.**
+
+---
+
 # Plano de Ação — Mock Data Studio (execução paralela por trilhas)
 
 | Campo | Valor |
 |---|---|
 | Objetivo | Concluir o MVP e a V1 com **2 ou 3 IAs trabalhando em paralelo**, cada sprint numa branch própria, com commit e merge na `main` ao final da sprint. |
-| Ponto de partida | `main` em `d9f3bf9` (Sprints 0–6 do plano sequencial executados). Situação verificada na [auditoria de implementação](docs/37-implementation-audit.md). |
-| Plano anterior | [docs/progress/plano-sequencial-sprints-0-6.md](docs/progress/plano-sequencial-sprints-0-6.md) (arquivado, com evidências) |
-| Conteúdo das tarefas | [docs/28-implementation-backlog.md](docs/28-implementation-backlog.md) (os `TASK-xx.yy` citados aqui) |
-| Regras da IA | [docs/33-executor-instructions.md](docs/33-executor-instructions.md) (em especial o §18) · Definition of Done: [docs/29 §1](docs/29-acceptance-criteria.md) |
+| Ponto de partida | `main` em `d9f3bf9` (Sprints 0–6 do plano sequencial executados). Situação verificada na [auditoria de implementação](../37-implementation-audit.md). |
+| Plano anterior | [docs/progress/plano-sequencial-sprints-0-6.md](../progress/plano-sequencial-sprints-0-6.md) (arquivado, com evidências) |
+| Conteúdo das tarefas | [docs/28-implementation-backlog.md](../28-implementation-backlog.md) (os `TASK-xx.yy` citados aqui) |
+| Regras da IA | [docs/33-executor-instructions.md](../33-executor-instructions.md) (em especial o §18) · Definition of Done: [docs/29 §1](../29-acceptance-criteria.md) |
 | Revisão | 2026-10-12 |
 
 ---
@@ -21,7 +27,7 @@
 6. **Atualize a linha "Status"** da sprint: `⬜ Não iniciada` → `🔄 Em andamento (branch, IA, data)` → `✅ Mesclada na main (data)`.
 7. **Edite neste arquivo apenas a seção da sua sprint.** Não altere seções de outras sprints nem das tabelas gerais. Isso evita conflitos de merge.
 8. Tudo o que **não** foi verificado deve ser declarado como não verificado. Teste que não pôde executar é **Skip com motivo**, nunca aprovado (DA-055). Avisos NuGet (NU190x) também entram no relatório.
-9. Registre decisões e verificações pendentes em [docs/32](docs/32-decisions-and-assumptions.md), **na faixa de numeração e na subseção da sua trilha** (A: 100–199, B: 200–299, C: 300–399, gates: 400–499).
+9. Registre decisões e verificações pendentes em [docs/32](../32-decisions-and-assumptions.md), **na faixa de numeração e na subseção da sua trilha** (A: 100–199, B: 200–299, C: 300–399, gates: 400–499).
 10. Ao final de cada sprint, preencha o **Relatório da sprint**: o que foi feito, testes (aprovados/falhos/ignorados por projeto), decisões (IDs), pendências, riscos e o hash do commit de merge.
 
 ### Legenda
@@ -38,7 +44,7 @@
 | Vazio | Application, Infrastructure, Output, Projects, Providers MySQL/PostgreSQL/Firebird |
 | Achados principais | Integração real nunca executada e smoke de integração falso (A-01, A-03); fixtures `loja.*` divergentes da especificação (A-02); vulnerabilidades NuGet (A-04); API do motor diferente de C06 (A-05); host dos testes de contrato não encerra (A-06) |
 
-Detalhes, achados A-01..A-12 e o que falta: [docs/37](docs/37-implementation-audit.md).
+Detalhes, achados A-01..A-12 e o que falta: [docs/37](../37-implementation-audit.md).
 
 ---
 
@@ -157,8 +163,8 @@ flowchart LR
 
 | Gate | Sprint | Exige na `main` | Verificação |
 |---|---|---|---|
-| **MVP** | C4 | A3, B2, B3, C3 | [docs/29 §2](docs/29-acceptance-criteria.md) (G-MVP-1..10) |
-| **V1** | C9 | A6, B6, C8 (e todas as anteriores) | [docs/29 §3](docs/29-acceptance-criteria.md) (G-V1-1..10) |
+| **MVP** | C4 | A3, B2, B3, C3 | [docs/29 §2](../29-acceptance-criteria.md) (G-MVP-1..10) |
+| **V1** | C9 | A6, B6, C8 (e todas as anteriores) | [docs/29 §3](../29-acceptance-criteria.md) (G-V1-1..10) |
 
 ---
 
@@ -661,7 +667,7 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 - [ ] **C4.5** Telas ainda não integradas (Explorer, SQL Editor, History, Settings) marcadas "Em desenvolvimento"; T-UI-FLOW-001 completo e T-UI-PERF-002. · Concluído em: ____ · Evidência: ____
 - [ ] **C4.6** README atualizado com o status; tag `v0.1.0-mvp` criada na `main` **após** o merge (`git tag -a v0.1.0-mvp -m "MVP"` e `git push origin v0.1.0-mvp`). · Concluído em: ____ · Evidência: ____
 
-**Verificação da sprint — GATE MVP ([docs/29 §2](docs/29-acceptance-criteria.md))**
+**Verificação da sprint — GATE MVP ([docs/29 §2](../29-acceptance-criteria.md))**
 - [ ] G-MVP-1 — `loja` em SQLite, PostgreSQL 17 e Firebird 5: ponta a ponta sem erros
 - [ ] G-MVP-2 — contagens, FKs (compostas e autorreferência), UNIQUEs e CHECKs verificados
 - [ ] G-MVP-3 — scripts idênticos com a mesma seed (MaxDOP 1 e 8)
@@ -812,7 +818,7 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 - [ ] **C9.6** Remover `Samples/SampleData` e `IDesignDataSource` do código de produção. · Concluído em: ____ · Evidência: ____
 - [ ] **C9.7** Auditoria final documentação × implementação (formato de docs/37) e tag `v1.0.0` na `main` após o merge. · Concluído em: ____ · Evidência: ____
 
-**Verificação da sprint — GATE V1 ([docs/29 §3](docs/29-acceptance-criteria.md))**
+**Verificação da sprint — GATE V1 ([docs/29 §3](../29-acceptance-criteria.md))**
 - [ ] G-V1-1 — todos os FR MVP/V1 (M) atendidos; matriz docs/35 100% verde
 - [ ] G-V1-2 — matriz oficial de versões de SGBD verde
 - [ ] G-V1-3 — inserção direta + limpeza devolve o banco ao estado anterior nos 4 SGBDs
@@ -831,4 +837,4 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 
 ## 10. Depois da V1 (V2 — detalhar antes de iniciar)
 
-CLI · Plugins · Grafo de relacionamentos · Designer de cenários · Regras condicionais declarativas · Perfil estatístico · Anonimização restrita · Perfis de carga e cobertura · Pacotes temáticos · MariaDB oficial · Coerência entre tabelas. Ver [docs/27 §4](docs/27-development-roadmap.md). As trilhas e o protocolo Git deste plano podem ser reaproveitados.
+CLI · Plugins · Grafo de relacionamentos · Designer de cenários · Regras condicionais declarativas · Perfil estatístico · Anonimização restrita · Perfis de carga e cobertura · Pacotes temáticos · MariaDB oficial · Coerência entre tabelas. Ver [docs/27 §4](../27-development-roadmap.md). As trilhas e o protocolo Git deste plano podem ser reaproveitados.

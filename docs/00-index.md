@@ -75,7 +75,7 @@
 | [35-traceability-matrix](35-traceability-matrix.md) | Requisito → Módulo → Contrato → Tarefa → Teste → Aceite |
 | [36-audit-report](36-audit-report.md) | Auditoria independente da especificação, correções e riscos residuais |
 | [37-implementation-audit](37-implementation-audit.md) | Auditoria da implementação (2026-10-12): o que foi feito, achados e o que falta |
-| [progress/](progress/plano-sequencial-sprints-0-6.md) | Plano sequencial arquivado (Sprints 0–6) e evidências por sprint |
+| [progress/](progress/plano-sequencial-sprints-0-6.md) | Planos arquivados: [sequencial (Sprints 0–6)](progress/plano-sequencial-sprints-0-6.md) e [trilhas v2](progress/plano-paralelo-trilhas-v2.md), com evidências por sprint |
 
 ## 5. Exemplos
 

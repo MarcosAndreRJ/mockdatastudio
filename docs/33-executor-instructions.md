@@ -126,7 +126,7 @@ Exatamente a Definition of Done de [29 §1](29-acceptance-criteria.md). Em parti
 
 ## 18. Execução paralela em branches (DA-054)
 
-O trabalho restante é executado por **2 ou 3 IAs** em paralelo, cada uma numa **trilha** (A — Motor/Planejamento/Saída; B — Providers/SQL/Integração; C — Aplicação/Projeto/Interface). O [Plano de Ação](../PLANO-DE-ACAO.md) é a fonte do protocolo. Resumo obrigatório:
+O trabalho restante é executado em **etapas sequenciais** (Plano de Ação v3); dentro de cada etapa, **2 ou 3 IAs** trabalham em paralelo, cada sprint pertencendo a uma **trilha** (A — Motor/Planejamento/Saída; B — Providers/SQL/Integração; C — Aplicação/Projeto/Interface). O [Plano de Ação](../PLANO-DE-ACAO.md) é a fonte do protocolo. Resumo obrigatório:
 
 1. **Uma branch por sprint**: `sprint/<ID>-<slug>` criada a partir da `main` atualizada (`git pull`). Nunca trabalhar direto na `main`.
 2. **Dependências**: só iniciar a sprint quando todas as sprints listadas em "Depende de" estiverem com status ✅ **na `main`**.
