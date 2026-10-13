@@ -72,7 +72,7 @@ public sealed partial class MappingViewModel : ObservableObject
 
     public MappingViewModel(
         MappingSession session, ProjectWorkspace workspace, GeneratorPreviewService preview,
-        IGeneratorRegistry registry, ICatalogInitializer catalog)
+        IGeneratorRegistry registry, ICatalogInitializer catalog, MappingLearningService learning)
     {
         _session = session;
         _workspace = workspace;
@@ -92,6 +92,8 @@ public sealed partial class MappingViewModel : ObservableObject
         ApplyGeneratorCommand = new AsyncRelayCommand(ApplyGeneratorAsync, () => SelectedField is not null && SelectedGenerator is not null);
         ApplyOptionsCommand = new RelayCommand(ApplyOptions, () => SelectedField?.Row.Binding is not null);
         ClearCommand = new RelayCommand(ClearBinding, () => SelectedField?.Row.Binding is not null);
+        _learning = learning;
+        RememberCommand = new AsyncRelayCommand(RememberAsync, () => SelectedField?.Row.Binding is not null);
         RegenerateCommand = new AsyncRelayCommand(PreviewAsync, () => SelectedField is not null);
         ReloadCommand = new AsyncRelayCommand(LoadAsync);
 
@@ -109,6 +111,32 @@ public sealed partial class MappingViewModel : ObservableObject
     public IAsyncRelayCommand ApplyGeneratorCommand { get; }
     public IRelayCommand ApplyOptionsCommand { get; }
     public IRelayCommand ClearCommand { get; }
+
+    // "Lembrar para outros projetos" (FR-064): grava a regra global para a coluna selecionada.
+    public IAsyncRelayCommand RememberCommand { get; }
+
+    private readonly MappingLearningService _learning;
+
+    private async Task RememberAsync()
+    {
+        if (SelectedField?.Row.Binding is not { } binding)
+        {
+            return;
+        }
+
+        var spec = binding.Generator;
+        var isTemplate = spec.GeneratorId.StartsWith("catalog.template", StringComparison.Ordinal);
+        var kind = isTemplate ? MockDataStudio.Catalog.RuleTargetKind.Template : MockDataStudio.Catalog.RuleTargetKind.Generator;
+        var target = isTemplate && spec.Parameters.TryGetPropertyValue("template", out var tpl) && tpl is not null
+            ? tpl.GetValue<string>()
+            : spec.GeneratorId;
+
+        var result = await _learning.RememberAsync(SelectedField.Row.Column.Column, kind, target, CancellationToken.None);
+        Message = result.IsSuccess
+            ? $"Regra aprendida: {SelectedField.Row.Column.Column} → {target}. Projetos novos vão sugerir este alvo."
+            : result.Error.Message;
+    }
+
     public IAsyncRelayCommand RegenerateCommand { get; }
     public IAsyncRelayCommand ReloadCommand { get; }
 

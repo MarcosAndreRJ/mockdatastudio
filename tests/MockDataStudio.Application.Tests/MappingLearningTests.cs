@@ -137,11 +137,77 @@ public sealed class MappingLearningTests
         ColumnModel.Create(name, ordinal, NativeTypeParser.Parse(type), nullable, defaultValue: defaultValue,
             identity: identity, generated: generated).Value;
 
-    private sealed class FakePresets(IReadOnlyList<GeneratorPresetInfo> items) : IGeneratorPresetRepository
+    // Repositório em memória que guarda de verdade: salvar e excluir precisam refletir na listagem.
+    private sealed class FakePresets(IEnumerable<GeneratorPresetInfo> seed) : IGeneratorPresetRepository
     {
-        public Task<IReadOnlyList<GeneratorPresetInfo>> ListAsync(CancellationToken ct) => Task.FromResult(items);
-        public Task<Result<long>> UpsertAsync(GeneratorPresetInfo preset, CancellationToken ct) => Task.FromResult(Result<long>.Ok(preset.Id));
-        public Task<Result<bool>> DeleteAsync(string code, CancellationToken ct) => Task.FromResult(Result<bool>.Ok(true));
+        private readonly List<GeneratorPresetInfo> _items = seed.ToList();
+
+        public Task<IReadOnlyList<GeneratorPresetInfo>> ListAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<GeneratorPresetInfo>>(_items.ToList());
+
+        public Task<Result<long>> UpsertAsync(GeneratorPresetInfo preset, CancellationToken ct)
+        {
+            _items.RemoveAll(p => p.Code == preset.Code);
+            _items.Add(preset with { Id = preset.Id == 0 ? _items.Count + 1 : preset.Id });
+            return Task.FromResult(Result<long>.Ok(preset.Id == 0 ? _items.Count : preset.Id));
+        }
+
+        public Task<Result<bool>> DeleteAsync(string code, CancellationToken ct)
+        {
+            var removed = _items.RemoveAll(p => p.Code == code && !p.IsBuiltIn);
+            return Task.FromResult(Result<bool>.Ok(removed > 0));
+        }
+    }
+
+    private static MappingLearningService Learning(params GeneratorPresetInfo[] seed) =>
+        new(new FakePresets(seed), new FakeRules(), new FakeFeedback(), Normalizer);
+
+    private static GeneratorPresetInfo UserPreset(string code = "MEU_CPF") =>
+        new(0, code, "Meu CPF", "br.cpf", 1, "{}", null, false);
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task PresetDoUsuarioEhSalvoEExcluido()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var service = Learning();
+
+        (await service.SavePresetAsync(UserPreset(), ct)).IsSuccess.ShouldBeTrue();
+        (await service.ListPresetsAsync(ct)).Select(p => p.Code).ShouldBe(["MEU_CPF"]);
+
+        (await service.DeletePresetAsync("MEU_CPF", ct)).Value.ShouldBeTrue();
+        (await service.ListPresetsAsync(ct)).ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task PresetInvalidoEhRecusadoAntesDeGravar()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var service = Learning();
+
+        (await service.SavePresetAsync(UserPreset("minusculo"), ct)).IsSuccess.ShouldBeFalse();
+        (await service.SavePresetAsync(UserPreset() with { ParametersJson = "[1,2]" }, ct)).IsSuccess.ShouldBeFalse();
+        (await service.SavePresetAsync(UserPreset() with { GeneratorVersion = 0 }, ct)).IsSuccess.ShouldBeFalse();
+        (await service.SavePresetAsync(UserPreset() with { GeneratorId = " " }, ct)).IsSuccess.ShouldBeFalse();
+        (await service.ListPresetsAsync(ct)).ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task PresetEmbutidoEhSomenteLeitura()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var builtIn = new GeneratorPresetInfo(1, "CPF", "CPF", "br.cpf", 1, "{}", null, true);
+        var service = Learning(builtIn);
+
+        var saved = await service.SavePresetAsync(builtIn with { Name = "Alterado" }, ct);
+        var deleted = await service.DeletePresetAsync("CPF", ct);
+
+        saved.IsSuccess.ShouldBeFalse();
+        saved.Error.Code.ShouldBe(ErrorCodes.CatBuiltinReadOnly);
+        deleted.IsSuccess.ShouldBeFalse();
+        deleted.Error.Code.ShouldBe(ErrorCodes.CatBuiltinReadOnly);
     }
 
     private sealed class FakeRules : IMappingRuleRepository

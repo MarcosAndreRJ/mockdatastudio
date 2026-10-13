@@ -54,6 +54,9 @@ internal sealed class AppSession : IDisposable
     // Invoca pelo padrão de automação (não depende de o botão estar visível na janela); cai para o clique do mouse sem o padrão.
     public void ClickButton(string name) => Find(name).Activate();
 
+    // Digita o texto num campo identificado pelo nome de automação (AutomationProperties.Name).
+    public void SetText(string name, string text) => Find(name).AsTextBox().Enter(text);
+
     /// <summary>Espera o elemento ficar habilitado (por exemplo, um botão que depende de uma seleção carregada em segundo plano).</summary>
     public void WaitEnabled(string name, TimeSpan? timeout = null)
     {

@@ -24,11 +24,13 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     private readonly CompositeTemplateEditor _composite;
     private readonly TemplateImportService _import;
     private readonly TemplatePackExporter _exporter;
+    private readonly MappingLearningService _learning;
     private CancellationTokenSource? _loadCts;
     private string? _importSessionId;
 
     public TemplatesViewModel(TemplateBrowser browser, ICatalogInitializer catalog, TemplateEditor editor,
-        CompositeTemplateEditor composite, TemplateImportService import, TemplatePackExporter exporter)
+        CompositeTemplateEditor composite, TemplateImportService import, TemplatePackExporter exporter,
+        MappingLearningService learning)
     {
         _browser = browser;
         _catalog = catalog;
@@ -36,7 +38,14 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
         _composite = composite;
         _import = import;
         _exporter = exporter;
+        _learning = learning;
         ExportPackCommand = new AsyncRelayCommand(ExportPackAsync);
+        NewPresetCommand = new RelayCommand(NewPreset);
+        SavePresetCommand = new AsyncRelayCommand(SavePresetAsync);
+        DeletePresetCommand = new AsyncRelayCommand(DeletePresetAsync);
+        LoadPresetCommand = new RelayCommand(LoadPreset);
+        ForgetRuleCommand = new AsyncRelayCommand<LearnedRuleRow?>(ForgetRuleAsync);
+        _ = RefreshPresetsAsync();
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         NewTemplateCommand = new RelayCommand(NewTemplate);
         SaveTemplateCommand = new AsyncRelayCommand(SaveTemplateAsync);
@@ -319,6 +328,139 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     }
 
     // Copia as instruções para uma IA gerar o script no formato esperado (S09).
+    // ---------- Presets de gerador (FR-059) e regras aprendidas (FR-064) ----------
+
+    public ObservableCollection<PresetRow> Presets { get; } = [];
+    public ObservableCollection<LearnedRuleRow> LearnedRules { get; } = [];
+
+    public IRelayCommand NewPresetCommand { get; }
+    public IAsyncRelayCommand SavePresetCommand { get; }
+    public IAsyncRelayCommand DeletePresetCommand { get; }
+    public IRelayCommand LoadPresetCommand { get; }
+    public IAsyncRelayCommand<LearnedRuleRow?> ForgetRuleCommand { get; }
+
+    [ObservableProperty]
+    private PresetRow? _selectedPreset;
+
+    [ObservableProperty]
+    private string _presetCode = string.Empty;
+
+    [ObservableProperty]
+    private string _presetName = string.Empty;
+
+    [ObservableProperty]
+    private string _presetGenerator = string.Empty;
+
+    [ObservableProperty]
+    private string _presetVersion = "1";
+
+    [ObservableProperty]
+    private string _presetParameters = "{}";
+
+    [ObservableProperty]
+    private string _presetDescription = string.Empty;
+
+    [ObservableProperty]
+    private string _presetStatus = string.Empty;
+
+    [ObservableProperty]
+    private string _rulesStatus = string.Empty;
+
+    private async Task RefreshPresetsAsync()
+    {
+        var presets = await _learning.ListPresetsAsync(CancellationToken.None);
+        Presets.Clear();
+        foreach (var p in presets.OrderBy(p => p.Code, StringComparer.Ordinal))
+        {
+            Presets.Add(new PresetRow(p.Id, p.Code, p.Name, p.GeneratorId, p.GeneratorVersion, p.ParametersJson, p.Description, p.IsBuiltIn));
+        }
+
+        LearnedRules.Clear();
+        foreach (var rule in await _learning.LearnedRulesAsync(CancellationToken.None))
+        {
+            LearnedRules.Add(new LearnedRuleRow(rule.Id, rule.ColumnPattern, rule.TargetRef, rule.TargetKind.ToString()));
+        }
+
+        RulesStatus = LearnedRules.Count == 0
+            ? "Nenhuma regra aprendida. Use \"Lembrar para outros projetos\" no Mapeamento."
+            : $"{LearnedRules.Count} regra(s) aprendida(s).";
+    }
+
+    private void NewPreset()
+    {
+        SelectedPreset = null;
+        PresetCode = string.Empty;
+        PresetName = string.Empty;
+        PresetGenerator = string.Empty;
+        PresetVersion = "1";
+        PresetParameters = "{}";
+        PresetDescription = string.Empty;
+        PresetStatus = "Novo preset: preencha código, nome e gerador.";
+    }
+
+    private void LoadPreset()
+    {
+        if (SelectedPreset is null)
+        {
+            PresetStatus = "Selecione um preset na lista.";
+            return;
+        }
+
+        PresetCode = SelectedPreset.Code;
+        PresetName = SelectedPreset.Name;
+        PresetGenerator = SelectedPreset.GeneratorId;
+        PresetVersion = SelectedPreset.GeneratorVersion.ToString(CultureInfo.InvariantCulture);
+        PresetParameters = SelectedPreset.ParametersJson;
+        PresetDescription = SelectedPreset.Description ?? string.Empty;
+        PresetStatus = SelectedPreset.IsBuiltIn
+            ? $"Preset embutido '{SelectedPreset.Code}': somente leitura."
+            : $"Preset '{SelectedPreset.Code}' carregado.";
+    }
+
+    private async Task SavePresetAsync()
+    {
+        if (!int.TryParse(PresetVersion, NumberStyles.None, CultureInfo.InvariantCulture, out var version))
+        {
+            PresetStatus = "Versão do gerador deve ser um número inteiro.";
+            return;
+        }
+
+        var result = await _learning.SavePresetAsync(new GeneratorPresetInfo(
+            SelectedPreset?.Id ?? 0, PresetCode.Trim(), PresetName.Trim(), PresetGenerator.Trim(), version,
+            string.IsNullOrWhiteSpace(PresetParameters) ? "{}" : PresetParameters.Trim(),
+            string.IsNullOrWhiteSpace(PresetDescription) ? null : PresetDescription.Trim(), IsBuiltIn: false), CancellationToken.None);
+        PresetStatus = result.IsSuccess ? $"Preset '{PresetCode.Trim()}' salvo." : result.Error.Message;
+        if (result.IsSuccess)
+        {
+            await RefreshPresetsAsync();
+        }
+    }
+
+    private async Task DeletePresetAsync()
+    {
+        var code = SelectedPreset?.Code ?? PresetCode.Trim();
+        var result = await _learning.DeletePresetAsync(code, CancellationToken.None);
+        PresetStatus = result.IsSuccess && result.Value
+            ? $"Preset '{code}' excluído."
+            : result.IsSuccess ? "Preset não encontrado." : result.Error.Message;
+        if (result.IsSuccess)
+        {
+            await RefreshPresetsAsync();
+        }
+    }
+
+    private async Task ForgetRuleAsync(LearnedRuleRow? rule)
+    {
+        if (rule is null)
+        {
+            return;
+        }
+
+        await _learning.ForgetAsync(rule.Id, CancellationToken.None);
+        await RefreshPresetsAsync();
+        RulesStatus = $"Regra '{rule.Column}' esquecida.";
+    }
+
     // Exporta os templates do usuário como pack JSON (C8a.3). Código e nome do pack vêm dos campos da tela.
     public IAsyncRelayCommand ExportPackCommand { get; }
 
@@ -491,3 +633,9 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
         }
     }
 }
+
+// Linha da lista de presets (FR-059). Embutidos não podem ser alterados nem excluídos.
+public sealed record PresetRow(long Id, string Code, string Name, string GeneratorId, int GeneratorVersion, string ParametersJson, string? Description, bool IsBuiltIn);
+
+// Linha da lista de regras aprendidas (FR-064).
+public sealed record LearnedRuleRow(long Id, string Column, string Target, string TargetKind);

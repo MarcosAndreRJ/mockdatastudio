@@ -199,7 +199,7 @@
                             <WrapPanel Margin="0,6,0,0">
                                 <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding NewTemplateCommand}" Content="Novo" />
                                 <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding LoadTemplateCommand}" Content="Carregar selecionado" />
-                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding SaveTemplateCommand}" Content="Salvar" />
+                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding SaveTemplateCommand}" Content="Salvar" AutomationProperties.Name="Salvar template" />
                                 <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding CloneTemplateCommand}" Content="Copiar selecionado com o código do campo" />
                                 <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding DeleteTemplateCommand}" Content="Excluir selecionado" />
                             </WrapPanel>
@@ -229,6 +229,76 @@
                                 <TextBox Text="{Binding PackExportName, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="0,0,8,6" Padding="6,4" AutomationProperties.Name="Nome do pack" />
                                 <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding ExportPackCommand}" Content="Exportar pack" />
                             </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Presets de gerador (FR-059): sugeridos pelo nome da coluna no mapeamento. -->
+                    <Border Style="{StaticResource Card}" Margin="0,14,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Presets de gerador" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
+                            <TextBlock Text="Um preset é sugerido quando o nome da coluna é igual ao código dele (ex.: cpf → CPF). Embutidos são somente leitura."
+                                       Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                            <ListBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" MaxHeight="160" Margin="0,0,0,8"
+                                     AutomationProperties.Name="Presets de gerador">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <Run Text="{Binding Code, Mode=OneWay}" FontWeight="Medium" />
+                                            <Run Text="{Binding Name, Mode=OneWay, StringFormat=' — {0}'}" />
+                                            <Run Text="{Binding GeneratorId, Mode=OneWay, StringFormat=' ({0})'}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <TextBlock Text="Código" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding PresetCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Código do preset" />
+                            <TextBlock Text="Nome" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Nome do preset" />
+                            <TextBlock Text="Gerador (ex.: br.cpf)" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding PresetGenerator, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Gerador do preset" />
+                            <TextBlock Text="Versão do gerador" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding PresetVersion, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Versão do gerador" />
+                            <TextBlock Text="Parâmetros (objeto JSON)" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding PresetParameters, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="70"
+                                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Parâmetros do preset" />
+                            <TextBlock Text="Descrição" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding PresetDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Descrição do preset" />
+                            <WrapPanel Margin="0,6,0,0">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding NewPresetCommand}" Content="Novo" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding LoadPresetCommand}" Content="Carregar selecionado" />
+                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding SavePresetCommand}" Content="Salvar" AutomationProperties.Name="Salvar preset" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding DeletePresetCommand}" Content="Excluir" />
+                            </WrapPanel>
+                            <TextBlock Text="{Binding PresetStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Regras aprendidas (FR-064): gravadas por "Lembrar para outros projetos" no mapeamento. -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Regras aprendidas" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
+                            <TextBlock Text="Regras globais. Uma regra é sugerida em outros projetos com a mesma coluna."
+                                       Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                            <ItemsControl ItemsSource="{Binding LearnedRules}" AutomationProperties.Name="Regras aprendidas">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock>
+                                                <Run Text="{Binding Column, Mode=OneWay}" FontFamily="Consolas" />
+                                                <Run Text="→" />
+                                                <Run Text="{Binding Target, Mode=OneWay}" FontWeight="Medium" />
+                                            </TextBlock>
+                                            <Button Grid.Column="1" Style="{StaticResource GhostButton}" Content="Esquecer" Padding="8,2"
+                                                    Command="{Binding DataContext.ForgetRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{Binding RulesStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

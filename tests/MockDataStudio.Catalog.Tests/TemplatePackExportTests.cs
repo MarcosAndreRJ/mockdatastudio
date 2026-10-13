@@ -67,6 +67,7 @@ public sealed class TemplatePackExportTests : IDisposable
 
     [Fact]
     [Trait("Category", "Contract")]
+    [Trait("Id", "T-CAT-008")]
     public async Task PackExportadoEReimportadoPreservaConteudo()
     {
         var ct = TestContext.Current.CancellationToken;

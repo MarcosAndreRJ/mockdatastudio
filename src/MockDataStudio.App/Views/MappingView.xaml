@@ -292,6 +292,9 @@
                                         Command="{Binding ApplyOptionsCommand}" AutomationProperties.Name="Salvar opções" />
                                 <Button Style="{StaticResource GhostButton}" Height="34" Padding="14,0" Margin="8,0,0,0" Content="Limpar vínculo"
                                         Command="{Binding ClearCommand}" AutomationProperties.Name="Limpar vínculo" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="8,0,0,0" Content="Lembrar para outros projetos"
+                                        Command="{Binding RememberCommand}" ToolTip="Grava uma regra global: projetos novos sugerem este alvo para a coluna"
+                                        AutomationProperties.Name="Lembrar para outros projetos" />
                             </StackPanel>
 
                             <TextBlock Text="Aliases Matched" Style="{StaticResource LabelText}" Margin="0,0,0,8" />
