@@ -557,7 +557,7 @@ A4 e B4 podem ser mescladas durante o gate. **O gate é avaliado sobre a `main` 
 
 - [ ] **C6r.0** Início conforme §6.1. · Concluído em: ____ · Evidência: ____
 - [ ] **C6r.1** `QuerySession` com conexão dedicada, modos Manual/AutoCommit, Run da seleção/comando atual/script, somente leitura no servidor (B5). *(TASK-13.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **C6r.2** Autocomplete em `SqlTooling/Completion` (T-SQL-COMP-001, B-SQL-001). *(TASK-13.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **C6r.2** Autocomplete em `SqlTooling/Completion` (T-SQL-COMP-001, B-SQL-001). *(TASK-13.02)* · Concluído em: ____ · ⏳ PARCIAL: `SqlCompletionEngine` (palavras-chave, relações, colunas, apelidos por FROM/JOIN; sem sugestão dentro de literal ou comentário; 10 testes em `SqlCompletionEngineTests`) e `CompletionCatalogService` (catálogo do schema real; 2 testes SQLite, commit 030eea1). Falta o popup no editor e os IDs T-SQL-COMP-001/B-SQL-001 (os testes ainda não usam esses IDs)
 - [ ] **C6r.3** Abas por perfil, chip de ambiente, `.xshd` por dialeto, recuperação de abas. *(TASK-13.03)* · Concluído em: ____ · Evidência: ____
 - [ ] **C6r.4** "Carregar mais", exportação completa por cursor, histórico (T-SQL-HIST-001), posição do erro no editor. *(TASK-13.04)* · Concluído em: ____ · Evidência: ____
 - [ ] Verificação (T-SQL-EXEC-001/002, T-UI-PERF-003, T-UI-FLOW-003) e merge/push conforme §6.3 · Concluído em: ____
