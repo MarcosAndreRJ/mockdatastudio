@@ -53,11 +53,11 @@ public sealed class SmokeTests
 
                 item.Click();
 
-                // Espera ativa pelo marcador (até 10 s): o app pode demorar sob carga, e um sleep fixo deixava o teste instável.
+                // Espera ativa pelo marcador (até 30 s): a suíte roda projetos em paralelo e o app pode demorar a renderizar.
                 // Marcadores com contagem dinâmica são comparados por prefixo: o nome UIA do TextBlock é o texto inteiro.
                 // Filtra por tipo (Text) para não enumerar a árvore inteira: a enumeração completa estoura timeout de COM.
                 var shown = false;
-                var deadline = DateTime.UtcNow.AddSeconds(10);
+                var deadline = DateTime.UtcNow.AddSeconds(30);
                 while (!shown && DateTime.UtcNow < deadline)
                 {
                     shown = window.FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Text))

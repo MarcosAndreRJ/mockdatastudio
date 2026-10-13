@@ -223,6 +223,12 @@
                                 <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding DiscardImportCommand}" Content="Descartar análise" />
                             </WrapPanel>
                             <TextBlock Text="{Binding ImportStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                            <TextBlock Text="Exportar seus templates como pack JSON" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
+                            <WrapPanel>
+                                <TextBox Text="{Binding PackExportCode, UpdateSourceTrigger=PropertyChanged}" Width="160" Margin="0,0,8,6" Padding="6,4" AutomationProperties.Name="Código do pack" />
+                                <TextBox Text="{Binding PackExportName, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="0,0,8,6" Padding="6,4" AutomationProperties.Name="Nome do pack" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding ExportPackCommand}" Content="Exportar pack" />
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>

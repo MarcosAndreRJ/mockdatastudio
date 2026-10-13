@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Windows.Media;
+using Microsoft.Win32;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MockDataStudio.Application;
@@ -21,17 +23,20 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     private readonly TemplateEditor _editor;
     private readonly CompositeTemplateEditor _composite;
     private readonly TemplateImportService _import;
+    private readonly TemplatePackExporter _exporter;
     private CancellationTokenSource? _loadCts;
     private string? _importSessionId;
 
     public TemplatesViewModel(TemplateBrowser browser, ICatalogInitializer catalog, TemplateEditor editor,
-        CompositeTemplateEditor composite, TemplateImportService import)
+        CompositeTemplateEditor composite, TemplateImportService import, TemplatePackExporter exporter)
     {
         _browser = browser;
         _catalog = catalog;
         _editor = editor;
         _composite = composite;
         _import = import;
+        _exporter = exporter;
+        ExportPackCommand = new AsyncRelayCommand(ExportPackAsync);
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         NewTemplateCommand = new RelayCommand(NewTemplate);
         SaveTemplateCommand = new AsyncRelayCommand(SaveTemplateAsync);
@@ -314,6 +319,34 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     }
 
     // Copia as instruções para uma IA gerar o script no formato esperado (S09).
+    // Exporta os templates do usuário como pack JSON (C8a.3). Código e nome do pack vêm dos campos da tela.
+    public IAsyncRelayCommand ExportPackCommand { get; }
+
+    [ObservableProperty]
+    private string _packExportCode = "MEU_PACK";
+
+    [ObservableProperty]
+    private string _packExportName = "Meu pack";
+
+    private async Task ExportPackAsync()
+    {
+        var dialog = new SaveFileDialog { Filter = "Pack de templates (*.json)|*.json", DefaultExt = ".json", FileName = PackExportCode.Trim() + ".json" };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = await _exporter.ExportAsync(PackExportCode.Trim(), PackExportName.Trim(), string.Empty, null, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            ImportStatus = result.Error.Message;
+            return;
+        }
+
+        await File.WriteAllTextAsync(dialog.FileName, result.Value!, new System.Text.UTF8Encoding(false));
+        ImportStatus = $"Pack exportado para {dialog.FileName}.";
+    }
+
     private void CopyInstructions()
     {
         System.Windows.Clipboard.SetText(TemplateInstructions.ForAi);
