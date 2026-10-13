@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MockDataStudio.Application;
 using MockDataStudio.Catalog;
+using MockDataStudio.Catalog.Editing;
+using MockDataStudio.Core.Schema;
 using MockDataStudio.Core.Templates;
 
 namespace MockDataStudio.App.ViewModels;
@@ -16,14 +18,228 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
 {
     private readonly TemplateBrowser _browser;
     private readonly ICatalogInitializer _catalog;
+    private readonly TemplateEditor _editor;
+    private readonly TemplateImportService _import;
     private CancellationTokenSource? _loadCts;
+    private string? _importSessionId;
 
-    public TemplatesViewModel(TemplateBrowser browser, ICatalogInitializer catalog)
+    public TemplatesViewModel(TemplateBrowser browser, ICatalogInitializer catalog, TemplateEditor editor, TemplateImportService import)
     {
         _browser = browser;
         _catalog = catalog;
+        _editor = editor;
+        _import = import;
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
+        NewTemplateCommand = new RelayCommand(NewTemplate);
+        SaveTemplateCommand = new AsyncRelayCommand(SaveTemplateAsync);
+        LoadTemplateCommand = new AsyncRelayCommand(LoadTemplateAsync);
+        CloneTemplateCommand = new AsyncRelayCommand(CloneTemplateAsync);
+        DeleteTemplateCommand = new AsyncRelayCommand(DeleteTemplateAsync);
+        AnalyzeImportCommand = new AsyncRelayCommand(AnalyzeImportAsync);
+        MergeImportCommand = new AsyncRelayCommand(MergeImportAsync, () => CanMergeImport);
+        DiscardImportCommand = new RelayCommand(DiscardImport);
+        CopyInstructionsCommand = new RelayCommand(CopyInstructions);
         _ = LoadAsync();
+    }
+
+    public IRelayCommand NewTemplateCommand { get; }
+    public IAsyncRelayCommand SaveTemplateCommand { get; }
+    public IAsyncRelayCommand LoadTemplateCommand { get; }
+    public IAsyncRelayCommand CloneTemplateCommand { get; }
+    public IAsyncRelayCommand DeleteTemplateCommand { get; }
+    public IAsyncRelayCommand AnalyzeImportCommand { get; }
+    public IAsyncRelayCommand MergeImportCommand { get; }
+    public IRelayCommand DiscardImportCommand { get; }
+    public IRelayCommand CopyInstructionsCommand { get; }
+
+    // Formulário de template escalar (S07/S08). Valores e aliases: um por linha.
+    [ObservableProperty]
+    private string _formCode = string.Empty;
+
+    [ObservableProperty]
+    private string _formName = string.Empty;
+
+    [ObservableProperty]
+    private string _formDescription = string.Empty;
+
+    [ObservableProperty]
+    private string _formLogicalType = "string";
+
+    [ObservableProperty]
+    private string _formValues = string.Empty;
+
+    [ObservableProperty]
+    private string _formAliases = string.Empty;
+
+    [ObservableProperty]
+    private string _formStatus = string.Empty;
+
+    // Importação por script SQL ou pack JSON (S09).
+    [ObservableProperty]
+    private string _importText = string.Empty;
+
+    [ObservableProperty]
+    private bool _importIsPackJson;
+
+    [ObservableProperty]
+    private string _importStatus = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(MergeImportCommand))]
+    private bool _canMergeImport;
+
+    private void NewTemplate()
+    {
+        FormCode = string.Empty;
+        FormName = string.Empty;
+        FormDescription = string.Empty;
+        FormLogicalType = "string";
+        FormValues = string.Empty;
+        FormAliases = string.Empty;
+        FormStatus = "Novo template: preencha código, nome e valores.";
+    }
+
+    private async Task SaveTemplateAsync()
+    {
+        if (!Enum.TryParse<LogicalType>(FormLogicalType, ignoreCase: true, out var logicalType))
+        {
+            FormStatus = $"Tipo lógico '{FormLogicalType}' inválido (ex.: string, integer, date).";
+            return;
+        }
+
+        var result = await _editor.SaveScalarAsync(new ScalarTemplateForm(
+            FormCode.Trim(), FormName.Trim(), FormDescription, logicalType,
+            TemplateEditor.ParseLines(FormValues), TemplateEditor.ParseLines(FormAliases)), CancellationToken.None);
+        FormStatus = result.IsSuccess ? $"Template '{FormCode.Trim()}' salvo." : result.Error.Message;
+        if (result.IsSuccess)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadTemplateAsync()
+    {
+        if (SelectedTemplate is null)
+        {
+            FormStatus = "Selecione um template na lista.";
+            return;
+        }
+
+        var loaded = await _editor.LoadScalarAsync(SelectedTemplate.Code, CancellationToken.None);
+        if (!loaded.IsSuccess)
+        {
+            FormStatus = loaded.Error.Message;
+            return;
+        }
+
+        var form = loaded.Value!;
+        FormCode = form.Code;
+        FormName = form.Name;
+        FormDescription = form.Description ?? string.Empty;
+        FormLogicalType = form.LogicalType.ToString();
+        FormValues = string.Join(Environment.NewLine, form.Values);
+        FormAliases = string.Join(Environment.NewLine, form.Aliases);
+        FormStatus = $"Template '{form.Code}' carregado para edição.";
+    }
+
+    private async Task CloneTemplateAsync()
+    {
+        if (SelectedTemplate is null)
+        {
+            FormStatus = "Selecione o template a copiar.";
+            return;
+        }
+
+        var newCode = FormCode.Trim();
+        if (newCode.Length == 0)
+        {
+            FormStatus = "Informe o código da cópia no campo Código.";
+            return;
+        }
+
+        var result = await _editor.CloneAsync(SelectedTemplate.Code, newCode, CancellationToken.None);
+        FormStatus = result.IsSuccess ? $"Cópia '{newCode}' criada." : result.Error.Message;
+        if (result.IsSuccess)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task DeleteTemplateAsync()
+    {
+        if (SelectedTemplate is null)
+        {
+            FormStatus = "Selecione um template para excluir.";
+            return;
+        }
+
+        var result = await _editor.DeleteAsync(SelectedTemplate.Code, CancellationToken.None);
+        FormStatus = result.IsSuccess && result.Value
+            ? $"Template '{SelectedTemplate.Code}' excluído."
+            : result.IsSuccess ? "Template não encontrado." : result.Error.Message;
+        if (result.IsSuccess)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task AnalyzeImportAsync()
+    {
+        DiscardImport();
+        var result = ImportIsPackJson
+            ? await _import.AnalyzePackJsonAsync(ImportText, MergeMode.Upsert, CancellationToken.None)
+            : await _import.AnalyzeScriptAsync(ImportText, MergeMode.Upsert, CancellationToken.None);
+
+        if (!result.IsSuccess)
+        {
+            ImportStatus = result.Error.Message;
+            return;
+        }
+
+        var analysis = result.Value!;
+        _importSessionId = analysis.StagingSessionId;
+        CanMergeImport = analysis.CanMerge;
+        var issues = analysis.Issues.Count == 0 ? string.Empty : $" {analysis.Issues.Count} problema(s) encontrado(s).";
+        ImportStatus = analysis.CanMerge
+            ? $"Análise ok: {analysis.TemplatesNew} template(s) novo(s), {analysis.TemplatesChanged} alterado(s), {analysis.ValuesNew} valor(es) novo(s).{issues}"
+            : $"Não é possível importar.{issues}";
+    }
+
+    private async Task MergeImportAsync()
+    {
+        if (_importSessionId is null)
+        {
+            return;
+        }
+
+        var merged = await _import.MergeAsync(_importSessionId, CancellationToken.None);
+        ImportStatus = merged.IsSuccess
+            ? $"Importado: {merged.Value!.Inserted} inserido(s), {merged.Value.Updated} atualizado(s), {merged.Value.Skipped} ignorado(s). Backup: {merged.Value.BackupPath}"
+            : merged.Error.Message;
+        _importSessionId = null;
+        CanMergeImport = false;
+        if (merged.IsSuccess)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private void DiscardImport()
+    {
+        if (_importSessionId is not null)
+        {
+            _import.Discard(_importSessionId);
+        }
+
+        _importSessionId = null;
+        CanMergeImport = false;
+    }
+
+    // Copia as instruções para uma IA gerar o script no formato esperado (S09).
+    private void CopyInstructions()
+    {
+        System.Windows.Clipboard.SetText(TemplateInstructions.ForAi);
+        ImportStatus = "Instruções copiadas. Cole na IA e depois cole o script aqui.";
     }
 
     public void Dispose()

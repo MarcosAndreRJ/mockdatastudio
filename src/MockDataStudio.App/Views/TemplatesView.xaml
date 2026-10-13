@@ -17,7 +17,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Template Catalog" Style="{StaticResource PageTitle}" />
-                <TextBlock Text="Consulte os templates de geração de dados do catálogo local (somente leitura nesta versão)."
+                <TextBlock Text="Consulte, edite e importe os templates de geração de dados do catálogo local."
                            Style="{StaticResource PageSubtitle}" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -138,6 +138,56 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Edição de template escalar (S07/S08, C8a.1). Embutidos são somente leitura. -->
+                    <Border Style="{StaticResource Card}" Margin="0,14,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Editar template" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
+                            <TextBlock Text="Valores e aliases: um por linha. Templates embutidos não podem ser alterados."
+                                       Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                            <TextBlock Text="Código" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding FormCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Código do template" />
+                            <TextBlock Text="Nome" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Nome do template" />
+                            <TextBlock Text="Descrição" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Descrição do template" />
+                            <TextBlock Text="Tipo lógico (string, integer, decimal, date…)" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding FormLogicalType, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Tipo lógico" />
+                            <TextBlock Text="Valores" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding FormValues, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="110"
+                                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Valores do template" />
+                            <TextBlock Text="Aliases" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding FormAliases, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="60"
+                                     VerticalScrollBarVisibility="Auto" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Aliases do template" />
+                            <WrapPanel Margin="0,6,0,0">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding NewTemplateCommand}" Content="Novo" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding LoadTemplateCommand}" Content="Carregar selecionado" />
+                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding SaveTemplateCommand}" Content="Salvar" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding CloneTemplateCommand}" Content="Copiar selecionado com o código do campo" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding DeleteTemplateCommand}" Content="Excluir selecionado" />
+                            </WrapPanel>
+                            <TextBlock Text="{Binding FormStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Importação por script SQL ou pack JSON (S09, C8a.2 e C8a.3). -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Importar templates" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
+                            <TextBlock Text="Copie as instruções, cole-as numa IA e cole o script gerado aqui. A análise não altera o catálogo; só a importação altera."
+                                       Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                            <CheckBox Content="É um pack JSON (formato de pack-core-ptbr.json)" IsChecked="{Binding ImportIsPackJson}" Margin="0,0,0,6" />
+                            <TextBox Text="{Binding ImportText, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="140"
+                                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Padding="6,4" AutomationProperties.Name="Script ou pack a importar" />
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding CopyInstructionsCommand}" Content="Copiar instruções para IA" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding AnalyzeImportCommand}" Content="Analisar" />
+                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding MergeImportCommand}" Content="Importar" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding DiscardImportCommand}" Content="Descartar análise" />
+                            </WrapPanel>
+                            <TextBlock Text="{Binding ImportStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

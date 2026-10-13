@@ -62,6 +62,13 @@ public static class ServiceRegistration
         builder.Services.AddSingleton<MappingSession>();
         builder.Services.AddSingleton<GeneratorPreviewService>();
         builder.Services.AddSingleton<TemplateBrowser>();
+        builder.Services.AddSingleton<MockDataStudio.Catalog.Editing.TemplateEditor>(sp =>
+            new MockDataStudio.Catalog.Editing.TemplateEditor(
+                sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().Templates,
+                sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().DataSource));
+        builder.Services.AddSingleton<MockDataStudio.Catalog.Editing.TemplateImportService>(sp =>
+            new MockDataStudio.Catalog.Editing.TemplateImportService(
+                sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().Importer));
         builder.Services.AddSingleton<ProjectWorkspace>();
 
         builder.Services.AddSingleton<ActiveConnectionSession>();
