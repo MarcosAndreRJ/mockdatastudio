@@ -316,8 +316,37 @@ public sealed partial class MappingViewModel : ObservableObject
         RebuildFields();
     }
 
+    // Diagnóstico de mapeamentos (C8a.4, FR-065): MAP-* do projeto aberto, recalculado a cada reconstrução da lista.
+    public ObservableCollection<MappingDiagnosticRow> Diagnostics { get; } = [];
+
+    [ObservableProperty]
+    private string _diagnosticsSummary = "Diagnóstico: sem projeto carregado.";
+
+    private void RefreshDiagnostics()
+    {
+        Diagnostics.Clear();
+        if (_session.Context is not { } context)
+        {
+            DiagnosticsSummary = "Diagnóstico: sem projeto carregado.";
+            return;
+        }
+
+        foreach (var item in MappingDiagnostics.Analyze(context.Schema, context.ExistingBindings))
+        {
+            Diagnostics.Add(new MappingDiagnosticRow(item.Code, item.ObjectPath, item.Message,
+                item.Severity == MappingSeverity.Error ? "Erro" : "Aviso"));
+        }
+
+        var errors = Diagnostics.Count(d => d.Severity == "Erro");
+        var warnings = Diagnostics.Count - errors;
+        DiagnosticsSummary = Diagnostics.Count == 0
+            ? "Diagnóstico: nenhum problema encontrado."
+            : $"Diagnóstico: {errors} erro(s), {warnings} aviso(s).";
+    }
+
     private void RebuildTables()
     {
+        RefreshDiagnostics();
         var selected = SelectedTable?.Table;
         var previousLoading = _loading;
         _loading = true;
@@ -660,3 +689,6 @@ public sealed partial class MappingViewModel : ObservableObject
         UndoLabel = _workspace.UndoDescription is { } text ? $"Desfazer: {text}" : "Desfazer";
     }
 }
+
+// Linha do painel de diagnóstico de mapeamentos (MAP-*).
+public sealed record MappingDiagnosticRow(string Code, string Path, string Message, string Severity);

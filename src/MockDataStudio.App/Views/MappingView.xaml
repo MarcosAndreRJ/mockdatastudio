@@ -72,7 +72,27 @@
         </Grid>
 
         <Border Grid.Row="1" Style="{StaticResource Card}" Padding="12,8" Margin="0,0,0,12">
-            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+            <StackPanel>
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                <!-- Diagnóstico de mapeamentos (FR-065): MAP-UNMAPPED bloqueia a geração da tabela. -->
+                <Expander Header="{Binding DiagnosticsSummary}" Margin="0,6,0,0" Foreground="{StaticResource TextSecondaryBrush}">
+                    <ItemsControl ItemsSource="{Binding Diagnostics}" Margin="0,6,0,0" AutomationProperties.Name="Diagnóstico de mapeamentos">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Width="60" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Code}" FontFamily="Consolas" Width="160" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Path}" FontWeight="Medium" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Message}" Margin="0,16,0,0" TextWrapping="Wrap" Style="{StaticResource MutedText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander>
+            </StackPanel>
         </Border>
 
         <Grid Grid.Row="2">
