@@ -5,180 +5,246 @@
              xmlns:controls="clr-namespace:MockDataStudio.App.Controls">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="310" MinWidth="220" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-        <!-- Abas do workspace (somente visual) -->
-        <Border Background="Transparent" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal">
-                <Border Style="{StaticResource TabText}" BorderBrush="{StaticResource AccentBrush}" Background="{StaticResource SurfaceBrush}"
-                        CornerRadius="8,8,0,0" Margin="0,0,4,-1">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Explorer" Foreground="{StaticResource AccentBrush}" FontWeight="Medium" />
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource TabText}" Margin="0,0,4,-1">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="SQL Editor" Foreground="{StaticResource TextSecondaryBrush}" />
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource TabText}" Margin="0,0,4,-1">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="Results" Foreground="{StaticResource TextSecondaryBrush}" />
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Border>
+        <!-- Database Explorer -->
+        <Border Style="{StaticResource Card}" Padding="14">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                    <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                            Foreground="{StaticResource TextSecondaryBrush}" Command="{Binding NewQueryCommand}"
+                            ToolTip="Nova consulta nesta conexão" AutomationProperties.Name="Nova consulta nesta conexão" />
+                    <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                            Foreground="{StaticResource TextSecondaryBrush}" Command="{Binding RefreshCommand}" ToolTip="Atualizar"
+                            AutomationProperties.Name="Atualizar objetos" />
+                    <TextBlock Text="Database Explorer" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                </DockPanel>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Database Explorer -->
-            <Border Style="{StaticResource Card}" Padding="14">
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                        <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
-                        <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Command="{Binding RefreshCommand}" ToolTip="Atualizar" />
-                        <TextBlock Text="Database Explorer" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
-                    </DockPanel>
-
-                    <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,12">
+                <!-- Conexão do Explorer: perfil salvo + database -->
+                <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
+                    <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource AccentSoftBrush}">
                                 <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{StaticResource AccentBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ConnectionTitle}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ConnectionTitle}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding ConnectionTitle}" />
                                 <TextBlock Text="{Binding ConnectionSubtitle}" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
                             </StackPanel>
-                            <TextBlock Grid.Column="2" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="10" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
                         </Grid>
-                    </Border>
+                        <ComboBox Margin="0,10,0,0" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Display"
+                                  ToolTip="Conexão do Explorer" AutomationProperties.Name="Conexão do Explorer" />
+                        <ComboBox Margin="0,6,0,0" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}"
+                                  Visibility="{Binding HasDatabaseChoice, Converter={StaticResource BoolToVisibility}}"
+                                  ToolTip="Database do Explorer" AutomationProperties.Name="Database do Explorer" />
+                    </StackPanel>
+                </Border>
 
-                    <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <controls:SearchField Placeholder="Search tables, schemas, objects..." Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
-                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Width="38" Height="38" Padding="0"
-                                Content="&#xE71C;" FontFamily="Segoe MDL2 Assets" FontSize="13" />
-                    </Grid>
+                <controls:SearchField DockPanel.Dock="Top" Margin="0,0,0,10" Placeholder="Search tables, schemas, objects..."
+                                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding StatusText}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                <TextBlock DockPanel.Dock="Bottom" Text="{Binding StatusText}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0" />
 
-                    <TreeView x:Name="ObjectTree" ItemsSource="{Binding Nodes}" SelectedItemChanged="ObjectTree_SelectedItemChanged">
-                        <TreeView.ItemContainerStyle>
-                            <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
-                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-                                <Setter Property="ContextMenu">
-                                    <Setter.Value>
-                                        <ContextMenu>
-                                            <MenuItem Header="SELECT (com limite)"
-                                                      Command="{Binding DataContext.SelectTopCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      CommandParameter="{Binding}" />
-                                            <MenuItem Header="Abrir no SQL Editor"
-                                                      Command="{Binding DataContext.OpenInEditorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      CommandParameter="{Binding}" />
-                                            <MenuItem Header="Copiar nome qualificado"
-                                                      Command="{Binding DataContext.CopyNameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      CommandParameter="{Binding}" />
-                                            <Separator />
-                                            <MenuItem Header="Gerar CREATE TABLE"
-                                                      Command="{Binding DataContext.CreateTableCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      CommandParameter="{Binding}" />
-                                            <MenuItem Header="Gerar INSERT de exemplo"
-                                                      Command="{Binding DataContext.InsertExampleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      CommandParameter="{Binding}" />
-                                            <Separator />
-                                            <MenuItem Header="Ver referências"
-                                                      Command="{Binding DataContext.ReferencesForNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                      CommandParameter="{Binding}" />
-                                        </ContextMenu>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </TreeView.ItemContainerStyle>
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
+                <TreeView x:Name="ObjectTree" ItemsSource="{Binding Nodes}" SelectedItemChanged="ObjectTree_SelectedItemChanged"
+                          BorderThickness="0" AutomationProperties.Name="Objetos do banco">
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                            <Setter Property="ToolTip" Value="{Binding Detail}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasTable}" Value="True">
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu>
+                                                <MenuItem Header="SELECT (com limite) e executar"
+                                                          Command="{Binding PlacementTarget.Tag.SelectTopCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                                <MenuItem Header="Abrir SELECT no SQL Editor"
+                                                          Command="{Binding PlacementTarget.Tag.OpenInEditorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                                <MenuItem Header="Copiar nome qualificado"
+                                                          Command="{Binding PlacementTarget.Tag.CopyNameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                                <Separator />
+                                                <MenuItem Header="Gerar CREATE TABLE"
+                                                          Command="{Binding PlacementTarget.Tag.CreateTableCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                                <MenuItem Header="Gerar INSERT de exemplo"
+                                                          Command="{Binding PlacementTarget.Tag.InsertExampleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                                <Separator />
+                                                <MenuItem Header="Ver referências"
+                                                          Command="{Binding PlacementTarget.Tag.ReferencesForNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}" />
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Schema"><Setter Property="Foreground" Value="{StaticResource AccentBrush}" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Table"><Setter Property="Foreground" Value="{StaticResource AccentBrush}" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="View"><Setter Property="Foreground" Value="{StaticResource TealBrush}" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Trigger"><Setter Property="Foreground" Value="{StaticResource OrangeBrush}" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Routine"><Setter Property="Foreground" Value="{StaticResource PurpleBrush}" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Sequence"><Setter Property="Foreground" Value="{StaticResource PinkBrush}" /></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </DockPanel>
+        </Border>
+
+        <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" ResizeDirection="Columns" />
+
+        <!-- Workspace: editor em abas, inspetor e resultados -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="160" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="*" MinHeight="120" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="320" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="400" MinWidth="260" />
+            </Grid.ColumnDefinitions>
+
+            <views:SqlEditorView DataContext="{Binding Workspace}" />
+
+            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" ResizeDirection="Columns" />
+
+            <!-- Inspetor do objeto selecionado -->
+            <Border Style="{StaticResource Card}" Grid.Column="2" Padding="14">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                Foreground="{StaticResource TextSecondaryBrush}" Command="{Binding ClearSelectionCommand}" ToolTip="Limpar seleção"
+                                AutomationProperties.Name="Limpar seleção" />
+                        <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" Margin="0,0,10,0">
+                            <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SelectedTableName}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding SelectedTableQualified}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <TabControl Style="{StaticResource UnderlineTabControl}" ItemContainerStyle="{StaticResource UnderlineTabItem}"
+                                SelectedIndex="{Binding InspectorTabIndex}" FontSize="12">
+                        <TabItem Header="Columns">
+                            <DataGrid ItemsSource="{Binding SelectedColumns}" Margin="0,6,0,0" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Column" Binding="{Binding Name}" Width="*" />
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto" />
+                                    <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="Auto" />
+                                    <DataGridTextColumn Header="Null" Binding="{Binding Nullable}" Width="Auto" />
+                                    <DataGridTextColumn Header="Default" Binding="{Binding Default}" Width="Auto" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Indexes">
+                            <DataGrid ItemsSource="{Binding Indexes}" Margin="0,6,0,0" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                    <DataGridCheckBoxColumn Header="Unique" Binding="{Binding IsUnique}" Width="Auto" />
+                                    <DataGridTemplateColumn Header="Columns" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ItemsControl ItemsSource="{Binding Columns}">
+                                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" Margin="0,0,6,0" /></DataTemplate></ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="Auto" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Foreign Keys">
+                            <DataGrid x:Name="ForeignKeyGrid" ItemsSource="{Binding ForeignKeys}" Margin="0,6,0,0" IsReadOnly="True"
+                                      MouseDoubleClick="ForeignKeyGrid_MouseDoubleClick" ToolTip="Duplo clique abre a tabela referenciada">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                    <DataGridTextColumn Header="References" Binding="{Binding Referenced.Name}" Width="*" />
+                                    <DataGridTextColumn Header="On Delete" Binding="{Binding OnDelete}" Width="Auto" />
+                                    <DataGridTextColumn Header="On Update" Binding="{Binding OnUpdate}" Width="Auto" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Checks">
+                            <DataGrid ItemsSource="{Binding Checks}" Margin="0,6,0,0" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" />
+                                    <DataGridTextColumn Header="Expression" Binding="{Binding Expression}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Triggers">
+                            <DataGrid ItemsSource="{Binding Triggers}" Margin="0,6,0,0" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
+                                    <DataGridTextColumn Header="Timing" Binding="{Binding Timing}" Width="Auto" />
+                                    <DataGridTextColumn Header="Events" Binding="{Binding Events}" Width="Auto" />
+                                    <DataGridTextColumn Header="Active" Binding="{Binding Active}" Width="Auto" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </TabItem>
+                        <TabItem Header="References">
+                            <DockPanel Margin="0,6,0,0">
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Height="30" Content="Procurar" Command="{Binding ReferencesCommand}" />
+                                    <TextBlock Text="{Binding ReferencesStatus}" Style="{StaticResource MutedText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                </DockPanel>
+                                <DataGrid ItemsSource="{Binding IncomingReferences}" IsReadOnly="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Table" Binding="{Binding Child.Name}" Width="*" />
+                                        <DataGridTextColumn Header="Foreign key" Binding="{Binding ForeignKeyName}" Width="*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </TabItem>
+                        <TabItem Header="Preview">
+                            <DockPanel Margin="0,6,0,0">
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" Height="30" Content="Recarregar" Command="{Binding PreviewCommand}" />
+                                    <TextBlock Text="{Binding PreviewStatus}" Style="{StaticResource MutedText}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                </DockPanel>
+                                <DataGrid ItemsSource="{Binding PreviewRows}" AutoGenerateColumns="True" IsReadOnly="True" />
+                            </DockPanel>
+                        </TabItem>
+                    </TabControl>
                 </DockPanel>
             </Border>
 
-            <!-- Workspace: editor, detalhes e resultados -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="12" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="360" />
-                </Grid.ColumnDefinitions>
+            <GridSplitter Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" ResizeDirection="Rows" />
 
-                <views:SqlEditorView DataContext="{Binding SqlEditor}" />
-
-                <!-- Detalhes da tabela -->
-                <Border Style="{StaticResource Card}" Grid.Column="2" Padding="14">
-                    <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                            <Button Style="{StaticResource GhostButton}" DockPanel.Dock="Right" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" />
-                            <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" Margin="0,0,10,0">
-                                <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding SelectedTableName}" FontWeight="SemiBold" FontSize="15" />
-                                <TextBlock Text="{Binding SelectedTableQualified}" Style="{StaticResource MutedText}" />
-                            </StackPanel>
-                        </DockPanel>
-
-                        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Style="{StaticResource TabText}" BorderBrush="{StaticResource AccentBrush}" Margin="0,0,2,-1">
-                                    <TextBlock Text="Columns" Foreground="{StaticResource AccentBrush}" FontWeight="Medium" />
-                                </Border>
-                                <Border Style="{StaticResource TabText}" Margin="0,0,2,-1"><TextBlock Text="Indexes" Foreground="{StaticResource TextSecondaryBrush}" /></Border>
-                                <Border Style="{StaticResource TabText}" Margin="0,0,2,-1"><TextBlock Text="Foreign Keys" Foreground="{StaticResource TextSecondaryBrush}" /></Border>
-                                <Border Style="{StaticResource TabText}" Margin="0,0,2,-1"><TextBlock Text="Preview" Foreground="{StaticResource TextSecondaryBrush}" /></Border>
-                            </StackPanel>
-                        </Border>
-
-                        <DataGrid ItemsSource="{Binding SelectedColumns}" FontSize="12">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Column" Binding="{Binding Name}" Width="*" />
-                                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="Auto" />
-                                <DataGridTextColumn Header="Key" Binding="{Binding Key}" Width="Auto" />
-                                <DataGridTextColumn Header="Nullable" Binding="{Binding Nullable}" Width="Auto" />
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </DockPanel>
-                </Border>
-
-
-                <views:SqlResultsView Grid.Row="2" Grid.ColumnSpan="3" DataContext="{Binding SqlResults}" />
-            </Grid>
+            <views:SqlResultsView Grid.Row="2" Grid.ColumnSpan="3" DataContext="{Binding Workspace.SelectedTab.Results}" />
         </Grid>
     </Grid>
 </UserControl>

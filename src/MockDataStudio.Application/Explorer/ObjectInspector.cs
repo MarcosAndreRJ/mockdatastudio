@@ -97,4 +97,13 @@ public static class TablePreview
         var target = quote(table.Name);
         return $"SELECT {columns} FROM {target} LIMIT {ClampLimit(limit).ToString(CultureInfo.InvariantCulture)}";
     }
+
+    // Versão por dialeto: nome qualificado (ex.: `db`.`tabela` no MySQL) e sintaxe de limite do SGBD
+    // (FIRST n no Firebird). Usada pelo Explorer; a versão acima continua para quem só tem a função de citação.
+    public static string BuildSql(ObjectName table, TableModel model, MockDataStudio.Providers.ISqlDialect dialect, int limit)
+    {
+        ArgumentNullException.ThrowIfNull(dialect);
+        var columns = string.Join(", ", model.Columns.OrderBy(c => c.Ordinal).Select(c => dialect.QuoteIdentifier(c.Name)));
+        return dialect.BuildLimitedSelect(columns, dialect.QualifiedName(table), ClampLimit(limit));
+    }
 }

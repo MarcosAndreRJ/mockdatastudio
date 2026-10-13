@@ -40,6 +40,8 @@ public sealed class ProjectServicesTests
 
         public Task<ConnectionProfile?> GetAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
 
+        public Task<Result<string?>> GetStoredPasswordAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
+
         public Task<Result<Guid>> SaveAsync(ConnectionProfile profile, string? newPassword, CancellationToken ct = default) => throw new NotSupportedException();
 
         public Task<Result<bool>> DeleteAsync(Guid id, CancellationToken ct = default) => throw new NotSupportedException();
@@ -56,6 +58,9 @@ public sealed class ProjectServicesTests
                 ConnectionEnvironment.Development, null, false, false, null);
             return Result<OpenedConnection>.Ok(new OpenedConnection(profile, connection, workbench.Provider, server, false));
         }
+
+        public Task<Result<OpenedConnection>> OpenAsync(Guid profileId, ConnectionPurpose purpose, string? database, CancellationToken ct = default) =>
+            OpenAsync(profileId, purpose, ct);
     }
 
     internal static DigestService NewDigestService(SqliteWorkbench workbench) =>

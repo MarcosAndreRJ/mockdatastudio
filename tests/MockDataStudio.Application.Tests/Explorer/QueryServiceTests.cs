@@ -40,6 +40,26 @@ public sealed class QueryServiceTests
 
     [Fact]
     [Trait("Category", "Integration")]
+    public async Task Script_FechaCursorDoComandoAnteriorAntesDoProximo()
+    {
+        // MySQL/PostgreSQL rejeitam um segundo leitor na mesma conexão; só o último comando mantém o cursor aberto.
+        await using var bench = await SqliteWorkbench.CreateAsync(ct: TestContext.Current.CancellationToken);
+        await using var connection = await bench.OpenAsync(TestContext.Current.CancellationToken);
+
+        await using var run = await Service(bench).ExecuteAsync(connection,
+            Request("SELECT id FROM cliente ORDER BY id;\nSELECT nome FROM cliente ORDER BY id;", pageSize: 1),
+            TestContext.Current.CancellationToken);
+
+        run.Statements.Count.ShouldBe(2);
+        run.Statements.ShouldAllBe(s => s.Status == StatementStatus.Succeeded);
+        run.Statements[0].FirstPage.Count.ShouldBe(1);
+        await Should.ThrowAsync<ObjectDisposedException>(() =>
+            run.Statements[0].Cursor!.NextPageAsync(1, TestContext.Current.CancellationToken));
+        (await run.Statements[1].Cursor!.NextPageAsync(1, TestContext.Current.CancellationToken)).Rows.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
     public async Task Paginacao_PercorreGrandeVolumeEmPaginasSemCarregarTudo()
     {
         await using var bench = await SqliteWorkbench.CreateAsync(ct: TestContext.Current.CancellationToken);

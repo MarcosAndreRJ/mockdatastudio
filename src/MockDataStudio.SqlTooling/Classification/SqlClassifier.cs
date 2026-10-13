@@ -66,6 +66,21 @@ public static class SqlClassifier
                 }
                 return StatementKind.Select;
 
+            // Consultas de metadados/plano que não alteram nada (MySQL SHOW/DESCRIBE, EXPLAIN de todos os SGBDs,
+            // VALUES e TABLE do padrão SQL). Tratadas como leitura: sem isso caíam em Other e exigiam confirmação.
+            case "EXPLAIN":
+                // EXPLAIN ANALYZE executa o comando de fato (PostgreSQL/MySQL 8): não é leitura garantida.
+                return tokens.Any(t => t.Type == SqlTokenType.Word && t.Text.Equals("ANALYZE", StringComparison.OrdinalIgnoreCase))
+                    ? StatementKind.Other
+                    : StatementKind.Select;
+
+            case "SHOW":
+            case "DESCRIBE":
+            case "DESC":
+            case "VALUES":
+            case "TABLE":
+                return StatementKind.Select;
+
             case "INSERT":
                 return StatementKind.Insert;
 

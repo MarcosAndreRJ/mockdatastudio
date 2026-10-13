@@ -28,6 +28,13 @@ public interface ISqlDialect
     /// </summary>
     string? BuildKeyRangeGuard(ObjectName table, string column, long first, long last) => null;
 
+    /// <summary>
+    /// SELECT com limite de linhas (preview do Explorer). Padrão <c>SELECT … LIMIT n</c> (SQLite, MySQL, PostgreSQL);
+    /// Firebird usa <c>SELECT FIRST n …</c>. <paramref name="columns"/> e <paramref name="target"/> já vêm citados.
+    /// </summary>
+    string BuildLimitedSelect(string columns, string target, int limit) =>
+        "SELECT " + columns + " FROM " + target + " LIMIT " + limit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
     /// <summary>Linhas entre commits periódicos no script (docs/18 §5). Padrão 50.000; MySQL 10.000 e Firebird 5.000 na sua implementação.</summary>
     long RecommendedCommitRows => 50_000;
 

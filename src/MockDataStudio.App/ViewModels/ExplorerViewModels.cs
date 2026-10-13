@@ -1,37 +1,52 @@
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
-using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
-using MockDataStudio.App.Controls;
 using MockDataStudio.Application;
 using MockDataStudio.Application.Explorer;
-using MockDataStudio.Core.Common;
-using MockDataStudio.Core.Connections;
 using MockDataStudio.Core.Naming;
 using MockDataStudio.Core.Schema;
-using MockDataStudio.SqlTooling.Dialect;
-using MockDataStudio.SqlTooling.Splitter;
 
 namespace MockDataStudio.App.ViewModels;
 
-// Explorer e SQL Editor sobre a conexão ativa (ActiveConnectionSession). Sem conexão, as telas convidam a abrir uma
-// em Connections; nada vem de dados de exemplo.
+// Explorer sobre a conexão ativa (ActiveConnectionSession), escolhida aqui (perfil + database) ou em Connections
+// ("Open in Explorer"). Os comandos SQL rodam nas abas do editor (SqlEditorWorkspaceViewModel), cada uma com a sua conexão.
 
-// Linha da inspeção de colunas (formato de exibição; os valores vêm de TableModel real).
-public sealed record ExplorerColumnRow(string Name, string Type, string Key, string Nullable);
+// Linhas das abas do inspetor (formato de exibição; os valores vêm de TableModel/TriggerModel reais).
+public sealed record ExplorerColumnRow(string Name, string Type, string Key, string Nullable, string Default);
 
-public sealed class ExplorerNode(string text, string glyph, ObjectName? table = null) : ObservableObject
+public sealed record ExplorerTriggerRow(string Name, string Timing, string Events, string Active);
+
+public enum ExplorerNodeKind { Schema, Group, Table, View, Trigger, Routine, Sequence }
+
+public sealed class ExplorerNode(string text, ExplorerNodeKind kind, ObjectName? table = null, string? detail = null) : ObservableObject
 {
     private bool _isExpanded;
 
     public string Text { get; } = text;
-    public string Glyph { get; } = glyph;
+    public ExplorerNodeKind Kind { get; } = kind;
+
+    // Tabela ou view do nó; nulo nos demais tipos (os comandos do menu de contexto só valem com ela).
     public ObjectName? Table { get; } = table;
+
+    public string? Detail { get; } = detail;
+    public bool HasTable => Table is not null;
     public ObservableCollection<ExplorerNode> Children { get; } = [];
+
+    // Segoe MDL2 Assets.
+    public string Glyph => Kind switch
+    {
+        ExplorerNodeKind.Schema => "",
+        ExplorerNodeKind.Group => "",
+        ExplorerNodeKind.Table => "",
+        ExplorerNodeKind.View => "",
+        ExplorerNodeKind.Trigger => "",
+        ExplorerNodeKind.Routine => "",
+        _ => "",
+    };
 
     public bool IsExpanded
     {
@@ -40,401 +55,30 @@ public sealed class ExplorerNode(string text, string glyph, ObjectName? table = 
     }
 }
 
-public sealed partial class SqlResultsViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private DataView? _rows;
-
-    [ObservableProperty]
-    private string _statusText = "Nenhuma consulta executada.";
-
-    [ObservableProperty]
-    private bool _isError;
-
-    [ObservableProperty]
-    private string _messagesText = string.Empty;
-
-    public SqlResultsViewModel()
-    {
-        ExportCommand = new AsyncRelayCommand(ExportAsync, () => Rows is not null);
-    }
-
-    // Exporta as linhas exibidas na grade (primeira página). Exportação completa por cursor é pendência da C6.
-    public AsyncRelayCommand ExportCommand { get; }
-
-    public void Clear(string status, bool isError = false)
-    {
-        Rows = null;
-        StatusText = status;
-        IsError = isError;
-        MessagesText = string.Empty;
-    }
-
-    // Mostra o plano de execução (EXPLAIN) na mesma grade, sem tocar nos cursores de resultado.
-    public void ShowPlan(QueryPlan plan)
-    {
-        ArgumentNullException.ThrowIfNull(plan);
-        var table = new DataTable();
-        foreach (var column in plan.Columns)
-        {
-            table.Columns.Add(string.IsNullOrWhiteSpace(column) ? "?column?" : column, typeof(string));
-        }
-
-        foreach (var row in plan.Rows)
-        {
-            table.Rows.Add(row.Select(cell => cell is null or DBNull ? null : Convert.ToString(cell, CultureInfo.CurrentCulture)).ToArray());
-        }
-
-        IsError = false;
-        MessagesText = string.Empty;
-        Rows = table.Columns.Count > 0 ? table.DefaultView : null;
-        StatusText = $"Plano de execução: {plan.Rows.Count} linha(s).";
-        ExportCommand.NotifyCanExecuteChanged();
-    }
-
-    private async Task ExportAsync()
-    {
-        if (Rows?.Table is not { } table)
-        {
-            return;
-        }
-
-        var dialog = new SaveFileDialog
-        {
-            Filter = "CSV (*.csv)|*.csv|JSON (*.json)|*.json",
-            DefaultExt = ".csv",
-            FileName = "resultado.csv",
-        };
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        var format = Path.GetExtension(dialog.FileName).Equals(".json", StringComparison.OrdinalIgnoreCase)
-            ? ExportFormat.Json
-            : ExportFormat.Csv;
-        var columns = table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToList();
-        var rows = table.Rows.Cast<DataRow>().Select(r => r.ItemArray.Select(v => v is DBNull ? null : v).ToArray()).ToList();
-
-        await using var stream = File.Create(dialog.FileName);
-        var written = await ResultExportService.ExportAsync(stream, format, columns, rows, CancellationToken.None);
-        StatusText = $"{written} linha(s) exportada(s) para {dialog.FileName}.";
-    }
-
-    // Copia a primeira página do último comando com resultado para uma tabela em memória e libera os cursores.
-    public async Task ShowAsync(QueryRun run)
-    {
-        var messages = run.Messages.Select(m => m.Text).ToList();
-        StatementOutcome? shown = null;
-        foreach (var s in run.Statements)
-        {
-            messages.AddRange(s.Messages.Select(m => m.Text));
-            if (s.Error is { } error)
-            {
-                messages.Add(error.Message);
-            }
-
-            if (s.Columns.Count > 0 || shown is null)
-            {
-                shown = s;
-            }
-        }
-
-        var table = new DataTable();
-        if (shown is not null)
-        {
-            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var column in shown.Columns)
-            {
-                var name = string.IsNullOrWhiteSpace(column.Name) ? "?column?" : column.Name;
-                var unique = name;
-                for (var i = 2; !used.Add(unique); i++)
-                {
-                    unique = name + "_" + i.ToString(CultureInfo.InvariantCulture);
-                }
-
-                table.Columns.Add(unique, typeof(string));
-            }
-
-            foreach (var row in shown.FirstPage)
-            {
-                var cells = new object?[table.Columns.Count];
-                for (var i = 0; i < cells.Length && i < row.Length; i++)
-                {
-                    cells[i] = row[i] is null or DBNull ? null : Convert.ToString(row[i], CultureInfo.CurrentCulture);
-                }
-
-                table.Rows.Add(cells);
-            }
-        }
-
-        IsError = shown is { Status: StatementStatus.Failed or StatementStatus.Blocked or StatementStatus.RequiresConfirmation or StatementStatus.Cancelled }
-                  || (shown is null && messages.Count > 0);
-        Rows = table.Columns.Count > 0 ? table.DefaultView : null;
-        MessagesText = string.Join(Environment.NewLine, messages);
-        StatusText = shown switch
-        {
-            null => messages.Count > 0 ? messages[0] : "Nada a executar.",
-            { Status: StatementStatus.Failed } => "Falha ao executar o comando.",
-            { Status: StatementStatus.Blocked } => "Comando bloqueado pela política de execução.",
-            { Status: StatementStatus.RequiresConfirmation } => "Comando exige confirmação.",
-            { Status: StatementStatus.Cancelled } => "Execução cancelada.",
-            { Columns.Count: > 0 } s => $"{s.FirstPage.Count} linha(s){(s.HasMore ? " (primeira página; há mais linhas)" : string.Empty)} em {s.Duration.TotalMilliseconds:0} ms",
-            { RecordsAffected: { } n } s => $"{n} linha(s) afetada(s) em {s.Duration.TotalMilliseconds:0} ms",
-            var s => $"Comando executado em {s.Duration.TotalMilliseconds:0} ms",
-        };
-
-        ExportCommand.NotifyCanExecuteChanged();
-
-        foreach (var s in run.Statements)
-        {
-            await s.DisposeAsync();
-        }
-
-        await run.DisposeAsync();
-    }
-}
-
-public sealed partial class SqlEditorViewModel : ObservableObject, IDisposable
-{
-    private readonly ActiveConnectionSession _session;
-    private readonly ISqlScriptSplitter _splitter;
-    private CancellationTokenSource? _cts;
-
-    public SqlEditorViewModel(ActiveConnectionSession session, ISqlScriptSplitter splitter, SqlResultsViewModel results)
-    {
-        _session = session;
-        _splitter = splitter;
-        Results = results;
-        RunCommand = new AsyncRelayCommand(RunAsync, () => HasConnection && !IsRunning);
-        StopCommand = new RelayCommand(() => _cts?.Cancel(), () => IsRunning);
-        ExplainCommand = new AsyncRelayCommand(ExplainAsync, () => HasConnection && !IsRunning);
-        FormatCommand = new RelayCommand(() => QueryText = SqlFormatter.Format(QueryText));
-        SaveScriptCommand = new AsyncRelayCommand(SaveScriptAsync);
-        OpenScriptCommand = new AsyncRelayCommand(OpenScriptAsync);
-        _session.Changed += (_, _) => RefreshConnectionState();
-        Results.Clear(HasConnection ? "Nenhuma consulta executada." : "Abra uma conexão em Connections.");
-    }
-
-    public SqlResultsViewModel Results { get; }
-
-    public void Dispose()
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-    }
-
-    public AsyncRelayCommand RunCommand { get; }
-    public RelayCommand StopCommand { get; }
-    public AsyncRelayCommand ExplainCommand { get; }
-    public RelayCommand FormatCommand { get; }
-    public AsyncRelayCommand SaveScriptCommand { get; }
-    public AsyncRelayCommand OpenScriptCommand { get; }
-
-    [ObservableProperty]
-    private string _queryText = string.Empty;
-
-    [ObservableProperty]
-    private bool _isRunning;
-
-    [ObservableProperty]
-    private string _scriptStatus = string.Empty;
-
-    public bool HasConnection => _session.Current is not null;
-
-    public string Title => _session.Current is { } c ? $"Query - {Database(c)}" : "Query";
-
-    public string DatabaseName => _session.Current is { } c ? $"{Database(c)} ({c.Provider.DisplayName})" : "Sem conexão";
-
-    // Barra de estado: conexão, ambiente e se a somente leitura foi aplicada de fato (null sem conexão).
-    public ConnectionStatusInfo? StatusBar => _session.Current is { } c
-        ? ConnectionStatus.Build(c.Profile.Name, c.Profile.Engine, Database(c), c.Profile.Environment,
-            c.Profile.IsReadOnly, c.IsServerReadOnly)
-        : null;
-
-    private static string Database(OpenedConnection c) =>
-        string.IsNullOrWhiteSpace(c.Server.DatabaseName) ? c.Profile.Name : c.Server.DatabaseName;
-
-    partial void OnIsRunningChanged(bool value)
-    {
-        RunCommand.NotifyCanExecuteChanged();
-        StopCommand.NotifyCanExecuteChanged();
-        ExplainCommand.NotifyCanExecuteChanged();
-    }
-
-    private void RefreshConnectionState()
-    {
-        OnPropertyChanged(nameof(HasConnection));
-        OnPropertyChanged(nameof(Title));
-        OnPropertyChanged(nameof(DatabaseName));
-        OnPropertyChanged(nameof(StatusBar));
-        RunCommand.NotifyCanExecuteChanged();
-        ExplainCommand.NotifyCanExecuteChanged();
-        Results.Clear(HasConnection ? "Nenhuma consulta executada." : "Abra uma conexão em Connections.");
-    }
-
-    // Restrição efetiva de sessão por SGBD para perfis somente leitura. Firebird não oferece: a execução é bloqueada.
-    private static string? ReadOnlyRestriction(DatabaseEngine engine) => engine switch
-    {
-        DatabaseEngine.Sqlite => "PRAGMA query_only = ON;",
-        DatabaseEngine.PostgreSql => "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;",
-        DatabaseEngine.MySql => "SET SESSION TRANSACTION READ ONLY;",
-        _ => null,
-    };
-
-    private static SqlDialectFeatures DialectOf(DatabaseEngine engine) => engine switch
-    {
-        DatabaseEngine.PostgreSql => SqlDialectFeatures.PostgreSql,
-        DatabaseEngine.MySql => SqlDialectFeatures.MySql,
-        DatabaseEngine.Firebird => SqlDialectFeatures.Firebird,
-        _ => SqlDialectFeatures.Sqlite,
-    };
-
-    public async Task RunAsync()
-    {
-        var opened = _session.Current;
-        if (opened is null || string.IsNullOrWhiteSpace(QueryText))
-        {
-            Results.Clear(opened is null ? "Abra uma conexão em Connections." : "Digite um comando SQL.");
-            return;
-        }
-
-        var profile = opened.Profile;
-        var policy = new ExecutionPolicy(profile.IsReadOnly, profile.Environment, ReadOnlyRestriction(profile.Engine));
-        var confirmed = false;
-
-        _cts = new CancellationTokenSource();
-        IsRunning = true;
-        try
-        {
-            await _session.Gate.WaitAsync(_cts.Token);
-            try
-            {
-                while (true)
-                {
-                    var request = new ExecutionRequest(QueryText, DialectOf(profile.Engine), policy, Confirmed: confirmed,
-                        CommandTimeoutSec: profile.Settings.CommandTimeoutSec);
-                    var run = await new QueryService(_splitter, opened.Provider.ErrorTranslator).ExecuteAsync(opened.Connection, request, _cts.Token);
-
-                    var pending = run.Statements.FirstOrDefault(s => s.Status == StatementStatus.RequiresConfirmation);
-                    if (pending is not null && !confirmed)
-                    {
-                        var reason = string.Join(Environment.NewLine, pending.Messages.Select(m => m.Text));
-                        var verdict = new AccessVerdict(AccessDecision.RequiresConfirmation, reason);
-                        var confirmation = ExecutionGuard.RequestFor(ExecutionPolicy.AccessOf(pending.Kind), verdict, profile.Environment);
-                        var owner = System.Windows.Application.Current?.MainWindow;
-                        var accepted = confirmation.Level switch
-                        {
-                            ConfirmationLevel.Typed => TypedConfirmDialog.Ask(owner!, "Confirmar execução",
-                                $"{reason}\n\nAmbiente: {profile.Environment}. Esta ação altera o banco.", confirmation.TypedWord!, "Executar"),
-                            ConfirmationLevel.Simple => ConfirmDialog.Ask(owner!, "Confirmar execução", $"{reason}\n\nExecutar mesmo assim?", "Executar"),
-                            _ => true,
-                        };
-                        if (accepted)
-                        {
-                            await run.DisposeAsync();
-                            confirmed = true;
-                            continue;
-                        }
-                    }
-
-                    await Results.ShowAsync(run);
-                    break;
-                }
-            }
-            finally
-            {
-                _session.Gate.Release();
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            Results.Clear("Execução cancelada.");
-        }
-        catch (Exception ex)
-        {
-            Results.Clear(ex.Message, isError: true);
-        }
-        finally
-        {
-            IsRunning = false;
-            _cts?.Dispose();
-            _cts = null;
-        }
-    }
-
-    // EXPLAIN do texto atual (só SELECT/WITH; ver ExplainService). Não executa a consulta.
-    public async Task ExplainAsync()
-    {
-        var opened = _session.Current;
-        if (opened is null || string.IsNullOrWhiteSpace(QueryText))
-        {
-            Results.Clear(opened is null ? "Abra uma conexão em Connections." : "Digite um comando SQL.", isError: opened is not null);
-            return;
-        }
-
-        try
-        {
-            await _session.Gate.WaitAsync();
-            try
-            {
-                var plan = await ExplainService.ExplainAsync(opened.Connection, opened.Profile.Engine, QueryText, CancellationToken.None);
-                Results.ShowPlan(plan);
-            }
-            finally
-            {
-                _session.Gate.Release();
-            }
-        }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException)
-        {
-            Results.Clear(ex.Message, isError: true);
-        }
-        catch (Exception ex)
-        {
-            Results.Clear("Falha ao gerar o plano: " + ex.Message, isError: true);
-        }
-    }
-
-    private async Task SaveScriptAsync()
-    {
-        var dialog = new SaveFileDialog { Filter = "Scripts SQL (*.sql)|*.sql|Todos (*.*)|*.*", DefaultExt = ".sql" };
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        await ScriptFileService.SaveAsync(dialog.FileName, QueryText, CancellationToken.None);
-        ScriptStatus = "Script salvo: " + dialog.FileName;
-    }
-
-    private async Task OpenScriptAsync()
-    {
-        var dialog = new OpenFileDialog { Filter = "Scripts SQL (*.sql)|*.sql|Todos (*.*)|*.*" };
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        QueryText = await ScriptFileService.OpenAsync(dialog.FileName, CancellationToken.None);
-        ScriptStatus = "Script aberto: " + dialog.FileName;
-    }
-}
-
 public sealed partial class ExplorerViewModel : ObservableObject
 {
+    public const int PreviewTab = 6;
+
     private readonly ActiveConnectionSession _session;
-    private readonly List<SchemaCatalog> _catalog = [];
+    private readonly IConnectionService _connections;
+    private readonly List<SchemaObjects> _catalog = [];
     private DatabaseNavigator? _navigator;
     private ObjectName? _selectedTable;
+    private TableModel? _selectedModel;
+    private bool _previewLoaded;
+    private bool _suppressSelection;
+    private int _loadVersion;
 
-    public ExplorerViewModel(ActiveConnectionSession session, SqlEditorViewModel sqlEditor, SqlResultsViewModel sqlResults)
+    public ExplorerViewModel(ActiveConnectionSession session, IConnectionService connections, SqlEditorWorkspaceViewModel workspace)
     {
         _session = session;
-        SqlEditor = sqlEditor;
-        SqlResults = sqlResults;
-        RefreshCommand = new AsyncRelayCommand(LoadAsync);
+        _connections = connections;
+        Workspace = workspace;
+        RefreshCommand = new AsyncRelayCommand(RefreshAsync);
         ReferencesCommand = new AsyncRelayCommand(LoadReferencesAsync);
+        PreviewCommand = new AsyncRelayCommand(LoadPreviewAsync);
+        NewQueryCommand = new AsyncRelayCommand(NewQueryAsync);
+        ClearSelectionCommand = new RelayCommand(ClearSelection);
         SelectTopCommand = new AsyncRelayCommand<ExplorerNode?>(node => OpenSelectAsync(node, run: true));
         OpenInEditorCommand = new AsyncRelayCommand<ExplorerNode?>(node => OpenSelectAsync(node, run: false));
         CopyNameCommand = new RelayCommand<ExplorerNode?>(CopyQualifiedName);
@@ -446,12 +90,16 @@ public sealed partial class ExplorerViewModel : ObservableObject
         _ = LoadAsync();
     }
 
-    private sealed record SchemaCatalog(string Schema, IReadOnlyList<ObjectName> Tables, IReadOnlyList<ObjectName> Views);
+    public SqlEditorWorkspaceViewModel Workspace { get; }
 
-    public SqlEditorViewModel SqlEditor { get; }
-    public SqlResultsViewModel SqlResults { get; }
+    public ObservableCollection<ProfileOption> Profiles => Workspace.Profiles;
+    public ObservableCollection<string> Databases { get; } = [];
+
     public AsyncRelayCommand RefreshCommand { get; }
     public AsyncRelayCommand ReferencesCommand { get; }
+    public AsyncRelayCommand PreviewCommand { get; }
+    public AsyncRelayCommand NewQueryCommand { get; }
+    public RelayCommand ClearSelectionCommand { get; }
 
     // Menu de contexto da árvore: o parâmetro é o nó clicado.
     public AsyncRelayCommand<ExplorerNode?> SelectTopCommand { get; }
@@ -461,6 +109,9 @@ public sealed partial class ExplorerViewModel : ObservableObject
     public AsyncRelayCommand<ExplorerNode?> InsertExampleCommand { get; }
     public AsyncRelayCommand<ExplorerNode?> ReferencesForNodeCommand { get; }
 
+    // Navega para a tabela referenciada por uma FK, selecionando o nó correspondente na árvore.
+    public AsyncRelayCommand<ForeignKeyInfo?> OpenReferencedTableCommand { get; }
+
     public ObservableCollection<ExplorerNode> Nodes { get; } = [];
     public ObservableCollection<ExplorerColumnRow> SelectedColumns { get; } = [];
     public ObservableCollection<IncomingReference> IncomingReferences { get; } = [];
@@ -469,9 +120,322 @@ public sealed partial class ExplorerViewModel : ObservableObject
     public ObservableCollection<IndexInfo> Indexes { get; } = [];
     public ObservableCollection<ForeignKeyInfo> ForeignKeys { get; } = [];
     public ObservableCollection<CheckInfo> Checks { get; } = [];
+    public ObservableCollection<ExplorerTriggerRow> Triggers { get; } = [];
 
-    // Navega para a tabela referenciada por uma FK, selecionando o nó correspondente na árvore.
-    public AsyncRelayCommand<ForeignKeyInfo?> OpenReferencedTableCommand { get; }
+    public bool HasDatabaseChoice => Databases.Count > 0;
+
+    [ObservableProperty]
+    private ProfileOption? _selectedProfile;
+
+    [ObservableProperty]
+    private string? _selectedDatabase;
+
+    [ObservableProperty]
+    private bool _isBusy;
+
+    [ObservableProperty]
+    private string _connectionTitle = "Sem conexão";
+
+    [ObservableProperty]
+    private string _connectionSubtitle = "Escolha uma conexão acima ou use Open in Explorer em Connections.";
+
+    [ObservableProperty]
+    private string _statusText = string.Empty;
+
+    [ObservableProperty]
+    private string _selectedTableName = "Nenhuma tabela selecionada";
+
+    [ObservableProperty]
+    private string _selectedTableQualified = string.Empty;
+
+    [ObservableProperty]
+    private string _referencesStatus = string.Empty;
+
+    [ObservableProperty]
+    private DataView? _previewRows;
+
+    [ObservableProperty]
+    private string _previewStatus = string.Empty;
+
+    [ObservableProperty]
+    private int _inspectorTabIndex;
+
+    // Busca na árvore. Filtra o catálogo já carregado; não consulta o banco de novo.
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
+    partial void OnSearchTextChanged(string value) => RebuildTree();
+
+    partial void OnInspectorTabIndexChanged(int value)
+    {
+        if (value == PreviewTab && !_previewLoaded && _selectedTable is not null)
+        {
+            _ = LoadPreviewAsync();
+        }
+    }
+
+    partial void OnSelectedProfileChanged(ProfileOption? value)
+    {
+        if (!_suppressSelection && value is not null)
+        {
+            _ = OpenSessionAsync(value, null);
+        }
+    }
+
+    partial void OnSelectedDatabaseChanged(string? value)
+    {
+        if (!_suppressSelection && SelectedProfile is { } profile && !string.IsNullOrWhiteSpace(value)
+            && (_session.Current is not { } opened || !string.Equals(SqlEditorTabViewModel.DatabaseOf(opened), value, StringComparison.Ordinal)))
+        {
+            _ = OpenSessionAsync(profile, value);
+        }
+    }
+
+    // Abre o perfil (e o database) escolhido no Explorer e o torna a conexão ativa; Changed recarrega a árvore.
+    private async Task OpenSessionAsync(ProfileOption profile, string? database)
+    {
+        IsBusy = true;
+        StatusText = $"Conectando a {profile.Name}...";
+        try
+        {
+            var result = await _connections.OpenAsync(profile.Id, ConnectionPurpose.Explore, database);
+            if (!result.IsSuccess)
+            {
+                StatusText = result.Error!.Message;
+                return;
+            }
+
+            // O Gate garante que nenhuma consulta do Explorer está usando a conexão anterior quando ela é descartada.
+            await _session.Gate.WaitAsync();
+            try
+            {
+                _session.Set(result.Value);
+            }
+            finally
+            {
+                _session.Gate.Release();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = "Falha ao conectar: " + ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        _navigator?.Refresh();
+        await Workspace.RefreshProfilesAsync();
+        await LoadAsync();
+    }
+
+    private void ClearInspector()
+    {
+        SelectedColumns.Clear();
+        IncomingReferences.Clear();
+        Indexes.Clear();
+        ForeignKeys.Clear();
+        Checks.Clear();
+        Triggers.Clear();
+        PreviewRows = null;
+        PreviewStatus = string.Empty;
+        ReferencesStatus = string.Empty;
+        _previewLoaded = false;
+        _selectedTable = null;
+        _selectedModel = null;
+        SelectedTableName = "Nenhuma tabela selecionada";
+        SelectedTableQualified = string.Empty;
+    }
+
+    private void ClearSelection() => ClearInspector();
+
+    private void SetSelectors(ProfileOption? profile, IReadOnlyList<string> databases, string? current)
+    {
+        _suppressSelection = true;
+        try
+        {
+            SelectedProfile = profile;
+            Databases.Clear();
+            foreach (var name in databases)
+            {
+                Databases.Add(name);
+            }
+
+            if (!string.IsNullOrWhiteSpace(current) && Databases.Count > 0 && !Databases.Contains(current))
+            {
+                Databases.Insert(0, current);
+            }
+
+            SelectedDatabase = string.IsNullOrWhiteSpace(current) ? null : current;
+        }
+        finally
+        {
+            _suppressSelection = false;
+        }
+
+        OnPropertyChanged(nameof(HasDatabaseChoice));
+    }
+
+    public async Task LoadAsync()
+    {
+        var version = ++_loadVersion;
+        Nodes.Clear();
+        _catalog.Clear();
+        ClearInspector();
+
+        await Workspace.RefreshProfilesAsync();
+        var opened = _session.Current;
+        if (opened is null)
+        {
+            _navigator = null;
+            SetSelectors(SelectedProfile, [], null);
+            ConnectionTitle = "Sem conexão";
+            ConnectionSubtitle = "Escolha uma conexão acima ou use Open in Explorer em Connections.";
+            StatusText = string.Empty;
+            return;
+        }
+
+        var database = SqlEditorTabViewModel.DatabaseOf(opened);
+        ConnectionTitle = $"{opened.Profile.Name} ({opened.Server.Product} {opened.Server.Version})";
+        ConnectionSubtitle = (string.IsNullOrEmpty(database) ? "(sem database)" : database)
+            + " • " + (opened.Profile.Settings.Host ?? "arquivo local")
+            + (opened.Profile.Settings.Port is { } p ? ":" + p.ToString(CultureInfo.InvariantCulture) : string.Empty);
+        StatusText = "Carregando objetos...";
+        IsBusy = true;
+        _navigator = new DatabaseNavigator(opened.Provider);
+
+        try
+        {
+            IReadOnlyList<string> databases = [];
+            IReadOnlyList<SchemaObjects> catalog;
+            await _session.Gate.WaitAsync();
+            try
+            {
+                if (!ReferenceEquals(opened, _session.Current))
+                {
+                    return; // trocada enquanto esperava; o Changed da nova conexão recarrega
+                }
+
+                try
+                {
+                    databases = await opened.Provider.ListDatabasesAsync(opened.Connection, CancellationToken.None);
+                }
+                catch (DbException)
+                {
+                    // Sem permissão para listar databases: fica só o atual.
+                }
+
+                catalog = await _navigator.LoadCatalogAsync(opened.Connection, CancellationToken.None);
+            }
+            finally
+            {
+                _session.Gate.Release();
+            }
+
+            if (version != _loadVersion)
+            {
+                return;
+            }
+
+            SetSelectors(await Workspace.FindProfileAsync(opened.Profile.Id), databases, database);
+            _catalog.AddRange(catalog);
+            RebuildTree();
+            if (_catalog.Count == 0)
+            {
+                StatusText = Databases.Count > 0 && string.IsNullOrEmpty(database)
+                    ? "Escolha um database na lista acima."
+                    : "Nenhum objeto encontrado.";
+            }
+        }
+        catch (NotImplementedException)
+        {
+            StatusText = $"A navegação de objetos para {opened.Provider.DisplayName} ainda não foi implementada. " +
+                         "O SQL Editor funciona nesta conexão.";
+        }
+        catch (Exception ex)
+        {
+            StatusText = "Falha ao listar objetos: " + ex.Message;
+        }
+        finally
+        {
+            if (version == _loadVersion)
+            {
+                IsBusy = false;
+            }
+        }
+    }
+
+    private static string Describe(TriggerModel trigger) =>
+        $"{trigger.Timing.ToString().ToUpperInvariant()} {trigger.Events.ToString().ToUpperInvariant().Replace(",", " OR", StringComparison.Ordinal)}"
+        + (trigger.Table is { } t ? " ON " + t.Name : string.Empty)
+        + (trigger.IsActive ? string.Empty : " (inativo)");
+
+    private static string Describe(RoutineModel routine) =>
+        $"{routine.Kind}, {routine.ParameterCount} parâmetro(s)" + (routine.ReturnType is { } r ? " → " + r : string.Empty);
+
+    private static string Describe(SequenceModel sequence) =>
+        "Sequence" + (sequence.Start is { } s ? ", início " + s.ToString(CultureInfo.CurrentCulture) : string.Empty)
+        + (sequence.Increment is { } i ? ", incremento " + i.ToString(CultureInfo.CurrentCulture) : string.Empty);
+
+    // Monta a árvore a partir do catálogo, aplicando a busca. Um schema que casa com a busca mostra todos os seus objetos.
+    private void RebuildTree()
+    {
+        Nodes.Clear();
+        var single = _catalog.Count == 1;
+        foreach (var entry in _catalog)
+        {
+            var all = ExplorerFilter.Matches(entry.Schema, SearchText);
+            var tables = all ? entry.Tables.ToList() : ExplorerFilter.Filter(entry.Tables, SearchText);
+            var views = all ? entry.Views.ToList() : ExplorerFilter.Filter(entry.Views, SearchText);
+            var triggers = entry.Triggers.Where(t => all || ExplorerFilter.Matches(t.Name, SearchText)).ToList();
+            var routines = entry.Routines.Where(r => all || ExplorerFilter.Matches(r.Name, SearchText)).ToList();
+            var sequences = entry.Sequences.Where(s => all || ExplorerFilter.Matches(s.Name, SearchText)).ToList();
+            if (!all && tables.Count + views.Count + triggers.Count + routines.Count + sequences.Count == 0)
+            {
+                continue;
+            }
+
+            var filtering = !string.IsNullOrWhiteSpace(SearchText);
+            var schemaNode = new ExplorerNode(entry.Schema, ExplorerNodeKind.Schema) { IsExpanded = single || filtering };
+            AddGroup(schemaNode, "Tables", tables, t => new ExplorerNode(t.Name, ExplorerNodeKind.Table, t), expand: true, always: true);
+            AddGroup(schemaNode, "Views", views, v => new ExplorerNode(v.Name, ExplorerNodeKind.View, v), expand: filtering, always: true);
+            AddGroup(schemaNode, "Triggers", triggers, t => new ExplorerNode(t.Name, ExplorerNodeKind.Trigger, detail: Describe(t)), filtering);
+            AddGroup(schemaNode, "Routines", routines, r => new ExplorerNode(r.Name, ExplorerNodeKind.Routine, detail: Describe(r)), filtering);
+            AddGroup(schemaNode, "Sequences", sequences, s => new ExplorerNode(s.Name, ExplorerNodeKind.Sequence, detail: Describe(s)), filtering);
+            Nodes.Add(schemaNode);
+        }
+
+        if (_catalog.Count > 0 && Nodes.Count == 0 && !string.IsNullOrWhiteSpace(SearchText))
+        {
+            StatusText = $"Nenhum objeto corresponde a '{SearchText.Trim()}'.";
+        }
+        else if (Nodes.Count > 0)
+        {
+            var total = _catalog.Sum(c => c.Tables.Count);
+            StatusText = $"{_catalog.Count} schema(s), {total} tabela(s), {_catalog.Sum(c => c.Views.Count)} view(s).";
+        }
+    }
+
+    private static void AddGroup<T>(ExplorerNode parent, string name, IReadOnlyList<T> items, Func<T, ExplorerNode> create,
+        bool expand, bool always = false)
+    {
+        if (items.Count == 0 && !always)
+        {
+            return;
+        }
+
+        var group = new ExplorerNode($"{name} ({items.Count})", ExplorerNodeKind.Group) { IsExpanded = expand };
+        foreach (var item in items)
+        {
+            group.Children.Add(create(item));
+        }
+
+        parent.Children.Add(group);
+    }
 
     private async Task OpenReferencedTableAsync(ForeignKeyInfo? fk)
     {
@@ -491,150 +455,28 @@ public sealed partial class ExplorerViewModel : ObservableObject
         await SelectNodeAsync(target);
     }
 
-    [ObservableProperty]
-    private string _connectionTitle = "Sem conexão";
-
-    [ObservableProperty]
-    private string _connectionSubtitle = "Abra uma conexão em Connections (Open in Explorer).";
-
-    [ObservableProperty]
-    private string _statusText = string.Empty;
-
-    [ObservableProperty]
-    private string _selectedTableName = "Nenhuma tabela selecionada";
-
-    [ObservableProperty]
-    private string _selectedTableQualified = string.Empty;
-
-    [ObservableProperty]
-    private string _referencesStatus = string.Empty;
-
-    // Busca na árvore. Filtra o catálogo já carregado; não consulta o banco de novo.
-    [ObservableProperty]
-    private string _searchText = string.Empty;
-
-    partial void OnSearchTextChanged(string value) => RebuildTree();
-
-    private async Task LoadAsync()
-    {
-        Nodes.Clear();
-        _catalog.Clear();
-        SelectedColumns.Clear();
-        IncomingReferences.Clear();
-        Indexes.Clear();
-        ForeignKeys.Clear();
-        Checks.Clear();
-        ReferencesStatus = string.Empty;
-        _selectedTable = null;
-        SelectedTableName = "Nenhuma tabela selecionada";
-        SelectedTableQualified = string.Empty;
-
-        var opened = _session.Current;
-        if (opened is null)
-        {
-            _navigator = null;
-            ConnectionTitle = "Sem conexão";
-            ConnectionSubtitle = "Abra uma conexão em Connections (Open in Explorer).";
-            StatusText = string.Empty;
-            return;
-        }
-
-        ConnectionTitle = opened.Provider.DisplayName;
-        ConnectionSubtitle = $"{opened.Server.DatabaseName} • {opened.Profile.Settings.Host ?? "arquivo local"}"
-            + (opened.Profile.Settings.Port is { } p ? $":{p}" : string.Empty);
-        StatusText = "Carregando objetos...";
-        _navigator = new DatabaseNavigator(opened.Provider);
-
-        try
-        {
-            await _session.Gate.WaitAsync();
-            try
-            {
-                foreach (var schema in await _navigator.ListSchemasAsync(opened.Connection, CancellationToken.None))
-                {
-                    var tables = await _navigator.ListTablesAsync(opened.Connection, schema, CancellationToken.None);
-                    var views = await _navigator.ListViewsAsync(opened.Connection, schema, CancellationToken.None);
-                    _catalog.Add(new SchemaCatalog(schema, tables, views));
-                }
-            }
-            finally
-            {
-                _session.Gate.Release();
-            }
-
-            RebuildTree();
-            StatusText = _catalog.Count == 0 ? "Nenhuma tabela ou view encontrada." : string.Empty;
-        }
-        catch (NotImplementedException)
-        {
-            // Introspecção de PostgreSQL/MySQL/Firebird ainda não existe (Sprints B2–B4); o SQL Editor já funciona.
-            StatusText = $"A navegação de objetos para {opened.Provider.DisplayName} ainda não foi implementada " +
-                         "(introspecção prevista nas sprints B2–B4). O SQL Editor funciona nesta conexão.";
-        }
-        catch (Exception ex)
-        {
-            StatusText = "Falha ao listar objetos: " + ex.Message;
-        }
-    }
-
-    // Monta a árvore a partir do catálogo, aplicando a busca. Um schema que casa com a busca mostra todos os seus objetos.
-    private void RebuildTree()
-    {
-        Nodes.Clear();
-        foreach (var entry in _catalog)
-        {
-            var schemaMatches = ExplorerFilter.Matches(entry.Schema, SearchText);
-            var tables = schemaMatches ? entry.Tables.ToList() : ExplorerFilter.Filter(entry.Tables, SearchText);
-            var views = schemaMatches ? entry.Views.ToList() : ExplorerFilter.Filter(entry.Views, SearchText);
-            if (!schemaMatches && tables.Count == 0 && views.Count == 0)
-            {
-                continue;
-            }
-
-            var schemaNode = new ExplorerNode(entry.Schema, "") { IsExpanded = true };
-
-            var tablesNode = new ExplorerNode($"Tables ({tables.Count})", "") { IsExpanded = true };
-            foreach (var t in tables)
-            {
-                tablesNode.Children.Add(new ExplorerNode(t.Name, "", t));
-            }
-
-            schemaNode.Children.Add(tablesNode);
-
-            var viewsNode = new ExplorerNode($"Views ({views.Count})", "");
-            foreach (var v in views)
-            {
-                viewsNode.Children.Add(new ExplorerNode(v.Name, "", v));
-            }
-
-            schemaNode.Children.Add(viewsNode);
-            Nodes.Add(schemaNode);
-        }
-
-        if (_catalog.Count > 0 && Nodes.Count == 0 && !string.IsNullOrWhiteSpace(SearchText))
-        {
-            StatusText = $"Nenhum objeto corresponde a '{SearchText.Trim()}'.";
-        }
-        else if (!string.IsNullOrWhiteSpace(SearchText) || Nodes.Count > 0)
-        {
-            StatusText = string.Empty;
-        }
-    }
-
     public async Task SelectNodeAsync(ExplorerNode? node)
     {
         var opened = _session.Current;
-        if (node?.Table is not { } table || opened is null || _navigator is null)
+        if (node is null || opened is null || _navigator is null)
         {
             return;
         }
 
+        if (node.Table is not { } table)
+        {
+            if (node.Detail is { } detail)
+            {
+                StatusText = $"{node.Text}: {detail}";
+            }
+
+            return;
+        }
+
+        ClearInspector();
         _selectedTable = table;
         SelectedTableName = table.Name;
-        SelectedTableQualified = table.Namespace + "." + table.Name;
-        SelectedColumns.Clear();
-        IncomingReferences.Clear();
-        ReferencesStatus = string.Empty;
+        SelectedTableQualified = (node.Kind == ExplorerNodeKind.View ? "View • " : "Tabela • ") + table.Namespace + "." + table.Name;
 
         try
         {
@@ -648,34 +490,112 @@ public sealed partial class ExplorerViewModel : ObservableObject
                     return;
                 }
 
-                var inspection = ObjectInspector.Inspect(table, described.Value!);
-                foreach (var c in inspection.Columns)
+                if (_selectedTable != table)
                 {
-                    var key = c.IsPrimaryKey ? "PK" : c.IsForeignKey ? "FK" : c.IsUnique ? "UQ" : string.Empty;
-                    SelectedColumns.Add(new ExplorerColumnRow(c.Name, c.NativeType, key, c.Nullable ? "Yes" : "No"));
+                    return; // outra seleção chegou enquanto esperava
                 }
 
-                Indexes.Clear();
-                foreach (var index in inspection.Indexes)
+                _selectedModel = described.Value!;
+            }
+            finally
+            {
+                _session.Gate.Release();
+            }
+
+            FillInspector(table, _selectedModel);
+            if (InspectorTabIndex == PreviewTab)
+            {
+                await LoadPreviewAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText = "Falha ao descrever o objeto: " + ex.Message;
+        }
+    }
+
+    private void FillInspector(ObjectName table, TableModel model)
+    {
+        var inspection = ObjectInspector.Inspect(table, model);
+        foreach (var c in inspection.Columns)
+        {
+            var key = c.IsPrimaryKey ? "PK" : c.IsForeignKey ? "FK" : c.IsUnique ? "UQ" : string.Empty;
+            var column = model.Columns.FirstOrDefault(m => m.Name == c.Name);
+            SelectedColumns.Add(new ExplorerColumnRow(c.Name, c.NativeType, key, c.Nullable ? "Yes" : "No", column?.Default?.RawExpression ?? string.Empty));
+        }
+
+        foreach (var index in inspection.Indexes)
+        {
+            Indexes.Add(index);
+        }
+
+        foreach (var fk in inspection.ForeignKeys)
+        {
+            ForeignKeys.Add(fk);
+        }
+
+        foreach (var check in inspection.Checks)
+        {
+            Checks.Add(check);
+        }
+
+        foreach (var trigger in _catalog.SelectMany(s => s.Triggers).Where(t => t.Table == table))
+        {
+            Triggers.Add(new ExplorerTriggerRow(trigger.Name, trigger.Timing.ToString(),
+                trigger.Events.ToString().Replace(", ", " | ", StringComparison.Ordinal), trigger.IsActive ? "Yes" : "No"));
+        }
+
+        StatusText = string.Empty;
+    }
+
+    // Primeiras linhas da tabela selecionada (SELECT com limite do dialeto), na própria conexão do Explorer.
+    private async Task LoadPreviewAsync()
+    {
+        if (_session.Current is not { } opened || _selectedTable is not { } table || _selectedModel is not { } model)
+        {
+            PreviewStatus = "Selecione uma tabela.";
+            return;
+        }
+
+        PreviewStatus = "Carregando...";
+        try
+        {
+            var dialect = opened.Provider.GetDialect(opened.Server.Version);
+            var sql = TablePreview.BuildSql(table, model, dialect, TablePreview.DefaultRows);
+            await _session.Gate.WaitAsync();
+            try
+            {
+                await using var command = opened.Connection.CreateCommand();
+                command.CommandText = sql;
+                await using var reader = await command.ExecuteReaderAsync();
+                var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
+                var rows = new List<object?[]>();
+                while (await reader.ReadAsync())
                 {
-                    Indexes.Add(index);
+                    var values = new object?[reader.FieldCount];
+                    for (var i = 0; i < values.Length; i++)
+                    {
+                        try
+                        {
+                            values[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                        }
+                        catch (Exception ex) when (ex is InvalidCastException or OverflowException or FormatException)
+                        {
+                            values[i] = "<" + reader.GetDataTypeName(i) + ">"; // valor fora do tipo .NET (ex.: data zero)
+                        }
+                    }
+
+                    rows.Add(values);
                 }
 
-                ForeignKeys.Clear();
-                foreach (var fk in inspection.ForeignKeys)
+                if (_selectedTable != table)
                 {
-                    ForeignKeys.Add(fk);
+                    return;
                 }
 
-                Checks.Clear();
-                foreach (var check in inspection.Checks)
-                {
-                    Checks.Add(check);
-                }
-
-                var dialect = opened.Provider.GetDialect(opened.Server.Version);
-                SqlEditor.QueryText = TablePreview.BuildSql(table, described.Value!, dialect.QuoteIdentifier, TablePreview.DefaultRows) + ";";
-                StatusText = string.Empty;
+                PreviewRows = ResultGrid.Build(columns, rows).DefaultView;
+                PreviewStatus = $"{rows.Count} linha(s) (limite {TablePreview.DefaultRows}).";
+                _previewLoaded = true;
             }
             finally
             {
@@ -684,7 +604,7 @@ public sealed partial class ExplorerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusText = "Falha ao descrever o objeto: " + ex.Message;
+            PreviewStatus = "Falha ao carregar o preview: " + ex.Message;
         }
     }
 
@@ -715,7 +635,10 @@ public sealed partial class ExplorerViewModel : ObservableObject
         }
     }
 
-    // SELECT com limite (TablePreview). Run executa no editor; Abrir apenas posiciona o texto.
+    private Task<SqlEditorTabViewModel> OpenGeneratedAsync(OpenedConnection opened, string text, bool run) =>
+        Workspace.OpenGeneratedAsync(opened.Profile.Id, SqlEditorTabViewModel.DatabaseOf(opened), text, run);
+
+    // SELECT com limite (TablePreview) numa aba do editor com a mesma conexão do Explorer.
     private async Task OpenSelectAsync(ExplorerNode? node, bool run)
     {
         if (node?.Table is not { } table || await DescribeNodeAsync(node) is not { } model || _session.Current is not { } opened)
@@ -724,11 +647,7 @@ public sealed partial class ExplorerViewModel : ObservableObject
         }
 
         var dialect = opened.Provider.GetDialect(opened.Server.Version);
-        SqlEditor.QueryText = TablePreview.BuildSql(table, model, dialect.QuoteIdentifier, TablePreview.DefaultRows) + ";";
-        if (run)
-        {
-            await SqlEditor.RunAsync();
-        }
+        await OpenGeneratedAsync(opened, TablePreview.BuildSql(table, model, dialect, TablePreview.DefaultRows) + ";", run);
     }
 
     // DDL (CREATE TABLE) ou INSERT de exemplo, gerados a partir do schema capturado (ObjectScripts).
@@ -740,9 +659,20 @@ public sealed partial class ExplorerViewModel : ObservableObject
         }
 
         var dialect = opened.Provider.GetDialect(opened.Server.Version);
-        SqlEditor.QueryText = insert
-            ? ObjectScripts.InsertExample(table, model, dialect)
-            : ObjectScripts.CreateTable(table, model, dialect);
+        var text = insert ? ObjectScripts.InsertExample(table, model, dialect) : ObjectScripts.CreateTable(table, model, dialect);
+        await OpenGeneratedAsync(opened, text, run: false);
+    }
+
+    private async Task NewQueryAsync()
+    {
+        if (_session.Current is { } opened)
+        {
+            await Workspace.NewTabAsync(opened.Profile.Id, SqlEditorTabViewModel.DatabaseOf(opened));
+        }
+        else
+        {
+            await Workspace.NewTabAsync();
+        }
     }
 
     // Copia o nome já citado pelo dialeto (ex.: "main"."cliente" conforme o SGBD).
@@ -765,6 +695,7 @@ public sealed partial class ExplorerViewModel : ObservableObject
         }
 
         await SelectNodeAsync(node);
+        InspectorTabIndex = 5;
         await LoadReferencesAsync();
     }
 
@@ -805,10 +736,4 @@ public sealed partial class ExplorerViewModel : ObservableObject
             ReferencesStatus = "Falha ao procurar referências: " + ex.Message;
         }
     }
-}
-
-public sealed class SqlEditorPageViewModel(SqlEditorViewModel editor, SqlResultsViewModel results)
-{
-    public SqlEditorViewModel Editor { get; } = editor;
-    public SqlResultsViewModel Results { get; } = results;
 }

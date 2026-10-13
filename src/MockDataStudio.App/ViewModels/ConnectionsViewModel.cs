@@ -142,6 +142,9 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
     private string _formUsername = string.Empty;
     private string _formPassword = string.Empty;
     private bool _formPromptPassword;
+    private bool _isPasswordRevealed;
+    // A senha salva não pôde ser lida (DPAPI de outro usuário/máquina): salvar com o campo vazio mantém o segredo existente.
+    private bool _storedPasswordUnavailable;
     private string _formSslMode = "Prefer";
     private string _formTimeoutSec = "15";
     private ConnectionEnvironment _formEnvironment = ConnectionEnvironment.Unknown;
@@ -196,6 +199,7 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         RefreshAllCommand = new AsyncRelayCommand(LoadConnectionsAsync);
         BrowseSqliteFileCommand = new RelayCommand(BrowseSqliteFile);
         OpenInExplorerCommand = new AsyncRelayCommand(OpenInExplorerAsync);
+        TogglePasswordRevealCommand = new RelayCommand(() => IsPasswordRevealed = !IsPasswordRevealed);
 
         // Carregar conexões salvas ao iniciar
         _ = LoadConnectionsAsync();
@@ -219,7 +223,35 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
             if (SetProperty(ref _selectedConnection, value) && value != null)
             {
                 PopulateFormFromProfile(value.Profile);
+                _ = LoadStoredPasswordAsync(value.Profile.Id);
             }
+        }
+    }
+
+    /// <summary>Senha exibida em texto (olho do campo Password); por padrão fica mascarada.</summary>
+    public bool IsPasswordRevealed
+    {
+        get => _isPasswordRevealed;
+        set => SetProperty(ref _isPasswordRevealed, value);
+    }
+
+    public ICommand TogglePasswordRevealCommand { get; }
+
+    // Preenche o campo Password com a senha salva (DA-310: o usuário pode ver e editar a senha da própria conexão).
+    private async Task LoadStoredPasswordAsync(Guid profileId)
+    {
+        var result = await _connectionService.GetStoredPasswordAsync(profileId);
+        if (_formId != profileId)
+        {
+            return; // outra conexão foi selecionada enquanto a senha era lida
+        }
+
+        _storedPasswordUnavailable = !result.IsSuccess;
+        _formPassword = result.IsSuccess ? result.Value ?? string.Empty : string.Empty;
+        OnPropertyChanged(nameof(FormPassword));
+        if (!result.IsSuccess)
+        {
+            TestResultMessage = result.Error!.Message;
         }
     }
 
@@ -562,7 +594,10 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
         _formPort = profile.Settings.Port?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
         _formDatabase = profile.Settings.Database;
         _formUsername = profile.Settings.User ?? string.Empty;
-        _formPassword = string.Empty; // Senhas em texto puro NUNCA são expostas na ViewModel após carregar (docs/23 §3)
+        _formPassword = string.Empty; // preenchida em seguida por LoadStoredPasswordAsync (DA-310)
+        _storedPasswordUnavailable = false;
+        _isPasswordRevealed = false;
+        OnPropertyChanged(nameof(IsPasswordRevealed));
         _formPromptPassword = profile.PromptPassword;
         _formTimeoutSec = profile.Settings.ConnectTimeoutSec.ToString(System.Globalization.CultureInfo.InvariantCulture);
         _formEnvironment = profile.Environment;
@@ -605,7 +640,9 @@ public sealed class ConnectionsViewModel : ObservableObject, IDisposable
     public async Task SaveConnectionAsync()
     {
         var profile = BuildProfileFromForm();
-        var passwordParam = string.IsNullOrEmpty(FormPassword) ? null : FormPassword;
+        // O campo mostra a senha salva: o que estiver nele é a senha (vazio = sem senha). Só mantém o segredo antigo
+        // quando ele não pôde ser lido e o usuário não digitou nada.
+        var passwordParam = _storedPasswordUnavailable && string.IsNullOrEmpty(FormPassword) ? null : FormPassword;
 
         var result = await _connectionService.SaveAsync(profile, passwordParam);
         if (!result.IsSuccess)

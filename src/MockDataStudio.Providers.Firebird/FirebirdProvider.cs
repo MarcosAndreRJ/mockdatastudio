@@ -30,7 +30,9 @@ public sealed class FirebirdProvider : IDatabaseProvider
 
     public IErrorTranslator ErrorTranslator => _errorTranslator;
 
-    public ITypeMapper TypeMapper => throw new NotImplementedException("Disponível a partir do módulo de introspecção / tipos.");
+    private readonly FirebirdTypeMapper _typeMapper = new();
+
+    public ITypeMapper TypeMapper => _typeMapper;
 
     public ProviderCapabilities GetCapabilities(string serverVersion) =>
         new(
@@ -127,11 +129,16 @@ public sealed class FirebirdProvider : IDatabaseProvider
         return new ServerInfo(versionText, "Firebird", connection.Database ?? string.Empty, host, fingerprint);
     }
 
-    public ISchemaExtractor CreateSchemaExtractor() =>
-        throw new NotImplementedException("Disponível a partir do módulo de introspecção (Sprint B4).");
+    public ISchemaExtractor CreateSchemaExtractor() => new FirebirdSchemaExtractor(_typeMapper);
 
-    public ISqlDialect GetDialect(string serverVersion) =>
-        throw new NotImplementedException("Disponível a partir do módulo de dialetos (Sprint B4).");
+    // serverVersion vem de ENGINE_VERSION ("2.5.9", "3.0.12", "5.0.1"): a versão principal decide resync e BOOLEAN.
+    public ISqlDialect GetDialect(string serverVersion)
+    {
+        var text = serverVersion ?? string.Empty;
+        var dot = text.IndexOf('.', StringComparison.Ordinal);
+        var major = int.TryParse(dot > 0 ? text[..dot] : text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : 3;
+        return new FirebirdDialect(major);
+    }
 
     public IBulkInserter CreateBulkInserter(DbConnection connection, string serverVersion) =>
         throw new NotImplementedException("Disponível a partir do módulo de execução direta (Sprint B4).");

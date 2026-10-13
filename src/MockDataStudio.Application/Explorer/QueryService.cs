@@ -121,6 +121,16 @@ public sealed class QueryService(ISqlScriptSplitter splitter, IErrorTranslator e
                 break;
             }
 
+            // MySQL e PostgreSQL aceitam um único leitor ativo por conexão: o cursor do comando anterior (cuja primeira
+            // página já foi lida) é fechado antes do próximo. Só o último comando do script mantém o cursor para paginação.
+            foreach (var previous in outcomes)
+            {
+                if (previous.Cursor is { } open)
+                {
+                    await open.DisposeAsync();
+                }
+            }
+
             var outcome = await ExecuteStatementAsync(connection, i, statement, request, ct);
             outcomes.Add(outcome);
             if (outcome.Status is StatementStatus.Failed or StatementStatus.Cancelled)

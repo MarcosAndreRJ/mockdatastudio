@@ -32,4 +32,17 @@ public interface ISchemaExtractor
     Task<IReadOnlyList<TriggerModel>> ListTriggersAsync(
         DbConnection connection,
         CancellationToken ct);
+
+    // Procedures e funções do usuário, sem corpo (Explorer, docs/11 §2). Namespace = schema/database da rotina.
+    // Padrão vazio para providers que ainda não listam rotinas.
+    Task<IReadOnlyList<(string Namespace, RoutineModel Routine)>> ListRoutinesAsync(
+        DbConnection connection,
+        CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<(string Namespace, RoutineModel Routine)>>([]);
+
+    // Sequences/generators do usuário (Explorer). Padrão vazio para SGBDs sem sequences (MySQL, SQLite).
+    Task<IReadOnlyList<(string Namespace, SequenceModel Sequence)>> ListSequencesAsync(
+        DbConnection connection,
+        CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<(string Namespace, SequenceModel Sequence)>>([]);
 }

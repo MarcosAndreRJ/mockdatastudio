@@ -17,7 +17,8 @@ public sealed class SmokeTests
         // Prefixo: a contagem depende dos perfis cadastrados (antes vinha do dado de exemplo, "(12)").
         ("Connections", "Saved Connections ("),
         ("Explorer", "Database Explorer"),
-        ("SQL Editor", "Abra uma conexão em Connections."),
+        // Sem perfis salvos, a aba inicial do editor pede a conexão (cada aba escolhe a sua).
+        ("SQL Editor", "Selecione a conexão e o database desta aba."),
         ("Schema Digest", "Database Structure"),
         ("Templates", "Template Catalog"),
         ("Mapping", "Field Mapping"),

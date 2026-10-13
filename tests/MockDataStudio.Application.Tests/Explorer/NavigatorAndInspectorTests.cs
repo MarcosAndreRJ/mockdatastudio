@@ -27,6 +27,25 @@ public sealed class NavigatorAndInspectorTests
 
     [Fact]
     [Trait("Category", "Integration")]
+    public async Task Catalogo_AgrupaTodosOsObjetosPorSchemaNumaPassada()
+    {
+        await using var bench = await SqliteWorkbench.CreateAsync(ct: TestContext.Current.CancellationToken);
+        await using var connection = await bench.OpenAsync(TestContext.Current.CancellationToken);
+        var navigator = new DatabaseNavigator(bench.Provider);
+
+        var catalog = await navigator.LoadCatalogAsync(connection, TestContext.Current.CancellationToken);
+
+        var main = catalog.ShouldHaveSingleItem();
+        main.Schema.ShouldBe("main");
+        main.Tables.Select(o => o.Name).ShouldBe(["cliente", "pedido"]);
+        main.Views.Select(o => o.Name).ShouldBe(["vw_pedidos"]);
+        main.Triggers.Select(t => t.Name).ShouldBe(["trg_pedido"]);
+        main.Routines.ShouldBeEmpty();
+        main.Sequences.ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
     public async Task Navegacao_SchemaInexistenteNaoRetornaObjetos()
     {
         await using var bench = await SqliteWorkbench.CreateAsync(ct: TestContext.Current.CancellationToken);

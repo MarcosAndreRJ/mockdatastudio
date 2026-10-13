@@ -3,72 +3,111 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ae="http://icsharpcode.net/sharpdevelop/avalonedit">
 
-                <!-- Editor SQL -->
-                <Border Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
-                    <DockPanel>
-                        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-                            <DockPanel Margin="6,0,8,0">
-                                <Border DockPanel.Dock="Right" Height="30" Padding="10,0" Margin="0,4,0,0" CornerRadius="8"
-                                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource SurfaceBrush}">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding DatabaseName}" FontSize="12" VerticalAlignment="Center" />
-                                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-                                    </StackPanel>
-                                </Border>
+    <!-- DataContext: SqlEditorWorkspaceViewModel. Cada aba tem conexão, database, documento e resultados próprios. -->
+    <Border Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
+        <DockPanel>
+            <!-- Abas das consultas -->
+            <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                <DockPanel Margin="6,0,8,0">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                            Foreground="{StaticResource TextSecondaryBrush}" Margin="4,4,0,0" VerticalAlignment="Center"
+                            Command="{Binding NewTabCommand}" ToolTip="Nova consulta (Ctrl+T)" AutomationProperties.Name="Nova consulta" />
+                    <ListBox ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" ItemContainerStyle="{StaticResource EditorTabItem}"
+                             Background="Transparent" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" AutomationProperties.Name="Abas de consulta">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8,8,0,0" Padding="12,8" Margin="0,4,0,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Ellipse Width="7" Height="7" Fill="{StaticResource WarningBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Title}" FontWeight="Medium" />
-                                    </StackPanel>
-                                </Border>
-                                <Button Style="{StaticResource GhostButton}" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                                        Foreground="{StaticResource TextSecondaryBrush}" Margin="4,0,0,0" VerticalAlignment="Center" />
+                                    <Ellipse Width="7" Height="7" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{StaticResource TextMutedBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasConnection}" Value="True">
+                                                        <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                        <Setter Property="Fill" Value="{StaticResource WarningBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <TextBlock Text="{Binding Title}" FontWeight="Medium" VerticalAlignment="Center" />
+                                    <Button Style="{StaticResource GhostButton}" Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="9" Padding="4"
+                                            Margin="6,0,0,0" Foreground="{StaticResource TextSecondaryBrush}" ToolTip="Fechar aba (Ctrl+W)"
+                                            AutomationProperties.Name="Fechar aba"
+                                            Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}" />
                                 </StackPanel>
-                            </DockPanel>
-                        </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
 
-                        <DockPanel DockPanel.Dock="Top" Margin="12,10">
-                            <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Margin="0,0,1,0" Command="{Binding RunCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Run" VerticalAlignment="Center" />
-                                        <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="9" VerticalAlignment="Center" Margin="10,0,0,0" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding StopCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextMutedBrush}" />
-                                        <TextBlock Text="Stop" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding ExplainCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Explain" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding FormatCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Format" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,0,0,0" Command="{Binding SaveScriptCommand}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock Text="Save Script" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </DockPanel>
+            <!-- Barra de ferramentas da aba selecionada -->
+            <WrapPanel DockPanel.Dock="Top" Margin="12,8" DataContext="{Binding SelectedTab}">
+                <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Margin="0,2,0,2" Command="{Binding RunCommand}"
+                        ToolTip="Executar a seleção ou o script inteiro (F9 ou Ctrl+Enter)" AutomationProperties.Name="Run">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Run" VerticalAlignment="Center" />
+                        <TextBlock Text="F9" FontSize="10" Opacity="0.75" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding StopCommand}" ToolTip="Cancelar a execução" AutomationProperties.Name="Stop">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Stop" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding ExplainCommand}" ToolTip="Plano de execução (SELECT)" AutomationProperties.Name="Explain">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Explain" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding FormatCommand}" ToolTip="Formatar o SQL" AutomationProperties.Name="Format">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Format" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding OpenScriptCommand}" ToolTip="Abrir script (.sql)" AutomationProperties.Name="Abrir script">
+                    <TextBlock Text="&#xE8E5;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                </Button>
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding SaveScriptCommand}" ToolTip="Salvar script (Ctrl+S)" AutomationProperties.Name="Salvar script">
+                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" />
+                </Button>
 
-                        <ae:TextEditor x:Name="QueryEditor" ShowLineNumbers="True" FontFamily="Consolas" FontSize="13"
-                                       Background="{StaticResource EditorBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                                       BorderThickness="0" Padding="6,4" LineNumbersForeground="{StaticResource TextMutedBrush}" />
-                    </DockPanel>
-                </Border>
+                <!-- Conexão e database desta aba -->
+                <StackPanel Orientation="Horizontal" Margin="16,2,0,2">
+                    <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <ComboBox Width="190" Height="32" ItemsSource="{Binding DataContext.Profiles, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Display"
+                              ToolTip="Conexão desta aba" AutomationProperties.Name="Conexão da aba" />
+                    <ComboBox Width="170" Height="32" Margin="6,0,0,0" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}"
+                              Visibility="{Binding HasDatabaseChoice, Converter={StaticResource BoolToVisibility}}"
+                              ToolTip="Database desta aba (cada aba pode usar um database diferente)" AutomationProperties.Name="Database da aba" />
+                    <TextBlock Text="{Binding DatabaseLabel}" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <Button Style="{StaticResource GhostButton}" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="4,0,0,0"
+                            Foreground="{StaticResource TextSecondaryBrush}" Command="{Binding ReconnectCommand}" ToolTip="Reconectar" AutomationProperties.Name="Reconectar" />
+                </StackPanel>
+            </WrapPanel>
+
+            <TextBlock DockPanel.Dock="Bottom" DataContext="{Binding SelectedTab}" Text="{Binding ScriptStatus}" Style="{StaticResource MutedText}" Margin="12,2,12,4" />
+
+            <ae:TextEditor x:Name="QueryEditor" ShowLineNumbers="True" FontFamily="Consolas" FontSize="13"
+                           Background="{StaticResource EditorBrush}" Foreground="{StaticResource TextPrimaryBrush}"
+                           BorderThickness="0" Padding="6,4" LineNumbersForeground="{StaticResource TextMutedBrush}"
+                           AutomationProperties.Name="Editor SQL" />
+        </DockPanel>
+    </Border>
 
 </UserControl>

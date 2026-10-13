@@ -35,6 +35,24 @@ public sealed class ConnectionService : IConnectionService
         return record?.Profile;
     }
 
+    public async Task<Result<string?>> GetStoredPasswordAsync(Guid id, CancellationToken ct = default)
+    {
+        var record = await _store.GetAsync(id, ct);
+        if (record?.ProtectedSecret == null || record.Profile.PromptPassword)
+        {
+            return Result<string?>.Ok(null);
+        }
+
+        try
+        {
+            return Result<string?>.Ok(_secretStore.Unprotect(record.ProtectedSecret));
+        }
+        catch (CryptographicException)
+        {
+            return Result<string?>.Fail(ErrorCodes.SecNoAuthorization, "Não foi possível recuperar a credencial protegida por DPAPI nesta máquina.");
+        }
+    }
+
     public async Task<Result<Guid>> SaveAsync(ConnectionProfile profile, string? newPassword, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(profile);
@@ -210,7 +228,10 @@ public sealed class ConnectionService : IConnectionService
         }
     }
 
-    public async Task<Result<OpenedConnection>> OpenAsync(Guid profileId, ConnectionPurpose purpose, CancellationToken ct = default)
+    public Task<Result<OpenedConnection>> OpenAsync(Guid profileId, ConnectionPurpose purpose, CancellationToken ct = default) =>
+        OpenAsync(profileId, purpose, database: null, ct);
+
+    public async Task<Result<OpenedConnection>> OpenAsync(Guid profileId, ConnectionPurpose purpose, string? database, CancellationToken ct = default)
     {
         var record = await _store.GetAsync(profileId, ct);
         if (record == null)
@@ -218,7 +239,10 @@ public sealed class ConnectionService : IConnectionService
             return Result<OpenedConnection>.Fail(ErrorCodes.PrvConnFailed, $"Perfil de conexão com ID '{profileId}' não encontrado.");
         }
 
-        var profile = record.Profile;
+        // Database escolhido na aba do editor/Explorer: mesma conexão salva, outro database do mesmo servidor.
+        var profile = string.IsNullOrWhiteSpace(database)
+            ? record.Profile
+            : record.Profile with { Settings = record.Profile.Settings with { Database = database } };
         var provider = _providerRegistry.Get(profile.Engine);
 
         string? password = null;

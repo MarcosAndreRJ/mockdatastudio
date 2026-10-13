@@ -111,6 +111,12 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 | DA-202 | Extrator lê `pg_catalog` em lote (uma consulta por tipo de objeto) com filtro opcional por namespace e tabela. `ExtractTableAsync` reusa as mesmas consultas, atendendo ao refresh por nó do Explorer | docs/11 §2 e §6; `PostgreSqlSchemaExtractor` |
 | DA-203 | UNIQUE sem constraint em colunas simples vira `UniqueConstraintModel` com `UniqueSource.UniqueIndex`. Índice de expressão guarda a definição completa (`pg_get_indexdef`) em `IndexColumn.Expression`, sem análise da expressão | docs/11 §2; digest de referência |
 | DA-204 | B2 iniciada antes de B1 ter status ✅ (regra §1.3 do plano), por decisão do responsável em 2026-10-12. B1 depende de Docker, indisponível nesta máquina. O contrato de B2 contra servidor real fica como Skip com motivo | PLANO §1.3; PV-202 |
+| DA-205 | Servidores de desenvolvimento definidos pelo responsável em 2026-10-12: MySQL e Firebird num servidor da rede local, SQLite local, PostgreSQL adiado. As credenciais ficam fora do repositório: testes e sondas as leem de variáveis de ambiente | Pedido do responsável; docs/23 |
+| DA-206 | O servidor "MySQL" de desenvolvimento é MariaDB 10.5. O provider MySQL atende os dois: `@@server_uuid` (inexistente no MariaDB) é lido à parte e `Product` vira "MariaDB" quando a versão o indica; defaults do MariaDB vêm citados (`'x'`) ou como função (`current_timestamp()`) e são normalizados | docs/10; `MySqlProvider`, `MySqlSchemaExtractor` |
+| DA-207 | Firebird 2.5 é suportado na introspecção (o servidor de desenvolvimento é 2.5.9): sem `RDB$IDENTITY_TYPE`, `RDB$FUNCTIONS` nem BOOLEAN, o extrator escolhe as consultas pela versão (`ENGINE_VERSION`). O dialeto recebe a versão maior: generators usam `SET GENERATOR` antes do 3, `RESTART WITH n-1` no 3 e `RESTART WITH n` do 4 em diante | docs/10, docs/11; `FirebirdSchemaExtractor`, `FirebirdDialect` |
+| DA-208 | `ISchemaExtractor` ganhou `ListRoutinesAsync` e `ListSequencesAsync`, e `ISqlDialect` ganhou `BuildLimitedSelect` (LIMIT por padrão; `SELECT FIRST n` no Firebird). São métodos com implementação padrão, sem quebra de contrato para providers existentes | C02; Explorer |
+| DA-209 | Classificador SQL: `SHOW`, `DESCRIBE`/`DESC`, `VALUES`, `TABLE` e `EXPLAIN` (sem `ANALYZE`) são leitura (Select). Antes caíam em Other, que exige confirmação, e "show tables" não executava | docs/20 §4; `SqlClassifier` |
+| DA-210 | `QueryService` fecha o cursor do comando anterior antes de executar o próximo do mesmo script: MySQL e PostgreSQL aceitam um único leitor ativo por conexão. Só o último comando mantém o cursor para paginação; os anteriores ficam com a primeira página | docs/20 §6; `QueryService` |
 
 ### 1.3 Trilha C — Aplicação, projeto e interface (DA-300..399)
 
@@ -126,6 +132,10 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 | DA-307 | `Infrastructure/AppPaths`: a pasta de dados é `%LOCALAPPDATA%\MockDataStudio` ou o caminho de `MDS_DATA_DIR`. Os testes de UI usam uma pasta descartável e não tocam nos dados do usuário | docs/23 §3 |
 | DA-308 | `ProjectWorkspace` guarda o histórico de desfazer/refazer em memória (100 entradas, descartado ao abrir ou criar projeto), com granularidade de alteração de projeto; `IAppSettings` ganhou `RecentProjects` (10 itens). Projeto novo adota o nome do arquivo no primeiro Salvar como | docs/21 S10 |
 | DA-309 | Telas Home, Digest, Mapping e Templates usam ViewModels singleton (mantêm seleção ao navegar). `IDesignDataSource` e os dados de exemplo foram removidos; `Samples/ViewItems.cs` guarda só os itens de apresentação. A área "Schema Relationships" do Digest lista as chaves estrangeiras em tabela, no lugar do diagrama estático do mockup | docs/21 S02 |
+| DA-310 | Connections mostra a senha salva ao selecionar um perfil (botão de exibir/ocultar), por pedido do responsável em 2026-10-12. `IConnectionService.GetStoredPasswordAsync` decifra o segredo DPAPI do usuário atual; segredo de outro usuário/máquina falha com SEC-NO-AUTHORIZATION e o formulário mantém a senha salva se o campo ficar vazio | docs/23 §3; pedido do responsável |
+| DA-311 | `IConnectionService.OpenAsync` ganhou sobrecarga com `database`: abre o perfil em outro database do mesmo servidor sem alterar o perfil salvo. Base para o seletor de database do Explorer e das abas do editor | C09; docs/20 |
+| DA-312 | SQL Editor em abas: cada aba tem a própria conexão (perfil + database), o próprio documento (texto e desfazer) e os próprios resultados, e a mesma lista de abas aparece no Explorer e na página SQL Editor. F9 e Ctrl+Enter executam a seleção ou o script inteiro; Ctrl+T/Ctrl+W abrem e fecham abas; Esc cancela. A conexão ativa (`ActiveConnectionSession`) passa a ser só a do Explorer | docs/20 §2; pedido do responsável |
+| DA-313 | Explorer: selecionar um nó só preenche o inspetor (Columns, Indexes, Foreign Keys, Checks, Triggers, References, Preview); o texto do editor não é mais trocado. Ações do menu de contexto abrem o SQL numa aba do mesmo perfil e database, reaproveitando só aba vazia ou com texto gerado e não editado. A árvore lista cada tipo de objeto uma vez (`DatabaseNavigator.LoadCatalogAsync`), com grupos Triggers, Routines e Sequences quando existem | docs/20, docs/21 S04 |
 
 ### 1.4 Integração e gates (DA-400..499)
 
@@ -213,6 +223,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | PV-200 | Extrator PostgreSQL contra servidor 17: o digest de `loja` deve ser igual a `docs/examples/digest-postgresql.json` (B2.2). Nada foi executado contra servidor nesta etapa | Docker com PostgreSQL 17; capturar `loja` e comparar o digest | Documentar as diferenças e ajustar o extrator; não aceitar divergência de tipo ou de chave sem registro | B2 |
 | PV-201 | Expressão de CHECK: `pg_get_constraintdef` devolve forma diferente da do digest de referência (parênteses e `::text`). A equivalência de digest não foi verificada | Comparar o digest capturado (PV-200) com o de referência | Normalizar a expressão na captura, com regra registrada | B2 |
 | PV-202 | Contrato PostgreSQL real (T-PRV-PG-001..011) e T-OUT-ROUNDTRIP-PG não executados: Docker indisponível. Hoje há só testes puros e um Skip com motivo | Executar `Category=Contract` com Docker e PostgreSQL 17 | Manter o Skip com motivo; B2.5 não é marcada como concluída | B2 |
+| PV-203 | MySQL (MariaDB 10.5) e Firebird 2.5 verificados contra os servidores de desenvolvimento só por sonda fora do repositório: listagem, catálogo, inspeção, preview, DDL e execução de script. Não há teste automatizado de contrato para MySQL e Firebird no repositório, nem verificação com MySQL 8 ou Firebird 3+ | Testes `Category=Contract` lendo host e senha de variáveis de ambiente; servidores MySQL 8 e Firebird 4 | Manter a sonda manual registrada; não marcar B3/B4 como concluídas | B3/B4 |
 
 ### 5.3 Trilha C (PV-300..399)
 
@@ -222,6 +233,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | PV-301 | Autosave e arquivo de recuperação (docs/22 §7) e `ProjectMigrator` com backup `.vX.Y.bak` não implementados (só há formato 1.0) | Teste de recuperação ao reabrir; migração 1.0→1.1 quando existir | Implementar com a UI de projeto (C3) e a primeira mudança de formato | C3 |
 | PV-302 | Fluxo "só por teclado" (G-MVP-8) e salvar pelo diálogo de arquivo não foram automatizados na UI: T-UI-FLOW-001 cobre projeto novo → digest → mapeamento automático por automação de interface | Teste FlaUI com foco e Tab/Enter; diálogo de arquivo | Cobertura de Salvar/Abrir fica em Application.Tests; validar a navegação por teclado manualmente | C4 |
 | PV-303 | Telas reescritas (Home, Digest, Templates, Mapping) verificadas por testes de texto e de fluxo, sem comparação visual com os mockups; nada foi conferido a 125% e 150% de DPI | Captura e comparação visual; T-UI-DPI-001 | Ajustes de layout depois de revisão do responsável | C3/C9 |
+| PV-304 | Explorer e SQL Editor em abas (DA-312, DA-313) verificados por build, teste de fumaça de UI e sonda dos serviços; a interação real (troca de database por aba, F9, menu de contexto, preview) não foi exercitada por automação de interface | Teste FlaUI com perfil SQLite: nova aba, trocar database, F9, menu de contexto | Validação manual pelo responsável | Módulo Explorer |
 
 ### 5.4 Integração e gates (PV-400..499)
 
@@ -257,11 +269,13 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
 | 2026-10-12 | DA-200..204, PV-200..202 | Sprint B2 parcial (TypeMapper, dialeto, extrator e testes puros do PostgreSQL) e reconciliação do plano (C1, C2, C5, B2, B3, B4) | Pedido do responsável em 2026-10-12 |
+| 2026-10-12 | DA-205..210, PV-203 | Providers MySQL e Firebird (introspecção, dialeto, MariaDB, Firebird 2.5), classificador e cursor do QueryService | Módulo Conexões/Explorer, pedido do responsável |
 
 ### 6.3 Trilha C
 
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
+| 2026-10-12 | DA-310..313, PV-304 | Módulo Conexões/Explorer: senha visível no formulário, database por conexão, editor em abas, inspetor e árvore completos | Pedido do responsável |
 | 2026-10-12 | DA-305..309, PV-302..303 | Sprint C3 (telas do fluxo MVP com dados reais) | Ligar Home, Digest, Templates e Mapping aos serviços da C2; correção dos ids de geradores do Mapping |
 | 2026-10-12 | DA-300..304, PV-300..301 | Sprint C2 (Projects, DigestService, MappingService) | Implementação de C09 §1 e §2 com ajustes de assinatura registrados |
 

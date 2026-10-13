@@ -74,8 +74,7 @@ public static class ServiceRegistration
         builder.Services.AddSingleton<HomeViewModel>();
         builder.Services.AddTransient<ConnectionsViewModel>();
         builder.Services.AddSingleton<ExplorerViewModel>();
-        builder.Services.AddSingleton<SqlEditorViewModel>();
-        builder.Services.AddSingleton<SqlResultsViewModel>();
+        builder.Services.AddSingleton<SqlEditorWorkspaceViewModel>();
         builder.Services.AddSingleton<SqlEditorPageViewModel>();
         builder.Services.AddSingleton<SchemaDigestViewModel>();
         builder.Services.AddSingleton<TemplatesViewModel>();

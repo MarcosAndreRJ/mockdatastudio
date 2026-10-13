@@ -30,7 +30,12 @@ public sealed class MySqlProvider : IDatabaseProvider
 
     public IErrorTranslator ErrorTranslator => _errorTranslator;
 
-    public ITypeMapper TypeMapper => throw new NotImplementedException("Disponível a partir do módulo de introspecção / tipos.");
+    // tinyint(1) → Boolean é o padrão (DA-011). A opção por perfil ainda não chega aqui: CreateSchemaExtractor não
+    // recebe as configurações da conexão.
+    private readonly MySqlTypeMapper _typeMapper = new();
+    private readonly MySqlDialect _dialect = new();
+
+    public ITypeMapper TypeMapper => _typeMapper;
 
     public ProviderCapabilities GetCapabilities(string serverVersion) =>
         new(
@@ -123,27 +128,35 @@ public sealed class MySqlProvider : IDatabaseProvider
     {
         ArgumentNullException.ThrowIfNull(connection);
 
-        await using var versionCmd = connection.CreateCommand();
-        versionCmd.CommandText = "SELECT @@version, coalesce(@@server_uuid, ''), DATABASE();";
-
         string versionText = string.Empty;
         string serverUuid = string.Empty;
         string dbName = connection.Database;
 
-        try
+        // Versão e database primeiro; @@server_uuid à parte porque não existe no MariaDB (uma consulta única falhava
+        // inteira e a versão virava só "MySQL").
+        await using (var versionCmd = connection.CreateCommand())
         {
+            versionCmd.CommandText = "SELECT VERSION(), DATABASE();";
             await using var reader = await versionCmd.ExecuteReaderAsync(ct);
             if (await reader.ReadAsync(ct))
             {
                 versionText = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
-                serverUuid = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                dbName = reader.IsDBNull(2) ? connection.Database : reader.GetString(2);
+                dbName = reader.IsDBNull(1) ? connection.Database : reader.GetString(1);
             }
         }
-        catch
+
+        try
         {
-            versionText = "MySQL";
+            await using var uuidCmd = connection.CreateCommand();
+            uuidCmd.CommandText = "SELECT @@server_uuid;";
+            serverUuid = Convert.ToString(await uuidCmd.ExecuteScalarAsync(ct), CultureInfo.InvariantCulture) ?? string.Empty;
         }
+        catch (MySqlException)
+        {
+            serverUuid = string.Empty; // MariaDB: sem server_uuid; o fingerprint usa host, porta e database
+        }
+
+        var product = versionText.Contains("MariaDB", StringComparison.OrdinalIgnoreCase) ? "MariaDB" : "MySQL";
 
         var host = (connection.DataSource ?? "localhost").ToLowerInvariant();
         var port = 3306;
@@ -158,14 +171,12 @@ public sealed class MySqlProvider : IDatabaseProvider
         var rawIdentity = $"mysql|{host}|{port}|{normalizedDb}|{serverUuid}";
         var fingerprint = "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawIdentity))).ToLowerInvariant();
 
-        return new ServerInfo(versionText, "MySQL", dbName ?? string.Empty, host, fingerprint);
+        return new ServerInfo(versionText, product, dbName ?? string.Empty, host, fingerprint);
     }
 
-    public ISchemaExtractor CreateSchemaExtractor() =>
-        throw new NotImplementedException("Disponível a partir do módulo de introspecção (Sprint B3).");
+    public ISchemaExtractor CreateSchemaExtractor() => new MySqlSchemaExtractor(_typeMapper);
 
-    public ISqlDialect GetDialect(string serverVersion) =>
-        throw new NotImplementedException("Disponível a partir do módulo de dialetos (Sprint B3).");
+    public ISqlDialect GetDialect(string serverVersion) => _dialect;
 
     public IBulkInserter CreateBulkInserter(DbConnection connection, string serverVersion) =>
         throw new NotImplementedException("Disponível a partir do módulo de execução direta (Sprint B3).");
