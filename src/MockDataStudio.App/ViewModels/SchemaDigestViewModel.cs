@@ -10,6 +10,7 @@ using MockDataStudio.Core.Common;
 using MockDataStudio.Core.Connections;
 using MockDataStudio.Core.Diff;
 using MockDataStudio.Core.Digest;
+using MockDataStudio.Core.Hashing;
 using MockDataStudio.Core.Schema;
 using MockDataStudio.Projects;
 using MockDataStudio.Providers.Models;
@@ -328,7 +329,10 @@ public sealed partial class SchemaDigestViewModel : ObservableObject, IDisposabl
             EnsureProject();
             var source = new ConnectionRef(profile.Id, profile.Name, profile.Engine, result.Value.SourceFingerprintHash);
             var attached = _workspace.AttachSnapshot(result.Value, source);
-            StatusMessage = $"Estrutura capturada ({attached.Id}). Siga para Mapping.";
+            var attention = MigrateBindings(result.Value.DigestJson);
+            StatusMessage = attention == 0
+                ? $"Estrutura capturada ({attached.Id}). Siga para Mapping."
+                : $"Estrutura capturada ({attached.Id}). {attention} vínculo(s) precisam de revisão ou ficaram órfãos.";
         }
         catch (OperationCanceledException)
         {
@@ -452,6 +456,27 @@ public sealed partial class SchemaDigestViewModel : ObservableObject, IDisposabl
                 : $"{change.Before ?? "∅"} → {change.After ?? "∅"}");
             DigestChanges.Add(new ChangeItem(change.Severity.ToString(), change.Path, label, Theme.Brush(brush), detail));
         }
+    }
+
+    // Migra os vínculos do projeto para o schema recém-capturado (C7a.2). Devolve quantos precisam de atenção.
+    // O hasher é sem estado: criá-lo aqui evita mexer no registro de DI só para isso.
+    private int MigrateBindings(string digestJson)
+    {
+        var project = _workspace.Current;
+        if (project is null || project.Bindings.Count == 0)
+        {
+            return 0;
+        }
+
+        var schema = _serializer.Deserialize(digestJson);
+        if (!schema.IsSuccess)
+        {
+            return 0;
+        }
+
+        var migration = BindingMigrator.Migrate(project.Bindings, schema.Value, new StructureHasher());
+        _workspace.Update("Migrar vínculos para o novo snapshot", p => p with { Bindings = migration.Bindings });
+        return migration.Entries.Count(e => e.Outcome is not MigrationOutcome.Kept);
     }
 
     // A captura e a importação precisam de um projeto: cria um quando ainda não há nenhum aberto.

@@ -578,8 +578,8 @@ A4 e B4 podem ser mescladas durante o gate. **O gate é avaliado sobre a `main` 
 > 🤖 **IA: ao concluir cada item, marque `[x]` e preencha data e evidência. Ao final, faça commit, merge e push (§6.3).**
 
 - [ ] **C7a.0** Início conforme §6.1. · Concluído em: ____ · Evidência: ____
-- [ ] **C7a.1** Snapshots e diff na tela Schema Digest. *(TASK-14.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **C7a.2** Migração de bindings (Active/NeedsReview/Orphaned + renomeações; T-DIG-030, T-E2E-004). *(TASK-14.02)* · Concluído em: ____ · Evidência: ____
+- [ ] **C7a.1** Snapshots e diff na tela Schema Digest. *(TASK-14.01)* · Concluído em: ____ · ⏳ PARCIAL: captura, lista de snapshots, comparação com contagem por tipo e tabela de mudanças já na tela; comparação testada (`SchemaDifferTests`, `ProjectServicesTests`). Falta teste de UI da tela
+- [ ] **C7a.2** Migração de bindings (Active/NeedsReview/Orphaned + renomeações; T-DIG-030, T-E2E-004). *(TASK-14.02)* · Concluído em: ____ · ⏳ PARCIAL: `BindingMigrator` (mantido, renomeado por fingerprint único, revisão, órfão; 6 testes) aplicado ao capturar um snapshot, com a contagem na mensagem de status. Falta exibir os estados na tela de Mapping e os IDs T-DIG-030/T-E2E-004
 - [ ] **C7a.3** Múltiplos perfis, migração de formato, exportação sanitizada, confiança em projetos de terceiros, dependências de catálogo (T-PRJ-004, T-SEC-008). *(TASK-14.03, 14.04)* · Concluído em: ____ · Evidência: ____
 - [ ] Verificação e merge/push conforme §6.3 · Concluído em: ____
 
