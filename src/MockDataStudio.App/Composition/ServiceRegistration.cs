@@ -66,6 +66,10 @@ public static class ServiceRegistration
             new MockDataStudio.Catalog.Editing.TemplateEditor(
                 sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().Templates,
                 sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().DataSource));
+        builder.Services.AddSingleton<MockDataStudio.Catalog.Editing.CompositeTemplateEditor>(sp =>
+            new MockDataStudio.Catalog.Editing.CompositeTemplateEditor(
+                sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().Templates,
+                sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().DataSource));
         builder.Services.AddSingleton<MockDataStudio.Catalog.Editing.TemplateImportService>(sp =>
             new MockDataStudio.Catalog.Editing.TemplateImportService(
                 sp.GetRequiredService<MockDataStudio.Infrastructure.Catalog.CatalogBootstrap>().Importer));

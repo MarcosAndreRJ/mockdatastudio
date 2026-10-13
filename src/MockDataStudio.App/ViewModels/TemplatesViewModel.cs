@@ -19,15 +19,18 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     private readonly TemplateBrowser _browser;
     private readonly ICatalogInitializer _catalog;
     private readonly TemplateEditor _editor;
+    private readonly CompositeTemplateEditor _composite;
     private readonly TemplateImportService _import;
     private CancellationTokenSource? _loadCts;
     private string? _importSessionId;
 
-    public TemplatesViewModel(TemplateBrowser browser, ICatalogInitializer catalog, TemplateEditor editor, TemplateImportService import)
+    public TemplatesViewModel(TemplateBrowser browser, ICatalogInitializer catalog, TemplateEditor editor,
+        CompositeTemplateEditor composite, TemplateImportService import)
     {
         _browser = browser;
         _catalog = catalog;
         _editor = editor;
+        _composite = composite;
         _import = import;
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         NewTemplateCommand = new RelayCommand(NewTemplate);
@@ -74,6 +77,16 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _formStatus = string.Empty;
 
+    // Template composto: campos e registros em texto (ver CompositeTemplateEditor).
+    [ObservableProperty]
+    private bool _formIsComposite;
+
+    [ObservableProperty]
+    private string _formFields = string.Empty;
+
+    [ObservableProperty]
+    private string _formRecords = string.Empty;
+
     // Importação por script SQL ou pack JSON (S09).
     [ObservableProperty]
     private string _importText = string.Empty;
@@ -88,6 +101,54 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(MergeImportCommand))]
     private bool _canMergeImport;
 
+    // Composto: campos e registros em texto (ver CompositeTemplateEditor para o formato).
+    private async Task SaveCompositeAsync()
+    {
+        var fields = CompositeTemplateEditor.ParseFields(FormFields);
+        if (!fields.IsSuccess)
+        {
+            FormStatus = fields.Error.Message;
+            return;
+        }
+
+        var records = CompositeTemplateEditor.ParseRecords(FormRecords, fields.Value!);
+        if (!records.IsSuccess)
+        {
+            FormStatus = records.Error.Message;
+            return;
+        }
+
+        var result = await _composite.SaveAsync(new CompositeTemplateForm(
+            FormCode.Trim(), FormName.Trim(), FormDescription, fields.Value!,
+            TemplateEditor.ParseLines(FormAliases), records.Value!.Select(r => (IReadOnlyDictionary<string, string?>)r).ToList()),
+            CancellationToken.None);
+        FormStatus = result.IsSuccess ? $"Template composto '{FormCode.Trim()}' salvo." : result.Error.Message;
+        if (result.IsSuccess)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadCompositeAsync(string code)
+    {
+        var loaded = await _composite.LoadAsync(code, CancellationToken.None);
+        if (!loaded.IsSuccess)
+        {
+            FormStatus = loaded.Error.Message;
+            return;
+        }
+
+        var form = loaded.Value!;
+        FormIsComposite = true;
+        FormCode = form.Code;
+        FormName = form.Name;
+        FormDescription = form.Description ?? string.Empty;
+        FormFields = CompositeTemplateEditor.FormatFields(form.Fields);
+        FormRecords = CompositeTemplateEditor.FormatRecords(form.Records, form.Fields);
+        FormAliases = string.Join(Environment.NewLine, form.Aliases);
+        FormStatus = $"Template composto '{form.Code}' carregado para edição.";
+    }
+
     private void NewTemplate()
     {
         FormCode = string.Empty;
@@ -96,11 +157,20 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
         FormLogicalType = "string";
         FormValues = string.Empty;
         FormAliases = string.Empty;
-        FormStatus = "Novo template: preencha código, nome e valores.";
+        FormIsComposite = false;
+        FormFields = string.Empty;
+        FormRecords = string.Empty;
+        FormStatus = "Novo template: preencha código, nome e valores (ou campos e registros, se for composto).";
     }
 
     private async Task SaveTemplateAsync()
     {
+        if (FormIsComposite)
+        {
+            await SaveCompositeAsync();
+            return;
+        }
+
         if (!Enum.TryParse<LogicalType>(FormLogicalType, ignoreCase: true, out var logicalType))
         {
             FormStatus = $"Tipo lógico '{FormLogicalType}' inválido (ex.: string, integer, date).";
@@ -125,6 +195,13 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
             return;
         }
 
+        var details = await _browser.GetDetailsAsync(SelectedTemplate.Code, CancellationToken.None);
+        if (details is not null && details.IsComposite)
+        {
+            await LoadCompositeAsync(SelectedTemplate.Code);
+            return;
+        }
+
         var loaded = await _editor.LoadScalarAsync(SelectedTemplate.Code, CancellationToken.None);
         if (!loaded.IsSuccess)
         {
@@ -132,6 +209,7 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
             return;
         }
 
+        FormIsComposite = false;
         var form = loaded.Value!;
         FormCode = form.Code;
         FormName = form.Name;

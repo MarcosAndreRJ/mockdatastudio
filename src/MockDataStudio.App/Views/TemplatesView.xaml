@@ -153,11 +153,46 @@
                             <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Nome do template" />
                             <TextBlock Text="Descrição" Style="{StaticResource LabelText}" />
                             <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Descrição do template" />
+                            <CheckBox Content="Template composto (campos e registros, em vez de valores)" IsChecked="{Binding FormIsComposite}" Margin="0,4,0,8" />
+                            <!-- Escalar: tipo lógico, valores e aliases. Oculto quando o template é composto. -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding FormIsComposite}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
                             <TextBlock Text="Tipo lógico (string, integer, decimal, date…)" Style="{StaticResource LabelText}" />
                             <TextBox Text="{Binding FormLogicalType, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Tipo lógico" />
                             <TextBlock Text="Valores" Style="{StaticResource LabelText}" />
                             <TextBox Text="{Binding FormValues, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="110"
                                      VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Valores do template" />
+                            </StackPanel>
+
+                            <!-- Composto: campos e registros. Visível só quando o template é composto. -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding FormIsComposite}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="Campos (codigo | tipo | tamanho | obrigatório)" Style="{StaticResource LabelText}" />
+                                <TextBox Text="{Binding FormFields, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="110"
+                                         VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Campos do template composto" />
+                                <TextBlock Text="Registros (valores na ordem dos campos, separados por |; vazio = nulo)" Style="{StaticResource LabelText}" />
+                                <TextBox Text="{Binding FormRecords, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="130"
+                                         VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Registros do template composto" />
+                            </StackPanel>
+
+                            <!-- Aliases valem para escalar e composto. -->
                             <TextBlock Text="Aliases" Style="{StaticResource LabelText}" />
                             <TextBox Text="{Binding FormAliases, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="60"
                                      VerticalScrollBarVisibility="Auto" Margin="0,2,0,6" Padding="6,4" AutomationProperties.Name="Aliases do template" />
