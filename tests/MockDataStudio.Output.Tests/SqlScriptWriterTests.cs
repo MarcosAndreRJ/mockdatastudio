@@ -60,7 +60,10 @@ public sealed class SqlScriptWriterTests
             await File.WriteAllTextAsync(snapshot, actual, new UTF8Encoding(false), ct);
         }
 
-        actual.ShouldBe(await File.ReadAllTextAsync(snapshot, ct));
+        // O Git pode converter as quebras de linha do arquivo de snapshot no checkout (autocrlf).
+        actual.ShouldBe((await File.ReadAllTextAsync(snapshot, ct)).Replace("
+", "
+", StringComparison.Ordinal));
         actual.ShouldContain("INSERT INTO \"categoria\" (\"id\",\"nome\",\"pai_id\") VALUES");
         actual.ShouldContain("Carla D''Ávila Teste");
         actual.ShouldContain("-- Segmento 001 de 001");
