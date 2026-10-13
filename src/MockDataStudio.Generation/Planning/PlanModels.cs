@@ -33,11 +33,16 @@ public sealed record KeyColumnPlan(
 
 public sealed record DeferredFk(string ForeignKeyName, CycleBreakStrategy Strategy);
 
+// FK gerada da tabela (16 §7). Composta quando tem mais de uma coluna.
+public sealed record ForeignKeyPlan(
+    string Name, IReadOnlyList<string> ChildColumns, ObjectName Parent, IReadOnlyList<string> ParentColumns, bool Composite);
+
 public sealed record TablePlan(
     ObjectName Table, long RowCount, IReadOnlyList<string> InsertColumns,
     IReadOnlyList<string> EvaluationOrder,
     IReadOnlyList<KeyColumnPlan> Keys, IReadOnlyList<DeferredFk> DeferredFks,
-    IReadOnlyDictionary<string, RelationSettings> Relations, bool ParentDrivenRowCount);
+    IReadOnlyDictionary<string, RelationSettings> Relations, bool ParentDrivenRowCount,
+    IReadOnlyList<ForeignKeyPlan>? ForeignKeys = null);
 
 public sealed record GenerationPlan(
     IReadOnlyList<PlanStep> Steps, IReadOnlyDictionary<ObjectName, TablePlan> Tables,

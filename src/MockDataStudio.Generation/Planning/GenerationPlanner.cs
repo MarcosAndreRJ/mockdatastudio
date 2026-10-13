@@ -202,8 +202,80 @@ public sealed class GenerationPlanner : IGenerationPlanner
             keys,
             deferredFks,
             settings.Relations ?? new Dictionary<string, RelationSettings>(),
-            ParentDrivenRowCount: false);
+            ParentDrivenRowCount: false,
+            ForeignKeys: BuildForeignKeys(input, table, model, diagnostics));
     }
+
+    // FKs geradas da tabela (16 §7). Colunas que participam de mais de uma FK precisam de implicação estrutural
+    // (PLN-FK-OVERLAP quando não há). A FK de maior aridade é a primária; as demais precisam ser implicadas por ela.
+    private static List<ForeignKeyPlan> BuildForeignKeys(PlanningInput input, ObjectName table, TableModel model, List<PlanDiagnostic> diagnostics)
+    {
+        var generated = model.ForeignKeys
+            .Where(fk => DependencyGraphBuilder.IsGenerated(table, fk.Name, input.Profile.Tables))
+            .OrderBy(fk => fk.Name, StringComparer.Ordinal)
+            .ToList();
+        var plans = generated
+            .Select(fk => new ForeignKeyPlan(fk.Name, fk.Columns, fk.Referenced, fk.ReferencedColumns, fk.Columns.Count > 1))
+            .ToList();
+
+        var reported = new HashSet<string>(StringComparer.Ordinal);
+        var shared = generated.SelectMany(fk => fk.Columns).Distinct(StringComparer.Ordinal)
+            .Where(c => generated.Count(fk => fk.Columns.Contains(c, StringComparer.Ordinal)) > 1);
+        foreach (var column in shared)
+        {
+            var group = generated
+                .Where(fk => fk.Columns.Contains(column, StringComparer.Ordinal))
+                .OrderByDescending(fk => fk.Columns.Count)
+                .ThenBy(fk => fk.Name, StringComparer.Ordinal)
+                .ToList();
+            var primary = group[0];
+            foreach (var other in group.Skip(1))
+            {
+                if (IsImplied(primary, other, input.Schema) || !reported.Add(other.Name))
+                {
+                    continue;
+                }
+
+                diagnostics.Add(new PlanDiagnostic(DiagnosticSeverity.Error, "PLN-FK-OVERLAP",
+                    $"A coluna '{column}' participa das FKs '{primary.Name}' e '{other.Name}' sem implicação estrutural entre elas.",
+                    table.CanonicalId,
+                    "Use a mesma coluna só numa das FKs, ou torne a FK menor a projeção da maior (mesma tabela de referência)."));
+            }
+        }
+
+        return plans;
+    }
+
+    // "other" é satisfeita por "primary" quando as colunas de other estão contidas em primary e a tabela pai de primary
+    // tem FK para a tabela referenciada por other, com as mesmas colunas (ou quando são duplicatas exatas).
+    private static bool IsImplied(ForeignKeyModel primary, ForeignKeyModel other, SchemaModel schema)
+    {
+        if (other.Columns.Count == primary.Columns.Count && other.Referenced == primary.Referenced
+            && other.Columns.SequenceEqual(primary.Columns, StringComparer.Ordinal)
+            && other.ReferencedColumns.SequenceEqual(primary.ReferencedColumns, StringComparer.Ordinal))
+        {
+            return true;
+        }
+
+        if (!other.Columns.All(c => primary.Columns.Contains(c, StringComparer.Ordinal)))
+        {
+            return false;
+        }
+
+        var parent = schema.FindTable(primary.Referenced);
+        if (parent is null)
+        {
+            return false;
+        }
+
+        var primaryMap = primary.Columns.Zip(primary.ReferencedColumns).ToDictionary(p => p.First, p => p.Second, StringComparer.Ordinal);
+        var otherMap = other.Columns.Zip(other.ReferencedColumns).ToDictionary(p => p.First, p => p.Second, StringComparer.Ordinal);
+        return other.Columns.All(c => parent.ForeignKeys.Any(h =>
+            h.Referenced == other.Referenced
+            && h.Columns.Zip(h.ReferencedColumns).Any(pair =>
+                pair.First == primaryMap[c] && pair.Second == otherMap[c])));
+    }
+
 
     private static bool IsInteger(DataTypeInfo type) => type.LogicalType == LogicalType.Integer;
 
