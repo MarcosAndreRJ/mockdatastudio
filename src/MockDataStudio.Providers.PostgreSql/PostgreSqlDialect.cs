@@ -24,6 +24,8 @@ public sealed class PostgreSqlDialect : ISqlDialect
     // Limite conservador de linhas por INSERT multi-linha (VALUES).
     public int RecommendedRowsPerInsert => 500;
 
+    public IReadOnlyList<string> DeferConstraintStatements() => ["SET CONSTRAINTS ALL DEFERRED;"];
+
     public string QuoteIdentifier(string identifier) =>
         "\"" + identifier.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
 
@@ -51,6 +53,19 @@ public sealed class PostgreSqlDialect : ISqlDialect
 
         var regclass = PostgreSqlLiteralFormatter.Text(sequenceName);
         return [$"SELECT setval({regclass}, {nextValue.ToString(CultureInfo.InvariantCulture)}, false);"];
+    }
+
+    // Bloco anônimo que aborta o script se já existir linha na faixa reservada (docs/16 §5.2). O texto da mensagem
+    // não carrega valores de dados, só nomes de objeto e os limites da faixa.
+    public string? BuildKeyRangeGuard(ObjectName table, string column, long first, long last)
+    {
+        var qualified = QualifiedName(table);
+        var quoted = QuoteIdentifier(column);
+        var range = first.ToString(CultureInfo.InvariantCulture) + ".." + last.ToString(CultureInfo.InvariantCulture);
+        var message = $"A faixa de chaves {table.Name}.{column} [{range}] já está ocupada no destino";
+        return "DO $$ BEGIN IF EXISTS (SELECT 1 FROM " + qualified + " WHERE " + quoted + " BETWEEN "
+            + first.ToString(CultureInfo.InvariantCulture) + " AND " + last.ToString(CultureInfo.InvariantCulture)
+            + ") THEN RAISE EXCEPTION '" + message.Replace("'", "''", StringComparison.Ordinal) + "'; END IF; END $$;";
     }
 
     public string BuildInsert(ObjectName table, IReadOnlyList<string> columns, IReadOnlyList<IReadOnlyList<string>> literalRows, string? overrideClause)

@@ -23,6 +23,8 @@ public sealed class SqliteDialect(string dateStorage = SqliteValues.DateStorageT
     // Limite conservador de linhas por INSERT multi-linha (VALUES).
     public int RecommendedRowsPerInsert => 500;
 
+    public IReadOnlyList<string> DeferConstraintStatements() => ["PRAGMA defer_foreign_keys = ON;"];
+
     public string QuoteIdentifier(string identifier) =>
         "\"" + identifier.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
 

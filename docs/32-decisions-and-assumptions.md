@@ -96,6 +96,11 @@ Decisões de produto (DP) e bloqueios técnicos (BT) seguem numeração única. 
 | DA-102 | Faixa de chave Explicit: `start = max(MAX, sequence, 0) + 1 + KeyOffset` (ou `KeyStartOverride`). Overflow usa a largura inteira do tipo (`IntegerBits`); tipo sem largura conhecida não tem checagem de overflow | 16 §5.2; `KeyPlanner.cs` |
 | DA-103 | Resolução de ciclos: busca exaustiva (menor conjunto de arestas, desempate por custo da estratégia) até 12 arestas candidatas; acima disso, guloso que só remove arestas dentro de um componente cíclico restante. A heurística gulosa pode não ser mínima | 16 §3; `CycleResolver.cs` |
 | DA-104 | `GenerationPlan` não inclui `SessionSetupStep`/`SessionTeardownStep`: as instruções dependem do dialeto e entram na A3. `PlanHash` é SHA-256 do texto canônico do plano. Autorreferência só gera o diagnóstico `PLN-SELF-REF`; a geração é responsabilidade do gerador | C06; 16 §4; `GenerationPlanner.cs` |
+| DA-105 | A3 iniciada com A2 parcial e sem B1 concluída, por decisão do responsável em 2026-10-12. O writer implementa `IRowSink` (Generation) e é testado com linhas montadas à mão sobre o plano do `GenerationPlanner`; a integração com `IGenerationEngine.RunAsync(GenerationPlan)` (A2.5) fica para depois | PLANO A3 |
+| DA-106 | Constantes por SGBD saíram do writer para `ISqlDialect` (T-ARC-007 proíbe ramificar por `DatabaseEngine` fora dos providers): `RecommendedCommitRows` (50.000), `DeferConstraintStatements()`, `MaxTuplesPerPredicate` (1.000) e `BuildTuplePredicate`, além de `BuildKeyRangeGuard` (C02). Todos têm implementação padrão; MySQL (10.000 linhas/commit) e Firebird (5.000, 200 tuplas, predicado com OR) sobrescrevem ao serem implementados (B3/B4). PostgreSQL implementa a guarda `DO $$ … RAISE EXCEPTION`; SQLite devolve nulo e o writer emite só o comentário `VERIFICAÇÃO` | docs/18 §5 e §7, C02 |
+| DA-107 | Com constraints adiadas (`DeferredConstraint`) o script inteiro fica num só segmento e sem commits periódicos (o componente de ciclo não pode ser dividido, 18 §6); se exceder o limite, o aviso é `OUT-SEGMENT-OVERSIZE`. O total de segmentos do cabeçalho tem largura fixa de 3 dígitos (`Segmento 001 de 003`) e é gravado no fim, no lugar de um marcador, sem reescrever o arquivo | docs/18 §6 |
+| DA-108 | Script de limpeza: faixa inteira Explicit vira `BETWEEN`; chaves compostas, UUID e demais usam tuplas guardadas pelo writer em memória (limite de 2 milhões por tabela; acima, comentário de limpeza manual). `ICleanupScriptBuilder` ganhou o schema no construtor e a convenção de que `KeyRangeResult.Column` traz as colunas da PK separadas por vírgula quando `CapturedKeys` está preenchido. `OutputWriterOptions` ganhou `CommitEveryRows` (testes) e `ScriptHeader` ganhou `Reproducibility`, ambos com padrão | C08 |
+| DA-109 | `LineEnding` `\r\n` converte só as quebras estruturais do script (`EolConverter` ignora o interior de `'…'` e `"…"`), para que valores com quebra de linha não sejam alterados | docs/18 §6 |
 
 ### 1.2 Trilha B — Providers, SQL e testes de integração (DA-200..299)
 
@@ -198,6 +203,8 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 | PV-100 | `IGenerationEngine.RunAsync(GenerationPlan, …)` e `IRowSink`/`RowBatch` (C06) ainda não existem: o motor continua com a API por tabela (DA-052). Output (A3) precisa consumir o plano, então exige coordenação com a trilha A na própria A3 | Implementar A2.5 e revisar com A3 | Manter a API por tabela até A3 e registrar a divergência no relatório | A2 / A3 |
 | PV-101 | Snapshots de plano para os 4 digests de `docs/examples` (T-REL-PLAN-001) não foram feitos: falta importar os digests para `SchemaModel` na suíte de testes | Importar `digest-*.json` (Core.Digest) e gerar o plano de `loja` por SGBD | Registrar snapshot parcial só para PostgreSQL e manter o restante pendente | A2 |
 | PV-102 | Smoke de UI (`App.UiTests`) falhou em rodadas completas da solução (rodadas de 2026-10-12, com a A2): `Saved Connections (` não foi encontrado na tela Connections após `Thread.Sleep(1200)`. Passa em execuções isoladas. Não é causado por código da A2 (a sprint só altera Generation) | Repetir a suíte completa e capturar a mensagem; trocar o sleep fixo por espera pelo marcador | Não marcar o smoke como verde sem captura; a correção é da Trilha C | Trilha C (C1) |
+| PV-103 | A saída em script foi verificada só em SQLite real (execução do script e limpeza). PostgreSQL, MySQL e Firebird: nenhum script foi executado contra servidor (sem Docker); a guarda `DO $$` e o resync de PostgreSQL só têm teste de texto | T-OUT-ROUNDTRIP-* e T-OUT-LIT-* em containers (B1/CI) | Manter marcado como não verificado até a B1 | A3/B1 |
+| PV-104 | `SqliteValues.ToStorage` (Trilha B) devolvia números como texto (`'1'` no script). Corrigido nesta sprint (inteiros, floats e decimais) com os testes de contrato verdes; requer revisão da Trilha B | Contratos do SQLite + T-OUT-001 | Reverter e tratar no writer | A3 |
 
 ### 5.2 Trilha B (PV-200..299)
 
@@ -242,6 +249,7 @@ Nenhum bloqueio técnico identificado que impeça iniciar a implementação. Ite
 
 | Data | Item | Alteração | Motivo |
 |---|---|---|---|
+| 2026-10-12 | DA-105..109, PV-103..104 | Sprint A3 (saída em script SQL) | Writer, sink segmentado, manifesto, limpeza e guardas; constantes por SGBD movidas para ISqlDialect |
 | 2026-10-12 | DA-100..104, PV-100..102 | Sprint A2 parcial: grafo com Tarjan, resolução de ciclos, faixa de chaves e planejador com diagnósticos e PlanHash | Pedido do responsável em 2026-10-12 |
 
 ### 6.2 Trilha B

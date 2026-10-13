@@ -55,3 +55,10 @@ public interface ICleanupScriptBuilder
 public sealed record RunManifest(string Format /* "mds.run-manifest" */, string Version /* "1.0" */, Guid RunId,
     string Status, ScriptHeader Header, IReadOnlyList<OutputArtifact> Segments, IReadOnlyList<TableRunResult> Tables, string ExecutionOrderNote);
 ```
+
+## Notas de implementação (A3, 2026-10-12)
+
+- `ScriptHeader` ganhou `Reproducibility` (padrão `"Exact"`) e `OutputWriterOptions` ganhou `CommitEveryRows` (padrão nulo = valor do dialeto); ambos aditivos.
+- `CleanupScriptBuilder` recebe o `SchemaModel` no construtor (precisa dos tipos das colunas da PK). Para chaves compostas/UUID/capturadas, `KeyRangeResult.CapturedKeys` traz as tuplas na ordem da PK e `Column` os nomes separados por vírgula.
+- `SegmentedTextSink` expõe `FinishAsync` (renomeia `.partial`, grava o total de segmentos e calcula SHA-256) e `AbortAsync` (mantém `.partial`). O primeiro segmento chama-se `<nome>.sql` e os seguintes `<nome>_partNNN.sql`.
+- Constantes por SGBD (commit periódico, tuplas por condição, constraints adiadas, guarda de faixa) vêm de `ISqlDialect` (DA-106).
