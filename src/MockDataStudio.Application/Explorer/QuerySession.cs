@@ -14,10 +14,26 @@ public enum TransactionMode
 // Sessão de consulta do editor (C6r.1): conexão dedicada, separada da conexão de navegação do Explorer,
 // e controle de transação. Início, COMMIT e ROLLBACK são enviados como SQL simples (BEGIN, COMMIT, ROLLBACK),
 // o que vale para SQLite, PostgreSQL e MySQL. O Firebird usa outra sintaxe e não é coberto por este serviço.
-public sealed class QuerySession(Func<CancellationToken, Task<DbConnection>> openConnection) : IAsyncDisposable
+public sealed class QuerySession : IAsyncDisposable
 {
+    private readonly Func<CancellationToken, Task<DbConnection>>? _openConnection;
+    private readonly bool _ownsConnection;
     private DbConnection? _connection;
     private bool _transactionOpen;
+
+    // Sessão que abre e descarta a própria conexão.
+    public QuerySession(Func<CancellationToken, Task<DbConnection>> openConnection)
+    {
+        _openConnection = openConnection ?? throw new ArgumentNullException(nameof(openConnection));
+        _ownsConnection = true;
+    }
+
+    // Sessão sobre uma conexão emprestada (ex.: a da aba do editor): não a fecha ao descartar, só desfaz transação aberta.
+    public QuerySession(DbConnection borrowed)
+    {
+        _connection = borrowed ?? throw new ArgumentNullException(nameof(borrowed));
+        _ownsConnection = false;
+    }
 
     public TransactionMode Mode { get; private set; } = TransactionMode.AutoCommit;
 
@@ -40,7 +56,7 @@ public sealed class QuerySession(Func<CancellationToken, Task<DbConnection>> ope
     }
 
     public async Task<DbConnection> ConnectionAsync(CancellationToken ct) =>
-        _connection ??= await openConnection(ct);
+        _connection ??= await _openConnection!(ct);
 
     // Executa um script na conexão da sessão. No modo Manual, abre a transação antes do primeiro comando.
     public async Task<QueryRun> RunAsync(QueryService service, ExecutionRequest request, CancellationToken ct)
@@ -94,7 +110,11 @@ public sealed class QuerySession(Func<CancellationToken, Task<DbConnection>> ope
                 }
             }
 
-            await _connection.DisposeAsync();
+            if (_ownsConnection)
+            {
+                await _connection.DisposeAsync();
+            }
+
             _connection = null;
         }
     }

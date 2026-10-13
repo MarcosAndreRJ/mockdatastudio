@@ -13,6 +13,7 @@ using MockDataStudio.Application;
 using MockDataStudio.Application.Explorer;
 using MockDataStudio.Core.Common;
 using MockDataStudio.Core.Connections;
+using MockDataStudio.SqlTooling.Completion;
 using MockDataStudio.SqlTooling.Dialect;
 using MockDataStudio.SqlTooling.Splitter;
 
@@ -273,11 +274,15 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
     private int _connectVersion;
     private bool _suppressSelection;
 
+    // Transação da aba (AutoCommit por padrão). Empresta a conexão da aba: descartá-la desfaz a transação, não a fecha.
+    private QuerySession? _transactions;
+
     public SqlEditorTabViewModel(int number, IConnectionService connections, ISqlScriptSplitter splitter)
     {
         Number = number;
         _connections = connections;
         _splitter = splitter;
+        Document.TextChanged += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
         RunCommand = new AsyncRelayCommand(RunAsync, () => HasConnection && !IsRunning && !IsConnecting);
         StopCommand = new RelayCommand(() => _cts?.Cancel(), () => IsRunning);
         ExplainCommand = new AsyncRelayCommand(ExplainAsync, () => HasConnection && !IsRunning && !IsConnecting);
@@ -285,6 +290,8 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
         SaveScriptCommand = new AsyncRelayCommand(SaveScriptAsync);
         OpenScriptCommand = new AsyncRelayCommand(OpenScriptAsync);
         ReconnectCommand = new AsyncRelayCommand(() => ConnectAsync(SelectedProfile, SelectedDatabase), () => SelectedProfile is not null && !IsRunning);
+        CommitCommand = new AsyncRelayCommand(CommitAsync, () => HasOpenTransaction && !IsRunning);
+        RollbackCommand = new AsyncRelayCommand(RollbackAsync, () => HasOpenTransaction && !IsRunning);
         Results.Clear("Selecione a conexão e o database desta aba.");
     }
 
@@ -295,6 +302,11 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
 
     public SqlResultsViewModel Results { get; } = new();
 
+    // Avisa a recuperação de abas quando texto, perfil, database ou arquivo mudam.
+    public event EventHandler? Changed;
+
+    public string? CurrentDatabaseOrNull => string.IsNullOrEmpty(CurrentDatabase) ? null : CurrentDatabase;
+
     public ObservableCollection<string> Databases { get; } = [];
 
     public AsyncRelayCommand RunCommand { get; }
@@ -304,6 +316,115 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
     public AsyncRelayCommand SaveScriptCommand { get; }
     public AsyncRelayCommand OpenScriptCommand { get; }
     public AsyncRelayCommand ReconnectCommand { get; }
+    public AsyncRelayCommand CommitCommand { get; }
+    public AsyncRelayCommand RollbackCommand { get; }
+
+    // Modo de transação da aba: false = AutoCommit (padrão), true = Manual (confirme com Commit ou desfaça com Rollback).
+    [ObservableProperty]
+    private bool _isManualTransaction;
+
+    public bool HasOpenTransaction => _transactions?.HasOpenTransaction ?? false;
+
+    // Catálogo do autocomplete (C6r.2): relações e colunas da conexão atual. Null até carregar ou sem conexão.
+    public CompletionCatalog? Catalog { get; private set; }
+
+    public SqlDialectFeatures? Dialect => _opened is { } c ? DialectOf(c.Profile.Engine) : null;
+
+    private async Task LoadCatalogAsync(OpenedConnection opened, int version)
+    {
+        try
+        {
+            await _gate.WaitAsync();
+            try
+            {
+                var catalog = await new CompletionCatalogService(opened.Provider).BuildAsync(opened.Connection, CancellationToken.None);
+                if (version == _connectVersion)
+                {
+                    Catalog = catalog;
+                }
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+        catch (Exception ex) when (ex is DbException or NotSupportedException or NotImplementedException or InvalidOperationException)
+        {
+            // Sem catálogo, o autocomplete fica desligado; a aba continua funcionando.
+            Catalog = null;
+        }
+    }
+
+    partial void OnIsManualTransactionChanged(bool value)
+    {
+        if (_transactions is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _transactions.SetMode(value ? TransactionMode.Manual : TransactionMode.AutoCommit);
+            ScriptStatus = value ? "Modo Manual: a transação só confirma com Commit." : "Modo AutoCommit.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Transação aberta: volta o modo para não mentir sobre o estado da sessão.
+            _isManualTransaction = !value;
+            OnPropertyChanged(nameof(IsManualTransaction));
+            ScriptStatus = ex.Message;
+        }
+    }
+
+    private async Task CommitAsync()
+    {
+        if (_transactions is null)
+        {
+            return;
+        }
+
+        await _gate.WaitAsync();
+        try
+        {
+            await _transactions.CommitAsync(CancellationToken.None);
+            ScriptStatus = "Transação confirmada.";
+        }
+        catch (Exception ex) when (ex is DbException or InvalidOperationException)
+        {
+            ScriptStatus = "Falha ao confirmar: " + ex.Message;
+        }
+        finally
+        {
+            _gate.Release();
+            RefreshCommands();
+            OnPropertyChanged(nameof(HasOpenTransaction));
+        }
+    }
+
+    private async Task RollbackAsync()
+    {
+        if (_transactions is null)
+        {
+            return;
+        }
+
+        await _gate.WaitAsync();
+        try
+        {
+            await _transactions.RollbackAsync(CancellationToken.None);
+            ScriptStatus = "Transação desfeita.";
+        }
+        catch (Exception ex) when (ex is DbException or InvalidOperationException)
+        {
+            ScriptStatus = "Falha ao desfazer: " + ex.Message;
+        }
+        finally
+        {
+            _gate.Release();
+            RefreshCommands();
+            OnPropertyChanged(nameof(HasOpenTransaction));
+        }
+    }
 
     public string QueryText
     {
@@ -385,6 +506,8 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
         }
     }
 
+    partial void OnScriptPathChanged(string? value) => Changed?.Invoke(this, EventArgs.Empty);
+
     partial void OnIsRunningChanged(bool value) => RefreshCommands();
 
     partial void OnIsConnectingChanged(bool value)
@@ -399,10 +522,13 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
         StopCommand.NotifyCanExecuteChanged();
         ExplainCommand.NotifyCanExecuteChanged();
         ReconnectCommand.NotifyCanExecuteChanged();
+        CommitCommand.NotifyCanExecuteChanged();
+        RollbackCommand.NotifyCanExecuteChanged();
     }
 
     private void RefreshConnectionState()
     {
+        Changed?.Invoke(this, EventArgs.Empty);
         OnPropertyChanged(nameof(HasConnection));
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(DatabaseLabel));
@@ -440,6 +566,13 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
             await _gate.WaitAsync();
             try
             {
+                if (_transactions is not null)
+                {
+                    await _transactions.DisposeAsync();
+                    _transactions = null;
+                }
+
+                Catalog = null;
                 await previous.DisposeAsync();
             }
             finally
@@ -496,6 +629,8 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
             }
 
             _opened = opened;
+            _transactions = new QuerySession(opened.Connection);
+            _ = LoadCatalogAsync(opened, version);
             SetDatabases(databases, DatabaseOf(opened));
             Results.Clear($"Conectado a {opened.Server.Product} {opened.Server.Version}. Execute com F9 ou Ctrl+Enter.");
         }
@@ -589,7 +724,10 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
                 {
                     var request = new ExecutionRequest(script, DialectOf(profile.Engine), policy, Confirmed: confirmed,
                         CommandTimeoutSec: profile.Settings.CommandTimeoutSec);
-                    var run = await new QueryService(_splitter, opened.Provider.ErrorTranslator).ExecuteAsync(opened.Connection, request, _cts.Token);
+                    var transactions = _transactions ?? new QuerySession(opened.Connection);
+                    var run = await transactions.RunAsync(new QueryService(_splitter, opened.Provider.ErrorTranslator), request, _cts.Token);
+                    RefreshCommands();
+                    OnPropertyChanged(nameof(HasOpenTransaction));
 
                     var pending = run.Statements.FirstOrDefault(s => s.Status == StatementStatus.RequiresConfirmation);
                     if (pending is not null && !confirmed && Confirm(pending, profile.Environment))
@@ -721,6 +859,12 @@ public sealed partial class SqlEditorTabViewModel : ObservableObject, IAsyncDisp
     {
         ++_connectVersion;
         _cts?.Cancel();
+        if (_transactions is not null)
+        {
+            await _transactions.DisposeAsync();
+            _transactions = null;
+        }
+
         if (_opened is { } opened)
         {
             _opened = null;
@@ -749,7 +893,83 @@ public sealed partial class SqlEditorWorkspaceViewModel : ObservableObject
 
         SelectedTab = CreateTab();
         _session.Changed += (_, _) => _ = AdoptSessionAsync();
+        _ = RestoreAsync();
         _ = AdoptSessionAsync();
+    }
+
+    // Recuperação de abas (C6r.3): abas gravadas na última sessão substituem a aba vazia inicial.
+    // A gravação só começa depois da restauração, para não apagar o arquivo antes de lê-lo.
+    private readonly EditorTabStore _store = new(Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MockDataStudio", "editor-tabs.json"));
+    private System.Threading.Timer? _saveTimer;
+    private TabSnapshot[]? _pendingSnapshot;
+    private bool _restored;
+
+    private async Task RestoreAsync()
+    {
+        try
+        {
+            var saved = await _store.LoadAsync(CancellationToken.None);
+            if (saved.Count > 0)
+            {
+                var initial = Tabs.Count == 1 && string.IsNullOrWhiteSpace(Tabs[0].QueryText) ? Tabs[0] : null;
+                foreach (var snapshot in saved.OrderBy(s => s.Number))
+                {
+                    var tab = CreateTab();
+                    tab.QueryText = snapshot.Text;
+                    tab.ScriptPath = snapshot.ScriptPath;
+                    var profile = snapshot.ProfileId is { } id ? await FindProfileAsync(id) : null;
+                    await tab.AttachAsync(profile, snapshot.Database);
+                }
+
+                if (initial is not null)
+                {
+                    Tabs.Remove(initial);
+                }
+
+                SelectedTab = Tabs[0];
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // Sem recuperação: o editor abre com a aba vazia. Não impede o uso.
+        }
+        finally
+        {
+            _restored = true;
+            ScheduleSave();
+        }
+    }
+
+    // Agenda a gravação das abas. Captura o estado agora (UI) e grava depois de 600 ms sem novas alterações.
+    private void ScheduleSave()
+    {
+        if (!_restored)
+        {
+            return;
+        }
+
+        _pendingSnapshot = Tabs.Select(t => new TabSnapshot(t.Number, t.ProfileId, t.CurrentDatabaseOrNull, t.QueryText, t.ScriptPath)).ToArray();
+        _saveTimer ??= new System.Threading.Timer(_ => SaveNow(), null, Timeout.Infinite, Timeout.Infinite);
+        _saveTimer.Change(600, Timeout.Infinite);
+    }
+
+    private void SaveNow()
+    {
+        var snapshot = _pendingSnapshot;
+        if (snapshot is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _store.SaveAsync(snapshot, CancellationToken.None).GetAwaiter().GetResult();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Falha ao gravar a recuperação não deve derrubar o editor.
+        }
     }
 
     public ObservableCollection<SqlEditorTabViewModel> Tabs { get; } = [];
@@ -766,7 +986,9 @@ public sealed partial class SqlEditorWorkspaceViewModel : ObservableObject
     private SqlEditorTabViewModel CreateTab()
     {
         var tab = new SqlEditorTabViewModel(_nextNumber++, _connections, _splitter);
+        tab.Changed += (_, _) => ScheduleSave();
         Tabs.Add(tab);
+        ScheduleSave();
         return tab;
     }
 
@@ -892,6 +1114,7 @@ public sealed partial class SqlEditorWorkspaceViewModel : ObservableObject
 
         var index = Tabs.IndexOf(tab);
         Tabs.Remove(tab);
+        ScheduleSave();
         if (Tabs.Count == 0)
         {
             await NewTabAsync();

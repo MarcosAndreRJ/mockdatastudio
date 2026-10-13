@@ -67,6 +67,10 @@
                         <TextBlock Text="Stop" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
+                <CheckBox Content="Manual" IsChecked="{Binding IsManualTransaction}" VerticalAlignment="Center" Margin="12,2,0,2"
+                          ToolTip="Modo Manual: a transação só confirma com Commit (AutoCommit quando desmarcado)" AutomationProperties.Name="Modo Manual" />
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding CommitCommand}" Content="Commit" ToolTip="Confirmar a transação aberta" AutomationProperties.Name="Commit" />
+                <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding RollbackCommand}" Content="Rollback" ToolTip="Desfazer a transação aberta" AutomationProperties.Name="Rollback" />
                 <Button Style="{StaticResource SecondaryButton}" Height="32" Margin="8,2,0,2" Command="{Binding ExplainCommand}" ToolTip="Plano de execução (SELECT)" AutomationProperties.Name="Explain">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0" />

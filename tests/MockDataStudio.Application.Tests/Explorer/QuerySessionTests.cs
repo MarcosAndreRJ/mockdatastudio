@@ -94,6 +94,23 @@ public sealed class QuerySessionTests
         history.Entries.ShouldBeEmpty();
     }
 
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task ConexaoEmprestada_RollbackDesfazEDispensaFechamento()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var bench = await SqliteWorkbench.CreateAsync(ct: ct);
+        await using var borrowed = await bench.OpenAsync(ct);
+        await using (var session = new QuerySession(borrowed))
+        {
+            session.SetMode(TransactionMode.Manual);
+            await session.RunAsync(new QueryService(SqliteWorkbench.Splitter, bench.Provider.ErrorTranslator), Insert(), ct);
+        }
+
+        // A sessão descartada desfaz a transação, mas a conexão emprestada continua aberta e utilizável.
+        (await Count(borrowed, ct)).ShouldBe(3L);
+    }
+
     private static ExecutionRequest Insert() =>
         new("insert into cliente (nome, ativo) values ('Zoe', 1);", SqlDialectFeatures.Sqlite, Policy, Confirmed: true);
 

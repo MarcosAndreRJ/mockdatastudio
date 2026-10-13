@@ -3,9 +3,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
+using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using MockDataStudio.App.ViewModels;
+using MockDataStudio.SqlTooling.Completion;
 
 namespace MockDataStudio.App.Views;
 
@@ -29,6 +31,44 @@ public partial class SqlEditorView : UserControl
 
         // F9 e Ctrl+Enter executam (padrão de IBExpert, DBeaver, SQL Developer); Ctrl+T e Ctrl+W abrem e fecham abas.
         PreviewKeyDown += OnPreviewKeyDown;
+
+        // Autocomplete (C6r.2): aparece ao digitar letras, dígitos, "_" ou "." e com Ctrl+Espaço.
+        QueryEditor.TextArea.TextEntered += (_, e) => TryShowCompletion(e.Text, manual: false);
+    }
+
+    private CompletionWindow? _completion;
+
+    private void TryShowCompletion(string? typed, bool manual)
+    {
+        var tab = _workspace?.SelectedTab;
+        if (tab?.Catalog is not { } catalog || tab.Dialect is not { } dialect || _completion is not null)
+        {
+            return;
+        }
+
+        if (!manual && (string.IsNullOrEmpty(typed) || !(char.IsLetterOrDigit(typed[0]) || typed[0] is '_' or '.')))
+        {
+            return;
+        }
+
+        var result = SqlCompletionEngine.Complete(QueryEditor.Text, QueryEditor.CaretOffset, catalog, dialect);
+        if (result.Items.Count == 0)
+        {
+            return;
+        }
+
+        var window = new CompletionWindow(QueryEditor.TextArea)
+        {
+            StartOffset = result.ReplaceStart,
+        };
+        foreach (var item in result.Items)
+        {
+            window.CompletionList.CompletionData.Add(new SqlCompletionData(item));
+        }
+
+        _completion = window;
+        window.Closed += (_, _) => _completion = null;
+        window.Show();
 
         DataContextChanged += (_, _) =>
         {
@@ -111,6 +151,11 @@ public partial class SqlEditorView : UserControl
         else if (ctrl && e.Key == Key.S)
         {
             tab?.SaveScriptCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (ctrl && e.Key == Key.Space)
+        {
+            TryShowCompletion(null, manual: true);
             e.Handled = true;
         }
         else if (e.Key == Key.Escape && tab?.StopCommand.CanExecute(null) == true)
