@@ -166,11 +166,16 @@ flowchart LR
 
 Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório que as IAs usam enquanto ela estiver aberta. **Marcação pelo responsável** (não pela IA).
 
-- [ ] **D-01** Idioma da interface: pt-BR (especificação) ou inglês (mockups) — PV-016. *Padrão:* manter os textos dos mockups, todos externalizados em `Strings.resx`.
-- [ ] **D-02** Aprovar o SQL Editor como tela separada (DA-028, capturas em `docs/progress/sprint-1/`). *Padrão:* manter separada.
-- [ ] **D-03** Rótulos de ambiente: os do mockup (Development/QA/Local/Production) ou os do domínio (Development/Test/Staging/Production/Unknown). *Padrão:* domínio, com as cores do mockup.
-- [ ] **D-04** Logo MySQL (marca de terceiros). *Padrão:* ícone genérico de banco com o texto "MySQL".
+- [x] **D-01** Idioma da interface: pt-BR (especificação) ou inglês (mockups) — PV-016. *Padrão:* manter os textos dos mockups, todos externalizados em `Strings.resx`.
+  **Resposta (2026-10-12):** Português (PT-BR).
+- [x] **D-02** Aprovar o SQL Editor como tela separada (DA-028, capturas em `docs/progress/sprint-1/`). *Padrão:* manter separada.
+  **Resposta (2026-10-12):** Sim: SQL Editor como tela separada.
+- [x] **D-03** Rótulos de ambiente: os do mockup (Development/QA/Local/Production) ou os do domínio (Development/Test/Staging/Production/Unknown). *Padrão:* domínio, com as cores do mockup.
+  **Resposta (2026-10-12):** Domínio (Development/Test/Staging/Production/Unknown), com as cores do mockup.
+- [x] **D-04** Logo MySQL (marca de terceiros). *Padrão:* ícone genérico de banco com o texto "MySQL".
+  **Resposta (2026-10-12):** Logo MySQL. ⚠ Marca de terceiros: confirmar a licença de uso antes de publicar. O padrão provisório era o ícone genérico.
 - [ ] **D-05** Licença do pack de dados `CORE_PTBR` e do produto (DP-002). *Padrão:* dados autorais; licença definida até o Gate V1.
+  **Resposta:** ainda não respondida. Padrão provisório (dados autorais) continua valendo.
 
 ---
 
