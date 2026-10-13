@@ -65,6 +65,7 @@ public sealed class CatalogBootstrap : ICatalogInitializer, IDisposable
                 return _result.Value;
             }
 
+            // Migração e instalação do pacote têm trechos síncronos longos: fora da thread de UI, que chama este método.
             var migrated = await Task.Run(() => new CatalogMigrator(Database, Migration.LoadEmbedded()).Migrate(), ct);
             if (!migrated.IsSuccess)
             {
@@ -72,9 +73,9 @@ public sealed class CatalogBootstrap : ICatalogInitializer, IDisposable
                 return _result.Value;
             }
 
-            if ((await Templates.ListAsync(new TemplateQuery(), ct)).Count == 0)
+            if ((await Task.Run(() => Templates.ListAsync(new TemplateQuery(), ct), ct)).Count == 0)
             {
-                var installed = await Pack.InstallAsync(ct);
+                var installed = await Task.Run(() => Pack.InstallAsync(ct), ct);
                 if (!installed.IsSuccess)
                 {
                     _result = Result<bool>.Fail(installed.Error);
