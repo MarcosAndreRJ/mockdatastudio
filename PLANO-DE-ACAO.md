@@ -274,22 +274,22 @@ Estas decisões não bloqueiam as trilhas: cada uma tem um padrão provisório q
 | Desbloqueia | A4, **C4 (gate MVP)** |
 | Referências | docs/18, C08, TASK-08.01, TASK-18.01 |
 
-**Status:** ⬜ Não iniciada
+**Status:** ✅ Concluída em 2026-10-12 (sprint/A3-saida-sql), com a ressalva de ter sido iniciada com A2 parcial e sem B1 (DA-105, PV-103)
 
 > 🤖 **IA: ao concluir cada etapa, marque `[x]` e preencha data e evidência. Ao final, faça commit e merge (§3.3).**
 
-- [ ] **A3.0** Início da sprint conforme §3.1. · Concluído em: ____ · Evidência: ____
-- [ ] **A3.1** `SqlScriptWriter`: cabeçalho, preâmbulo, transações e commits periódicos, INSERT por `ISqlDialect`, updates adiados, resync de sequences. *(TASK-08.01)* · Concluído em: ____ · Evidência: ____
-- [ ] **A3.2** `ISegmentedTextSink` (nunca corta comando), `RunManifest` e escrita atômica (`.partial` → renomear). *(TASK-18.01 parte)* · Concluído em: ____ · Evidência: ____
-- [ ] **A3.3** `CleanupScriptBuilder` por faixas de chave e por tuplas (18 §7). · Concluído em: ____ · Evidência: ____
-- [ ] **A3.4** Guardas: `EmitGuards` usa `ISqlDialect.BuildKeyRangeGuard` (C02, acrescentado pela B1); quando o dialeto retorna `null`, emite só o comentário de verificação. · Concluído em: ____ · Evidência: ____
-- [ ] **A3.5** `IOutputWriterFactory` (script); T-OUT-001 (snapshot SQLite), T-OUT-002, T-OUT-003, T-OUT-004 e T-OUT-006 executando o script em SQLite real; `docs/examples/output-sqlite.sql` atualizado com saída real. · Concluído em: ____ · Evidência: ____
+- [x] **A3.0** Início da sprint conforme §3.1. · Concluído em: 2026-10-12 · Evidência: worktree MockDataStudio-A3, branch sprint/A3-saida-sql
+- [x] **A3.1** `SqlScriptWriter`: cabeçalho, preâmbulo, transações e commits periódicos, INSERT por `ISqlDialect`, updates adiados, resync de sequences. *(TASK-08.01)* · Concluído em: 2026-10-12 · Evidência: Output/SqlScriptWriter (cabeçalho, preâmbulo, transações e commits periódicos, INSERT por ISqlDialect, UPDATEs adiados, resync); T-OUT-001, T-OUT-008, T-OUT-009
+- [x] **A3.2** `ISegmentedTextSink` (nunca corta comando), `RunManifest` e escrita atômica (`.partial` → renomear). *(TASK-18.01 parte)* · Concluído em: 2026-10-12 · Evidência: Output/SegmentedTextSink (nunca corta comando, .partial → renomear, SHA-256, total de segmentos), RunManifest; T-OUT-002, T-OUT-003, T-OUT-004
+- [x] **A3.3** `CleanupScriptBuilder` por faixas de chave e por tuplas (18 §7). · Concluído em: 2026-10-12 · Evidência: Output/CleanupScriptBuilder (faixas, tuplas em lotes, FKs de ciclo zeradas antes dos DELETEs); T-OUT-006 executa script e limpeza em SQLite real e confere as contagens; T-OUT-007
+- [x] **A3.4** Guardas: `EmitGuards` usa `ISqlDialect.BuildKeyRangeGuard` (C02, acrescentado pela B1); quando o dialeto retorna `null`, emite só o comentário de verificação. · Concluído em: 2026-10-12 · Evidência: ISqlDialect.BuildKeyRangeGuard (padrão nulo; PostgreSQL com bloco DO); writer emite o comentário quando nulo; T-OUT-005
+- [x] **A3.5** `IOutputWriterFactory` (script); T-OUT-001 (snapshot SQLite), T-OUT-002, T-OUT-003, T-OUT-004 e T-OUT-006 executando o script em SQLite real; `docs/examples/output-sqlite.sql` atualizado com saída real. · Concluído em: 2026-10-12 · Evidência: SqlScriptWriterFactory (IOutputWriterFactory); T-OUT-001..004 e T-OUT-006 (28 testes em Output.Tests, incluindo literais adversariais T-OUT-LIT-001/002); docs/examples/output-sqlite.sql substituído pela saída real. T-OUT-ROUNDTRIP em PostgreSQL/MySQL/Firebird não executados (PV-103)
 
 **Verificação da sprint**
-- [ ] Testes de Output verdes; script `loja` SQLite executa sem erro e a limpeza devolve as contagens originais
-- [ ] Encerramento conforme §3.3
+- [x] Testes de Output verdes; script `loja` SQLite executa sem erro e a limpeza devolve as contagens originais
+- [x] Encerramento conforme §3.3
 
-**Relatório da sprint:** ____
+**Relatório da sprint:** Writer de script SQL completo (cabeçalho, transações, segmentação, manifesto, limpeza, guardas). Testes (Release): Output 28, Architecture 10 (T-ARC-007 exigiu mover constantes por SGBD para ISqlDialect, DA-106), ContractTests 41 (+4 ignorados), demais projetos sem mudança de resultado. Pendências: integração com o motor multi-tabela (A2.5), servidores reais (PV-103). Efeito no gate MVP: destrava o script SQLite; C4 ainda precisa de A2.4/A2.5, B3 e Docker.
 
 ---
 

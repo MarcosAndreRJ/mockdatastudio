@@ -34,6 +34,14 @@ public static class SqliteValues
                 return ToTemporal(dt, (dt.ToUniversalTime() - UnixEpoch).TotalSeconds, type.LogicalType, dateStorage, null);
             case TimeSpan ts:
                 return ts.ToString("c", CultureInfo.InvariantCulture);
+            case sbyte or byte or short or ushort or int or uint or long:
+                return Convert.ToInt64(value, CultureInfo.InvariantCulture);
+            case ulong unsigned:
+                return unsigned <= long.MaxValue ? (long)unsigned : unsigned.ToString(CultureInfo.InvariantCulture);
+            case float or double:
+                return Convert.ToDouble(value, CultureInfo.InvariantCulture);
+            case decimal:
+                return value;
             case IConvertible convertible when value is not string:
                 return convertible.ToString(CultureInfo.InvariantCulture);
             default:
