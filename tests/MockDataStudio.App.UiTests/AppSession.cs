@@ -47,7 +47,7 @@ internal sealed class AppSession : IDisposable
             found = Window.FindFirstDescendant(cf => cf.ByName(name));
             return found is not null;
         }, timeout ?? TimeSpan.FromSeconds(15));
-        found.ShouldNotBeNull($"Elemento '{name}' não encontrado.");
+        found.ShouldNotBeNull($"Elemento '{name}' não encontrado. Nomes visíveis: " + string.Join(" | ", Window.FindAllDescendants().Select(e => e.Name).Where(n => !string.IsNullOrEmpty(n) && !n.StartsWith("NavEntry", StringComparison.Ordinal)).Distinct().Take(300)));
         return found;
     }
 

@@ -302,7 +302,7 @@
                         <Border DockPanel.Dock="Top" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
                             <WrapPanel IsItemsHost="True" />
                         </Border>
-                        <ContentPresenter ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" />
+                        <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" />
                     </DockPanel>
                 </ControlTemplate>
             </Setter.Value>

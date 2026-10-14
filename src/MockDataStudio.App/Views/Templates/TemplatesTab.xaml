@@ -1,0 +1,234 @@
+<UserControl x:Class="MockDataStudio.App.Views.Templates.TemplatesTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MockDataStudio.App.Controls"
+             xmlns:res="clr-namespace:MockDataStudio.App.Resources">
+
+    <!-- Aba Templates: lista (Catalog) | detalhes e edição (Details) | valores de exemplo. DataContext: TemplatesViewModel. -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340" />
+            <ColumnDefinition Width="14" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="14" />
+            <ColumnDefinition Width="360" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Lista de templates -->
+        <Border Style="{StaticResource Card}" Padding="16">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.ListTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
+                <controls:SearchField DockPanel.Dock="Top" Placeholder="{x:Static res:TemplatesText.SearchPlaceholder}" Margin="0,0,0,10"
+                                      Text="{Binding Catalog.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      AutomationProperties.Name="{x:Static res:TemplatesText.SearchAuto}" />
+                <TextBlock DockPanel.Dock="Bottom" Text="{Binding Catalog.StatusMessage}" Style="{StaticResource MutedText}" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding Catalog.IsReady, Converter={StaticResource BoolToVisibility}}" />
+                <controls:StatePanel DockPanel.Dock="Top" State="{Binding Catalog.State}" Message="{Binding Catalog.StatusMessage}"
+                                     RetryCommand="{Binding Catalog.ReloadCommand}" RetryText="{x:Static res:TemplatesText.Retry}" />
+                <ListBox ItemsSource="{Binding Catalog.Templates}" SelectedItem="{Binding Catalog.SelectedTemplate}" BorderThickness="0" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{x:Static res:TemplatesText.ListAuto}"
+                         Visibility="{Binding Catalog.IsReady, Converter={StaticResource BoolToVisibility}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="36" Height="36" CornerRadius="8" Background="{Binding TintBg}">
+                                    <TextBlock Text="{Binding Glyph}" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{Binding Tint}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding Count}" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Edição e detalhes -->
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+            <StackPanel>
+                <!-- Criar e editar (provisório até o assistente da Fase 3). Fica no topo: ações e status aparecem sem rolar. Embutidos são somente leitura. -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:TemplatesText.EditTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
+                        <TextBlock Text="{x:Static res:TemplatesText.EditHelp}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                        <WrapPanel Margin="0,0,0,6">
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.NewTemplateCommand}"
+                                    Content="{x:Static res:TemplatesText.ButtonNew}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonNew}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.LoadTemplateCommand}"
+                                    Content="{x:Static res:TemplatesText.ButtonEdit}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonEdit}" />
+                            <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.SaveTemplateCommand}"
+                                    Content="{x:Static res:TemplatesText.ButtonSave}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonSaveAuto}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.CloneTemplateCommand}"
+                                    Content="{x:Static res:TemplatesText.ButtonClone}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonClone}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.DeleteTemplateCommand}"
+                                    Content="{x:Static res:TemplatesText.ButtonDelete}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonDelete}" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding Details.FormStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                        <TextBlock Text="{x:Static res:TemplatesText.ExamplesHint}" Style="{StaticResource LabelText}" Margin="0,0,0,4" />
+                        <WrapPanel Margin="0,0,0,10">
+                            <Button Style="{StaticResource GhostButton}" Padding="10,2" Margin="0,0,8,6" Command="{Binding Details.UseScalarExampleCommand}"
+                                    Content="{x:Static res:TemplatesText.ExampleScalar}" AutomationProperties.Name="{x:Static res:TemplatesText.ExampleScalar}" />
+                            <Button Style="{StaticResource GhostButton}" Padding="10,2" Margin="0,0,8,6" Command="{Binding Details.UseCompositeExampleCommand}"
+                                    Content="{x:Static res:TemplatesText.ExampleComposite}" AutomationProperties.Name="{x:Static res:TemplatesText.ExampleComposite}" />
+                        </WrapPanel>
+
+                        <CheckBox Content="{x:Static res:TemplatesText.CompositeCheck}" IsChecked="{Binding Details.FormIsComposite}" Margin="0,4,0,8"
+                                  AutomationProperties.Name="{x:Static res:TemplatesText.AutoCompositeCheck}" />
+                        <TextBlock Text="{x:Static res:TemplatesText.LabelCode}" Style="{StaticResource LabelText}" />
+                        <TextBox Text="{Binding Details.FormCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                                 AutomationProperties.Name="{x:Static res:TemplatesText.AutoCode}" />
+                        <TextBlock Text="{x:Static res:TemplatesText.LabelName}" Style="{StaticResource LabelText}" />
+                        <TextBox Text="{Binding Details.FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                                 AutomationProperties.Name="{x:Static res:TemplatesText.AutoName}" />
+                        <TextBlock Text="{x:Static res:TemplatesText.LabelDescription}" Style="{StaticResource LabelText}" />
+                        <TextBox Text="{Binding Details.FormDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                                 AutomationProperties.Name="{x:Static res:TemplatesText.AutoDescription}" />
+
+                        <!-- Escalar: tipo lógico e valores. Oculto quando o template é composto. -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Details.FormIsComposite}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="{x:Static res:TemplatesText.LabelLogicalType}" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding Details.FormLogicalType, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                                     AutomationProperties.Name="{x:Static res:TemplatesText.AutoLogicalType}" />
+                            <TextBlock Text="{x:Static res:TemplatesText.LabelValues}" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding Details.FormValues, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="110"
+                                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4"
+                                     AutomationProperties.Name="{x:Static res:TemplatesText.AutoValues}" />
+                        </StackPanel>
+
+                        <!-- Composto: campos e registros. Visível só quando o template é composto. -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Details.FormIsComposite}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="{x:Static res:TemplatesText.LabelFields}" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding Details.FormFields, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="110"
+                                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4"
+                                     AutomationProperties.Name="{x:Static res:TemplatesText.AutoFields}" />
+                            <TextBlock Text="{x:Static res:TemplatesText.LabelRecords}" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding Details.FormRecords, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="130"
+                                     VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4"
+                                     AutomationProperties.Name="{x:Static res:TemplatesText.AutoRecords}" />
+                        </StackPanel>
+
+                        <!-- Aliases valem para escalar e composto: ajudam o mapeamento a sugerir o template pelo nome da coluna. -->
+                        <TextBlock Text="{x:Static res:TemplatesText.LabelAliases}" Style="{StaticResource LabelText}" />
+                        <TextBox Text="{Binding Details.FormAliases, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="60"
+                                 VerticalScrollBarVisibility="Auto" Margin="0,2,0,0" Padding="6,4"
+                                 AutomationProperties.Name="{x:Static res:TemplatesText.AutoAliases}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Detalhes do template selecionado. -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Details.Title}" FontSize="22" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Details.Subtitle}" Style="{StaticResource MutedText}" />
+                        <TextBlock Text="{Binding Details.Description}" TextWrapping="Wrap" Margin="0,12,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="{x:Static res:TemplatesText.CardType}" Style="{StaticResource SectionTitle}" FontSize="14" Margin="0,0,0,8" />
+                            <TextBlock Text="{Binding Details.KindText}" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Static res:TemplatesText.CardLogicalType}" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
+                            <TextBlock Text="{Binding Details.LogicalTypeText}" FontWeight="Medium" />
+                            <TextBlock Text="{x:Static res:TemplatesText.CardValues}" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
+                            <TextBlock Text="{Binding Details.ValueCountText}" FontSize="20" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Grid.Column="2">
+                        <StackPanel>
+                            <TextBlock Text="{x:Static res:TemplatesText.CardOrigin}" Style="{StaticResource SectionTitle}" FontSize="14" Margin="0,0,0,8" />
+                            <TextBlock Text="{Binding Details.PackText}" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Static res:TemplatesText.CardTags}" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
+                            <TextBlock Text="{Binding Details.TagsText}" TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Static res:TemplatesText.CardHash}" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
+                            <TextBlock Text="{Binding Details.HashText}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:TemplatesText.CardFields}" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
+                        <DataGrid ItemsSource="{Binding Details.Fields}" FontSize="12" IsReadOnly="True" MaxHeight="220"
+                                  AutomationProperties.Name="{x:Static res:TemplatesText.CardFields}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{x:Static res:TemplatesText.ColField}" Binding="{Binding FieldCode}" Width="*" />
+                                <DataGridTextColumn Header="{x:Static res:TemplatesText.ColLogicalType}" Binding="{Binding LogicalType}" Width="Auto" />
+                                <DataGridTextColumn Header="{x:Static res:TemplatesText.ColMaxLength}" Binding="{Binding MaxLength}" Width="Auto" />
+                                <DataGridTextColumn Header="{x:Static res:TemplatesText.ColRequired}" Binding="{Binding Required}" Width="Auto" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:TemplatesText.CardAliases}" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
+                        <ItemsControl ItemsSource="{Binding Details.Aliases}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource Chip}">
+                                        <TextBlock Text="{Binding}" FontWeight="Medium" FontSize="12" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Valores de exemplo -->
+        <Border Grid.Column="4" Style="{StaticResource Card}" Padding="16">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.SamplesTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.SamplesHint}" Style="{StaticResource MutedText}" Margin="0,0,0,8" />
+                <ListBox ItemsSource="{Binding Details.SampleValues}" BorderThickness="0" Background="Transparent" IsHitTestVisible="False" Focusable="False"
+                         AutomationProperties.Name="{x:Static res:TemplatesText.SamplesAuto}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="13" Padding="0,3" TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

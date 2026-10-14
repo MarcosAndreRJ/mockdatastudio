@@ -8,6 +8,9 @@ namespace MockDataStudio.App.ViewModels;
 public sealed partial class ShellViewModel : ObservableObject
 {
     private readonly IServiceProvider _services;
+    private readonly MockDataStudio.App.Services.NavigationGate _gate;
+    private NavEntry? _confirmedNav;
+    private bool _navigating;
 
     [ObservableProperty]
     private NavEntry? _selectedNav;
@@ -15,9 +18,10 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty]
     private object? _currentPage;
 
-    public ShellViewModel(IServiceProvider services, MockDataStudio.App.Services.ShellNavigator navigator)
+    public ShellViewModel(IServiceProvider services, MockDataStudio.App.Services.ShellNavigator navigator, MockDataStudio.App.Services.NavigationGate gate)
     {
         _services = services;
+        _gate = gate;
 
         NavItems =
         [
@@ -46,7 +50,37 @@ public sealed partial class ShellViewModel : ObservableObject
 
     partial void OnSelectedNavChanged(NavEntry? value)
     {
-        CurrentPage = value?.CreatePage(_services);
+        if (_navigating || value == _confirmedNav)
+        {
+            return;
+        }
+
+        // TC-104: a página atual pode ter alterações não salvas. Devolve a seleção e só navega se a guarda liberar.
+        var current = CurrentPage;
+        _navigating = true;
+        SelectedNav = _confirmedNav;
+        _navigating = false;
+        _ = LeaveAsync(current, value);
+    }
+
+    private async Task LeaveAsync(object? current, NavEntry? target)
+    {
+        if (!await _gate.CanLeaveAsync(current))
+        {
+            return;
+        }
+
+        _navigating = true;
+        try
+        {
+            _confirmedNav = target;
+            SelectedNav = target;
+            CurrentPage = target?.CreatePage(_services);
+        }
+        finally
+        {
+            _navigating = false;
+        }
     }
 }
 

@@ -30,7 +30,7 @@ D-01 coluna Peso no lugar de "Parâmetros" (sim) · D-04 embutidos não exportá
 TC-001 [O] editores preservam draft completo · TC-002 [O] contagem de compostos · TC-003 [O] export/import sem perdas · TC-004 [O] análise com lista de templates/conflitos · TC-005 [O] preset repo falha em no-op · TC-006 [M] normalizar `ColumnPattern` (D-07, toca Mapping) · TC-007 [O] impacto de exclusão · TC-008 [O] `TemplateDraftValidator` · TC-009 [O] busca por alias/tag.
 
 **Fase 1 — Navegação**
-TC-101 [O] fatiar `TemplatesViewModel` (+ projeto `App.Tests`) · TC-102 [O] 4 abas · TC-103 [O] estados · TC-104 [O] `INavigationGuard` · TC-105 [O] resx e automação.
+TC-101 [x] fatiar `TemplatesViewModel` (+ projeto `App.Tests`) · TC-102 [x] 4 abas · TC-103 [x] estados · TC-104 [x] `INavigationGuard` · TC-105 [x] resx e automação.
 
 **Fase 2 — Detalhes/edição**
 TC-201 [O] `TemplateDetailsView` · TC-202 [O] ações (Editar/Duplicar/Excluir com impacto) · TC-203 [O] lista (badge, contagem, selo) · TC-204 [M] prévia de geração · TC-205 [O] edição via wizard (código não editável).
@@ -76,3 +76,12 @@ Ver `05-test-and-acceptance-plan.md` §4: 10 métricas (entender finalidade ≤3
 ## Resultado
 
 **Aprovado com ressalvas.** Começar por Fase 0/Fase 1 após aprovação. Itens não lidos integralmente (`TemplateLoader`, partes de `StagingImporter`) devem ser lidos nas tarefas TC-004/TC-601 antes de alterar.
+
+## Status da Fase 1 (navegação) — concluída
+
+- TC-101: `TemplatesViewModel` virou orquestrador; lógica em `TemplateCatalog/Details/ImportExport`, `GeneratorPresets`, `LearnedRules` (pasta `ViewModels/Templates`). Projeto `tests/MockDataStudio.App.Tests` criado.
+- TC-102: quatro abas; seleção e busca ficam nos ViewModels singleton e sobrevivem à troca de aba. O `TabControl` precisa do `PART_SelectedContentHost` para a automação UI enxergar o conteúdo.
+- TC-103: `StatePanel` + `ViewState` (carregando, vazio, sem resultados, erro com "Tentar novamente").
+- TC-104: `INavigationGuard` + `NavigationGate` + `UnsavedChangesDialog`; o Shell devolve a seleção e só navega se a guarda liberar.
+- TC-105: textos em `Strings.resx` (`Templates.*`) via `TemplatesText`; todos os controles com `AutomationProperties.Name`.
+- Divergências: usa `CommunityToolkit.Mvvm` (não "RelayCommand próprios"); as ações de edição ficam em `TemplateDetailsViewModel`; a aba Importar/Exportar não entra na guarda (o texto colado é só rascunho).

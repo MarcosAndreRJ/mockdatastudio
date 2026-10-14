@@ -32,4 +32,160 @@
   <data name="NavHistory" xml:space="preserve"><value>History</value></data>
   <data name="NavSettings" xml:space="preserve"><value>Settings</value></data>
   <data name="ErrorUnexpected" xml:space="preserve"><value>Ocorreu um erro inesperado. Detalhes: {0}</value></data>
+  <data name="Templates.Title" xml:space="preserve"><value>Template Catalog</value></data>
+  <data name="Templates.Subtitle" xml:space="preserve"><value>Crie, edite e importe os templates de geração de dados do catálogo local. Comece por um exemplo.</value></data>
+  <data name="Templates.Refresh" xml:space="preserve"><value>Atualizar</value></data>
+  <data name="Templates.RefreshAuto" xml:space="preserve"><value>Atualizar catálogo</value></data>
+  <data name="Templates.TabsAuto" xml:space="preserve"><value>Abas da tela Templates</value></data>
+  <data name="Templates.TabTemplates" xml:space="preserve"><value>Templates</value></data>
+  <data name="Templates.TabImportExport" xml:space="preserve"><value>Importar/Exportar</value></data>
+  <data name="Templates.TabPresets" xml:space="preserve"><value>Presets de gerador</value></data>
+  <data name="Templates.TabRules" xml:space="preserve"><value>Regras aprendidas</value></data>
+  <data name="Templates.ListTitle" xml:space="preserve"><value>Templates</value></data>
+  <data name="Templates.SearchPlaceholder" xml:space="preserve"><value>Buscar templates...</value></data>
+  <data name="Templates.SearchAuto" xml:space="preserve"><value>Buscar templates</value></data>
+  <data name="Templates.ListAuto" xml:space="preserve"><value>Lista de templates</value></data>
+  <data name="Templates.ListCount" xml:space="preserve"><value>{0} template(s)</value></data>
+  <data name="Templates.Retry" xml:space="preserve"><value>Tentar novamente</value></data>
+  <data name="Templates.StateLoading" xml:space="preserve"><value>Carregando o catálogo…</value></data>
+  <data name="Templates.StateEmpty" xml:space="preserve"><value>O catálogo está vazio. Crie um template ou importe um pack.</value></data>
+  <data name="Templates.StateNoResults" xml:space="preserve"><value>Nenhum template encontrado para "{0}".</value></data>
+  <data name="Templates.StateError" xml:space="preserve"><value>Não foi possível carregar o catálogo: {0}</value></data>
+  <data name="Templates.DetailsNoSelection" xml:space="preserve"><value>Nenhum template selecionado</value></data>
+  <data name="Templates.DetailsNoDescription" xml:space="preserve"><value>Sem descrição.</value></data>
+  <data name="Templates.KindComposite" xml:space="preserve"><value>Composto (registros com vários campos)</value></data>
+  <data name="Templates.KindScalar" xml:space="preserve"><value>Escalar (lista de valores)</value></data>
+  <data name="Templates.EmbeddedSuffix" xml:space="preserve"><value> (embutido)</value></data>
+  <data name="Templates.EditTitle" xml:space="preserve"><value>Criar ou editar template</value></data>
+  <data name="Templates.EditHelp" xml:space="preserve"><value>Código, nome e valores. Para criar do zero, clique em Novo. Para alterar um template seu, selecione-o na lista e clique em Editar selecionado.</value></data>
+  <data name="Templates.ButtonNew" xml:space="preserve"><value>Novo</value></data>
+  <data name="Templates.ButtonEdit" xml:space="preserve"><value>Editar selecionado</value></data>
+  <data name="Templates.ButtonSave" xml:space="preserve"><value>Salvar</value></data>
+  <data name="Templates.ButtonSaveAuto" xml:space="preserve"><value>Salvar template</value></data>
+  <data name="Templates.ButtonClone" xml:space="preserve"><value>Copiar selecionado com o código do campo</value></data>
+  <data name="Templates.ButtonDelete" xml:space="preserve"><value>Excluir selecionado</value></data>
+  <data name="Templates.ExamplesHint" xml:space="preserve"><value>Começar com um exemplo (preenche o formulário; nada é salvo até você clicar em Salvar)</value></data>
+  <data name="Templates.ExampleScalar" xml:space="preserve"><value>Exemplo escalar (lista de valores)</value></data>
+  <data name="Templates.ExampleComposite" xml:space="preserve"><value>Exemplo composto (campos e registros)</value></data>
+  <data name="Templates.CompositeCheck" xml:space="preserve"><value>Template composto (campos e registros, em vez de valores)</value></data>
+  <data name="Templates.LabelCode" xml:space="preserve"><value>Código (vira maiúsculas; espaços viram _)</value></data>
+  <data name="Templates.LabelName" xml:space="preserve"><value>Nome</value></data>
+  <data name="Templates.LabelDescription" xml:space="preserve"><value>Descrição</value></data>
+  <data name="Templates.LabelLogicalType" xml:space="preserve"><value>Tipo lógico (string, integer, decimal, date…)</value></data>
+  <data name="Templates.LabelValues" xml:space="preserve"><value>Valores (um por linha)</value></data>
+  <data name="Templates.LabelFields" xml:space="preserve"><value>Campos (uma linha por campo: codigo | tipo | tamanho | obrigatório)</value></data>
+  <data name="Templates.LabelRecords" xml:space="preserve"><value>Registros (uma linha por registro: valores na ordem dos campos, separados por |; vazio = nulo)</value></data>
+  <data name="Templates.LabelAliases" xml:space="preserve"><value>Aliases (um por linha; nomes de coluna que devem sugerir este template)</value></data>
+  <data name="Templates.AutoCode" xml:space="preserve"><value>Código do template</value></data>
+  <data name="Templates.AutoName" xml:space="preserve"><value>Nome do template</value></data>
+  <data name="Templates.AutoDescription" xml:space="preserve"><value>Descrição do template</value></data>
+  <data name="Templates.AutoLogicalType" xml:space="preserve"><value>Tipo lógico</value></data>
+  <data name="Templates.AutoValues" xml:space="preserve"><value>Valores do template</value></data>
+  <data name="Templates.AutoFields" xml:space="preserve"><value>Campos do template composto</value></data>
+  <data name="Templates.AutoRecords" xml:space="preserve"><value>Registros do template composto</value></data>
+  <data name="Templates.AutoAliases" xml:space="preserve"><value>Aliases do template</value></data>
+  <data name="Templates.AutoCompositeCheck" xml:space="preserve"><value>Template composto</value></data>
+  <data name="Templates.CardType" xml:space="preserve"><value>Tipo</value></data>
+  <data name="Templates.CardLogicalType" xml:space="preserve"><value>Tipo lógico</value></data>
+  <data name="Templates.CardValues" xml:space="preserve"><value>Valores</value></data>
+  <data name="Templates.CardOrigin" xml:space="preserve"><value>Origem</value></data>
+  <data name="Templates.CardTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="Templates.CardHash" xml:space="preserve"><value>Hash do conteúdo</value></data>
+  <data name="Templates.CardFields" xml:space="preserve"><value>Campos</value></data>
+  <data name="Templates.CardAliases" xml:space="preserve"><value>Aliases</value></data>
+  <data name="Templates.ColField" xml:space="preserve"><value>Campo</value></data>
+  <data name="Templates.ColLogicalType" xml:space="preserve"><value>Tipo lógico</value></data>
+  <data name="Templates.ColMaxLength" xml:space="preserve"><value>Tam. máx.</value></data>
+  <data name="Templates.ColRequired" xml:space="preserve"><value>Obrigatório</value></data>
+  <data name="Templates.SamplesTitle" xml:space="preserve"><value>Valores de exemplo</value></data>
+  <data name="Templates.SamplesHint" xml:space="preserve"><value>Primeiros valores em ordem do catálogo.</value></data>
+  <data name="Templates.SamplesAuto" xml:space="preserve"><value>Valores de exemplo do template</value></data>
+  <data name="Templates.ExampleScalarLoaded" xml:space="preserve"><value>Exemplo escalar carregado. Clique em Salvar para criar '{0}', ou troque o código antes.</value></data>
+  <data name="Templates.ExampleCompositeLoaded" xml:space="preserve"><value>Exemplo composto carregado. Clique em Salvar para criar '{0}', ou troque o código antes.</value></data>
+  <data name="Templates.FormNew" xml:space="preserve"><value>Novo template: preencha código, nome e valores (ou campos e registros, se for composto).</value></data>
+  <data name="Templates.FormSaved" xml:space="preserve"><value>Template '{0}' salvo.</value></data>
+  <data name="Templates.FormSavedComposite" xml:space="preserve"><value>Template composto '{0}' salvo.</value></data>
+  <data name="Templates.FormLoaded" xml:space="preserve"><value>Template '{0}' carregado para edição.</value></data>
+  <data name="Templates.FormLoadedComposite" xml:space="preserve"><value>Template composto '{0}' carregado para edição.</value></data>
+  <data name="Templates.FormSelectTemplate" xml:space="preserve"><value>Selecione um template na lista.</value></data>
+  <data name="Templates.FormInvalidLogicalType" xml:space="preserve"><value>Tipo lógico '{0}' inválido (ex.: string, integer, date).</value></data>
+  <data name="Templates.FormCloneSelect" xml:space="preserve"><value>Selecione o template a copiar.</value></data>
+  <data name="Templates.FormCloneNeedsCode" xml:space="preserve"><value>Informe o código da cópia no campo Código.</value></data>
+  <data name="Templates.FormCloned" xml:space="preserve"><value>Cópia '{0}' criada.</value></data>
+  <data name="Templates.FormDeleteSelect" xml:space="preserve"><value>Selecione um template para excluir.</value></data>
+  <data name="Templates.FormDeleted" xml:space="preserve"><value>Template '{0}' excluído.</value></data>
+  <data name="Templates.FormNotFound" xml:space="preserve"><value>Template não encontrado.</value></data>
+  <data name="Templates.ImportTitle" xml:space="preserve"><value>Importar templates</value></data>
+  <data name="Templates.ImportHelp" xml:space="preserve"><value>Copie as instruções, cole-as numa IA e cole o script gerado aqui. A análise não altera o catálogo; só a importação altera.</value></data>
+  <data name="Templates.ImportExampleScript" xml:space="preserve"><value>Exemplo de script SQL</value></data>
+  <data name="Templates.ImportExamplePack" xml:space="preserve"><value>Exemplo de pack JSON</value></data>
+  <data name="Templates.ImportIsPack" xml:space="preserve"><value>É um pack JSON (formato de pack-core-ptbr.json)</value></data>
+  <data name="Templates.ImportTextAuto" xml:space="preserve"><value>Script ou pack a importar</value></data>
+  <data name="Templates.ImportCopy" xml:space="preserve"><value>Copiar instruções para IA</value></data>
+  <data name="Templates.ImportAnalyze" xml:space="preserve"><value>Analisar</value></data>
+  <data name="Templates.ImportMerge" xml:space="preserve"><value>Importar</value></data>
+  <data name="Templates.ImportDiscard" xml:space="preserve"><value>Descartar análise</value></data>
+  <data name="Templates.ImportExampleScriptLoaded" xml:space="preserve"><value>Exemplo de script SQL carregado ({0}). Clique em Analisar e depois em Importar.</value></data>
+  <data name="Templates.ImportExamplePackLoaded" xml:space="preserve"><value>Exemplo de pack JSON carregado (EXEMPLO_PRODUTO e EXEMPLO_PRIORIDADE). Clique em Analisar e depois em Importar.</value></data>
+  <data name="Templates.ImportInstructionsCopied" xml:space="preserve"><value>Instruções copiadas. Cole na IA e depois cole o script aqui.</value></data>
+  <data name="Templates.ImportAnalysisOkBase" xml:space="preserve"><value>Análise ok: {0} template(s) novo(s), {1} alterado(s), {2} valor(es) novo(s).</value></data>
+  <data name="Templates.ImportBlockedBase" xml:space="preserve"><value>Não é possível importar.</value></data>
+  <data name="Templates.ImportIssues" xml:space="preserve"><value> {0} problema(s) encontrado(s).</value></data>
+  <data name="Templates.ImportDone" xml:space="preserve"><value>Importado: {0} inserido(s), {1} atualizado(s), {2} ignorado(s). Backup: {3}</value></data>
+  <data name="Templates.ExportTitle" xml:space="preserve"><value>Exportar seus templates como pack JSON</value></data>
+  <data name="Templates.ExportCodeAuto" xml:space="preserve"><value>Código do pack</value></data>
+  <data name="Templates.ExportNameAuto" xml:space="preserve"><value>Nome do pack</value></data>
+  <data name="Templates.ExportButton" xml:space="preserve"><value>Exportar pack</value></data>
+  <data name="Templates.ExportFileFilter" xml:space="preserve"><value>Pack de templates (*.json)|*.json</value></data>
+  <data name="Templates.ExportDone" xml:space="preserve"><value>Pack exportado para {0}.</value></data>
+  <data name="Templates.PresetsTitle" xml:space="preserve"><value>Presets de gerador</value></data>
+  <data name="Templates.PresetsHelp" xml:space="preserve"><value>Um preset é sugerido quando o nome da coluna é igual ao código dele (ex.: cpf → CPF). Embutidos são somente leitura.</value></data>
+  <data name="Templates.PresetsListAuto" xml:space="preserve"><value>Presets de gerador</value></data>
+  <data name="Templates.PresetsEmpty" xml:space="preserve"><value>Nenhum preset cadastrado.</value></data>
+  <data name="Templates.PresetsCount" xml:space="preserve"><value>{0} preset(s)</value></data>
+  <data name="Templates.PresetLabelCode" xml:space="preserve"><value>Código</value></data>
+  <data name="Templates.PresetLabelName" xml:space="preserve"><value>Nome</value></data>
+  <data name="Templates.PresetLabelGenerator" xml:space="preserve"><value>Gerador (ex.: br.cpf)</value></data>
+  <data name="Templates.PresetLabelVersion" xml:space="preserve"><value>Versão do gerador</value></data>
+  <data name="Templates.PresetLabelParameters" xml:space="preserve"><value>Parâmetros (objeto JSON)</value></data>
+  <data name="Templates.PresetLabelDescription" xml:space="preserve"><value>Descrição</value></data>
+  <data name="Templates.PresetAutoCode" xml:space="preserve"><value>Código do preset</value></data>
+  <data name="Templates.PresetAutoName" xml:space="preserve"><value>Nome do preset</value></data>
+  <data name="Templates.PresetAutoGenerator" xml:space="preserve"><value>Gerador do preset</value></data>
+  <data name="Templates.PresetAutoVersion" xml:space="preserve"><value>Versão do gerador</value></data>
+  <data name="Templates.PresetAutoParameters" xml:space="preserve"><value>Parâmetros do preset</value></data>
+  <data name="Templates.PresetAutoDescription" xml:space="preserve"><value>Descrição do preset</value></data>
+  <data name="Templates.PresetButtonNew" xml:space="preserve"><value>Novo</value></data>
+  <data name="Templates.PresetButtonLoad" xml:space="preserve"><value>Carregar selecionado</value></data>
+  <data name="Templates.PresetButtonSave" xml:space="preserve"><value>Salvar</value></data>
+  <data name="Templates.PresetButtonSaveAuto" xml:space="preserve"><value>Salvar preset</value></data>
+  <data name="Templates.PresetButtonDelete" xml:space="preserve"><value>Excluir</value></data>
+  <data name="Templates.PresetNew" xml:space="preserve"><value>Novo preset: preencha código, nome e gerador.</value></data>
+  <data name="Templates.PresetSelect" xml:space="preserve"><value>Selecione um preset na lista.</value></data>
+  <data name="Templates.PresetBuiltIn" xml:space="preserve"><value>Preset embutido '{0}': somente leitura.</value></data>
+  <data name="Templates.PresetLoaded" xml:space="preserve"><value>Preset '{0}' carregado.</value></data>
+  <data name="Templates.PresetVersionInvalid" xml:space="preserve"><value>Versão do gerador deve ser um número inteiro.</value></data>
+  <data name="Templates.PresetSaved" xml:space="preserve"><value>Preset '{0}' salvo.</value></data>
+  <data name="Templates.PresetDeleted" xml:space="preserve"><value>Preset '{0}' excluído.</value></data>
+  <data name="Templates.PresetNotFound" xml:space="preserve"><value>Preset não encontrado.</value></data>
+  <data name="Templates.RulesTitle" xml:space="preserve"><value>Regras aprendidas</value></data>
+  <data name="Templates.RulesHelp" xml:space="preserve"><value>Regras globais. Uma regra é sugerida em outros projetos com a mesma coluna.</value></data>
+  <data name="Templates.RulesListAuto" xml:space="preserve"><value>Regras aprendidas</value></data>
+  <data name="Templates.RulesEmpty" xml:space="preserve"><value>Nenhuma regra aprendida. Use "Lembrar para outros projetos" no Mapeamento.</value></data>
+  <data name="Templates.RulesCount" xml:space="preserve"><value>{0} regra(s) aprendida(s).</value></data>
+  <data name="Templates.RuleForgotten" xml:space="preserve"><value>Regra '{0}' esquecida.</value></data>
+  <data name="Templates.RuleForget" xml:space="preserve"><value>Esquecer</value></data>
+  <data name="Templates.RuleForgetAuto" xml:space="preserve"><value>Esquecer regra</value></data>
+  <data name="Templates.UnsavedTitle" xml:space="preserve"><value>Alterações não salvas</value></data>
+  <data name="Templates.UnsavedTemplate" xml:space="preserve"><value>O formulário de template tem alterações que ainda não foram salvas.</value></data>
+  <data name="Templates.UnsavedPreset" xml:space="preserve"><value>O formulário de preset tem alterações que ainda não foram salvas.</value></data>
+  <data name="Templates.UnsavedBoth" xml:space="preserve"><value>Os formulários de template e de preset têm alterações que ainda não foram salvas.</value></data>
+  <data name="Templates.UnsavedQuestion" xml:space="preserve"><value>O que você quer fazer?</value></data>
+  <data name="Templates.UnsavedSave" xml:space="preserve"><value>Salvar</value></data>
+  <data name="Templates.UnsavedDiscard" xml:space="preserve"><value>Descartar</value></data>
+  <data name="Templates.UnsavedStay" xml:space="preserve"><value>Continuar editando</value></data>
+  <data name="Templates.TabTemplatesAuto" xml:space="preserve"><value>Aba Templates</value></data>
+  <data name="Templates.TabImportExportAuto" xml:space="preserve"><value>Aba Importar/Exportar</value></data>
+  <data name="Templates.TabPresetsAuto" xml:space="preserve"><value>Aba Presets de gerador</value></data>
+  <data name="Templates.TabRulesAuto" xml:space="preserve"><value>Aba Regras aprendidas</value></data>
 </root>

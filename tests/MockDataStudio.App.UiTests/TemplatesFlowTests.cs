@@ -48,12 +48,14 @@ public sealed class TemplatesFlowTests
         session.ClickButton("Salvar template");
         session.WaitForText("Template 'EXEMPLO_STATUS_PEDIDO' salvo", TimeSpan.FromSeconds(60));
 
-        // Importação: cola o script, analisa e importa.
+        // Importação (aba Importar/Exportar): cola o script, analisa e importa; depois volta à aba Templates.
+        session.ClickButton("Aba Importar/Exportar");
         session.SetText("Script ou pack a importar", Script);
         session.ClickButton("Analisar");
         session.WaitForText("Análise ok", TimeSpan.FromSeconds(60));
         session.ClickButton("Importar");
         session.WaitForText("Importado:", TimeSpan.FromSeconds(60));
+        session.ClickButton("Aba Templates");
         session.WaitForText("Importado pela UI", TimeSpan.FromSeconds(60));
     }
 }

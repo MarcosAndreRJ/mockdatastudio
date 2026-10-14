@@ -1,0 +1,75 @@
+<UserControl x:Class="MockDataStudio.App.Views.Templates.PresetsTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MockDataStudio.App.Controls"
+             xmlns:res="clr-namespace:MockDataStudio.App.Resources">
+
+    <!-- Aba Presets de gerador (FR-059). DataContext: GeneratorPresetsViewModel. -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="14" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Card}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.PresetsTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.PresetsHelp}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                <TextBlock DockPanel.Dock="Bottom" Text="{Binding StateMessage}" Style="{StaticResource MutedText}" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding IsReady, Converter={StaticResource BoolToVisibility}}" />
+                <controls:StatePanel DockPanel.Dock="Top" State="{Binding State}" Message="{Binding StateMessage}"
+                                     RetryCommand="{Binding RefreshCommand}" RetryText="{x:Static res:TemplatesText.Retry}" />
+                <ListBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" AutomationProperties.Name="{x:Static res:TemplatesText.PresetsListAuto}"
+                         Visibility="{Binding IsReady, Converter={StaticResource BoolToVisibility}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Code, Mode=OneWay}" FontWeight="Medium" />
+                                <Run Text="{Binding Name, Mode=OneWay, StringFormat=' — {0}'}" />
+                                <Run Text="{Binding GeneratorId, Mode=OneWay, StringFormat=' ({0})'}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="{x:Static res:TemplatesText.PresetLabelCode}" Style="{StaticResource LabelText}" />
+                    <TextBox Text="{Binding PresetCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                             AutomationProperties.Name="{x:Static res:TemplatesText.PresetAutoCode}" />
+                    <TextBlock Text="{x:Static res:TemplatesText.PresetLabelName}" Style="{StaticResource LabelText}" />
+                    <TextBox Text="{Binding PresetName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                             AutomationProperties.Name="{x:Static res:TemplatesText.PresetAutoName}" />
+                    <TextBlock Text="{x:Static res:TemplatesText.PresetLabelGenerator}" Style="{StaticResource LabelText}" />
+                    <TextBox Text="{Binding PresetGenerator, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                             AutomationProperties.Name="{x:Static res:TemplatesText.PresetAutoGenerator}" />
+                    <TextBlock Text="{x:Static res:TemplatesText.PresetLabelVersion}" Style="{StaticResource LabelText}" />
+                    <TextBox Text="{Binding PresetVersion, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                             AutomationProperties.Name="{x:Static res:TemplatesText.PresetAutoVersion}" />
+                    <TextBlock Text="{x:Static res:TemplatesText.PresetLabelParameters}" Style="{StaticResource LabelText}" />
+                    <TextBox Text="{Binding PresetParameters, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" Height="90"
+                             VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="0,2,0,6" Padding="6,4"
+                             AutomationProperties.Name="{x:Static res:TemplatesText.PresetAutoParameters}" />
+                    <TextBlock Text="{x:Static res:TemplatesText.PresetLabelDescription}" Style="{StaticResource LabelText}" />
+                    <TextBox Text="{Binding PresetDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
+                             AutomationProperties.Name="{x:Static res:TemplatesText.PresetAutoDescription}" />
+                    <WrapPanel Margin="0,6,0,0">
+                        <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding NewPresetCommand}"
+                                Content="{x:Static res:TemplatesText.PresetButtonNew}" AutomationProperties.Name="{x:Static res:TemplatesText.PresetButtonNew}" />
+                        <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding LoadPresetCommand}"
+                                Content="{x:Static res:TemplatesText.PresetButtonLoad}" AutomationProperties.Name="{x:Static res:TemplatesText.PresetButtonLoad}" />
+                        <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding SavePresetCommand}"
+                                Content="{x:Static res:TemplatesText.PresetButtonSave}" AutomationProperties.Name="{x:Static res:TemplatesText.PresetButtonSaveAuto}" />
+                        <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding DeletePresetCommand}"
+                                Content="{x:Static res:TemplatesText.PresetButtonDelete}" AutomationProperties.Name="{x:Static res:TemplatesText.PresetButtonDelete}" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding PresetStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

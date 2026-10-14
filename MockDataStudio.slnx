@@ -17,6 +17,7 @@
     <Project Path="src/MockDataStudio.SqlTooling/MockDataStudio.SqlTooling.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/MockDataStudio.App.Tests/MockDataStudio.App.Tests.csproj" />
     <Project Path="tests/MockDataStudio.App.UiTests/MockDataStudio.App.UiTests.csproj" />
     <Project Path="tests/MockDataStudio.Application.Tests/MockDataStudio.Application.Tests.csproj" />
     <Project Path="tests/MockDataStudio.Architecture.Tests/MockDataStudio.Architecture.Tests.csproj" />

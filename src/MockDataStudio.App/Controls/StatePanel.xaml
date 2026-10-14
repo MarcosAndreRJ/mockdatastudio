@@ -1,0 +1,33 @@
+<UserControl x:Class="MockDataStudio.App.Controls.StatePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:t="clr-namespace:MockDataStudio.App.ViewModels.Templates">
+
+    <!-- Estado de uma lista ou área (TC-103): carregando, vazio, sem resultados ou erro. Some quando o estado é Ready. -->
+    <UserControl.Style>
+        <Style TargetType="UserControl">
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State, RelativeSource={RelativeSource Self}}" Value="{x:Static t:ViewState.Ready}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Style>
+
+    <Border Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+            CornerRadius="10" Padding="16" Margin="0,4">
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock x:Name="Glyph" FontFamily="Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center"
+                       Foreground="{StaticResource TextSecondaryBrush}" Text="&#xE9CE;" Margin="0,0,0,8" />
+            <TextBlock Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}" TextWrapping="Wrap"
+                       TextAlignment="Center" AutomationProperties.Name="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            <ProgressBar x:Name="Bar" IsIndeterminate="True" Height="4" Margin="0,10,0,0" Visibility="Collapsed" />
+            <Button x:Name="RetryButton" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,10,0,0"
+                    HorizontalAlignment="Center" Visibility="Collapsed"
+                    Command="{Binding RetryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Content="{Binding RetryText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    AutomationProperties.Name="{Binding RetryText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+        </StackPanel>
+    </Border>
+</UserControl>

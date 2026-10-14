@@ -93,7 +93,14 @@ public static class ServiceRegistration
         builder.Services.AddSingleton<SqlEditorWorkspaceViewModel>();
         builder.Services.AddSingleton<SqlEditorPageViewModel>();
         builder.Services.AddSingleton<SchemaDigestViewModel>();
+        builder.Services.AddSingleton<MockDataStudio.App.ViewModels.Templates.TemplateCatalogViewModel>();
+        builder.Services.AddSingleton<MockDataStudio.App.ViewModels.Templates.TemplateDetailsViewModel>();
+        builder.Services.AddSingleton<MockDataStudio.App.ViewModels.Templates.TemplateImportExportViewModel>();
+        builder.Services.AddSingleton<MockDataStudio.App.ViewModels.Templates.GeneratorPresetsViewModel>();
+        builder.Services.AddSingleton<MockDataStudio.App.ViewModels.Templates.LearnedRulesViewModel>();
         builder.Services.AddSingleton<TemplatesViewModel>();
+        builder.Services.AddSingleton<MockDataStudio.App.Services.IUnsavedChangesPrompt, MockDataStudio.App.Services.UnsavedChangesDialog>();
+        builder.Services.AddSingleton<MockDataStudio.App.Services.NavigationGate>();
         builder.Services.AddSingleton<MappingViewModel>();
 
         return builder.Build();
