@@ -33,7 +33,7 @@ TC-001 [O] editores preservam draft completo · TC-002 [O] contagem de compostos
 TC-101 [x] fatiar `TemplatesViewModel` (+ projeto `App.Tests`) · TC-102 [x] 4 abas · TC-103 [x] estados · TC-104 [x] `INavigationGuard` · TC-105 [x] resx e automação.
 
 **Fase 2 — Detalhes/edição**
-TC-201 [x] `TemplateDetailsView` · TC-202 [x] ações (Editar/Duplicar/Excluir com impacto) · TC-203 [x] lista (badge, contagem, selo) · TC-204 [M] prévia de geração · TC-205 [x] edição via wizard (código não editável).
+TC-201 [x] `TemplateDetailsView` · TC-202 [x] ações (Editar/Duplicar/Excluir com impacto) · TC-203 [x] lista (badge, contagem, selo) · TC-204 [M] prévia de geração · TC-205 [parcial] edição via wizard (código não editável).
 
 **Fase 3 — Assistente**
 TC-301 [O] VM + stepper + draft em memória · TC-302 [O] passos 1–2 · TC-303 [O] revisão/salvar/salvar e criar outro · TC-304 [O] cancelar e não salvo · TC-305 [O] compat. com `TemplatesFlowTests`.
