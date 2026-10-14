@@ -56,7 +56,63 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
         MergeImportCommand = new AsyncRelayCommand(MergeImportAsync, () => CanMergeImport);
         DiscardImportCommand = new RelayCommand(DiscardImport);
         CopyInstructionsCommand = new RelayCommand(CopyInstructions);
+        UseScalarExampleCommand = new RelayCommand(UseScalarExample);
+        UseCompositeExampleCommand = new RelayCommand(UseCompositeExample);
+        UseScriptExampleCommand = new RelayCommand(UseScriptExample);
+        UsePackExampleCommand = new RelayCommand(UsePackExample);
         _ = LoadAsync();
+    }
+
+    // Exemplos (ajuda para criar templates): preenchem o formulário ou a área de importação. Nada é salvo até clicar em Salvar/Importar.
+    public IRelayCommand UseScalarExampleCommand { get; }
+    public IRelayCommand UseCompositeExampleCommand { get; }
+    public IRelayCommand UseScriptExampleCommand { get; }
+    public IRelayCommand UsePackExampleCommand { get; }
+
+    private void UseScalarExample()
+    {
+        var example = TemplateExamples.Scalar();
+        FillForm(example.Code, example.Name, example.Description, isComposite: false);
+        FormLogicalType = example.LogicalType.ToString();
+        FormValues = string.Join(Environment.NewLine, example.Values);
+        FormAliases = string.Join(Environment.NewLine, example.Aliases);
+        FormStatus = $"Exemplo escalar carregado. Clique em Salvar para criar '{example.Code}', ou troque o código antes.";
+    }
+
+    private void UseCompositeExample()
+    {
+        FillForm(TemplateExamples.CompositeCode, TemplateExamples.CompositeName, TemplateExamples.CompositeDescription, isComposite: true);
+        FormFields = TemplateExamples.CompositeFields;
+        FormRecords = TemplateExamples.CompositeRecords;
+        FormAliases = TemplateExamples.CompositeAliases;
+        FormStatus = $"Exemplo composto carregado. Clique em Salvar para criar '{TemplateExamples.CompositeCode}', ou troque o código antes.";
+    }
+
+    private void UseScriptExample()
+    {
+        ImportIsPackJson = false;
+        ImportText = TemplateExamples.Script;
+        ImportStatus = $"Exemplo de script SQL carregado ({TemplateExamples.ScriptCode}). Clique em Analisar e depois em Importar.";
+    }
+
+    private void UsePackExample()
+    {
+        ImportIsPackJson = true;
+        ImportText = TemplateExamples.PackJson;
+        ImportStatus = "Exemplo de pack JSON carregado (EXEMPLO_PRODUTO e EXEMPLO_PRIORIDADE). Clique em Analisar e depois em Importar.";
+    }
+
+    private void FillForm(string code, string name, string? description, bool isComposite)
+    {
+        FormCode = code;
+        FormName = name;
+        FormDescription = description ?? string.Empty;
+        FormIsComposite = isComposite;
+        if (!isComposite)
+        {
+            FormFields = string.Empty;
+            FormRecords = string.Empty;
+        }
     }
 
     public IRelayCommand NewTemplateCommand { get; }
@@ -118,6 +174,8 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
     // Composto: campos e registros em texto (ver CompositeTemplateEditor para o formato).
     private async Task SaveCompositeAsync()
     {
+        var code = TemplateEditor.NormalizeCode(FormCode);
+        FormCode = code;
         var fields = CompositeTemplateEditor.ParseFields(FormFields);
         if (!fields.IsSuccess)
         {
@@ -133,10 +191,10 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
         }
 
         var result = await _composite.SaveAsync(new CompositeTemplateForm(
-            FormCode.Trim(), FormName.Trim(), FormDescription, fields.Value!,
+            code, FormName.Trim(), FormDescription, fields.Value!,
             TemplateEditor.ParseLines(FormAliases), records.Value!.Select(r => (IReadOnlyDictionary<string, string?>)r).ToList()),
             CancellationToken.None);
-        FormStatus = result.IsSuccess ? $"Template composto '{FormCode.Trim()}' salvo." : result.Error.Message;
+        FormStatus = result.IsSuccess ? $"Template composto '{code}' salvo." : result.Error.Message;
         if (result.IsSuccess)
         {
             await LoadAsync();
@@ -191,10 +249,12 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
             return;
         }
 
+        var code = TemplateEditor.NormalizeCode(FormCode);
+        FormCode = code;
         var result = await _editor.SaveScalarAsync(new ScalarTemplateForm(
-            FormCode.Trim(), FormName.Trim(), FormDescription, logicalType,
+            code, FormName.Trim(), FormDescription, logicalType,
             TemplateEditor.ParseLines(FormValues), TemplateEditor.ParseLines(FormAliases)), CancellationToken.None);
-        FormStatus = result.IsSuccess ? $"Template '{FormCode.Trim()}' salvo." : result.Error.Message;
+        FormStatus = result.IsSuccess ? $"Template '{code}' salvo." : result.Error.Message;
         if (result.IsSuccess)
         {
             await LoadAsync();
@@ -242,12 +302,14 @@ public sealed partial class TemplatesViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var newCode = FormCode.Trim();
+        var newCode = TemplateEditor.NormalizeCode(FormCode);
         if (newCode.Length == 0)
         {
             FormStatus = "Informe o código da cópia no campo Código.";
             return;
         }
+
+        FormCode = newCode;
 
         var result = await _editor.CloneAsync(SelectedTemplate.Code, newCode, CancellationToken.None);
         FormStatus = result.IsSuccess ? $"Cópia '{newCode}' criada." : result.Error.Message;

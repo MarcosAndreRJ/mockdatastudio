@@ -22,6 +22,13 @@ public sealed class TemplateEditor(ITemplateRepository templates, ITemplateDataS
         .Distinct(StringComparer.Ordinal)
         .ToList();
 
+    // Código no formato do catálogo (maiúsculas, dígitos e "_"): o que o usuário digita vira o código válido.
+    // Ex.: "cliente br" → "CLIENTE_BR". Caracteres fora de A-Z/0-9 viram "_"; o repositório ainda valida o tamanho.
+    public static string NormalizeCode(string text) =>
+        new string((text ?? string.Empty).Trim().ToUpperInvariant()
+            .Select(ch => ch is (>= 'A' and <= 'Z') or (>= '0' and <= '9') ? ch : '_')
+            .ToArray());
+
     public Task<Result<long>> SaveScalarAsync(ScalarTemplateForm form, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(form);

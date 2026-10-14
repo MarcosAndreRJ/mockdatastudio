@@ -22,8 +22,7 @@ public sealed partial class TemplateRepository(CatalogDatabase database) : ITemp
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT t.id, t.code, t.name, t.kind, t.logical_type, t.locale, t.tags, t.description, p.code, t.is_builtin,
-                   (SELECT COUNT(*) FROM template_value v WHERE v.template_id = t.id),
-                   (SELECT COUNT(*) FROM template_record r WHERE r.template_id = t.id)
+                   (SELECT COUNT(*) FROM template_value v WHERE v.template_id = t.id), t.content_hash
             FROM template t JOIN template_pack p ON p.id = t.pack_id
             WHERE ($text IS NULL OR t.code LIKE '%' || $text || '%' OR t.name LIKE '%' || $text || '%')
               AND ($kind IS NULL OR t.kind = $kind)
@@ -45,16 +44,19 @@ public sealed partial class TemplateRepository(CatalogDatabase database) : ITemp
                 reader.IsDBNull(4) ? null : Enum.Parse<LogicalType>(reader.GetString(4), ignoreCase: true),
                 reader.GetString(5), Tags(reader.GetString(6)), reader.IsDBNull(7) ? null : reader.GetString(7),
                 reader.GetString(8), reader.GetInt64(9) == 1, reader.GetInt64(10),
-                TemplateLoader.ContentHash(connection, null, code)));
+                // Hash gravado ao salvar/importar (SaveAsync, StagingImporter). Recalcular aqui lia o template inteiro por linha.
+                reader.IsDBNull(11) ? string.Empty : reader.GetString(11)));
         }
 
         return Task.FromResult<IReadOnlyList<TemplateInfo>>(list);
     }
 
+    // Um template pelo código. A busca é pelo texto e o resultado é filtrado pelo código exato,
+    // porque a consulta de listagem só faz LIKE (sem recalcular conteúdo de todos os templates).
     public Task<TemplateInfo?> GetAsync(string code, CancellationToken ct)
     {
-        var all = ListAsync(new TemplateQuery(), ct).GetAwaiter().GetResult();
-        return Task.FromResult(all.FirstOrDefault(t => t.Code == code));
+        var matches = ListAsync(new TemplateQuery(Text: code), ct).GetAwaiter().GetResult();
+        return Task.FromResult(matches.FirstOrDefault(t => t.Code == code));
     }
 
     public Task<IReadOnlyList<TemplateFieldInfo>> GetFieldsAsync(string code, CancellationToken ct)

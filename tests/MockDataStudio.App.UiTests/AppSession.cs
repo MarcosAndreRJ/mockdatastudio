@@ -70,8 +70,8 @@ internal sealed class AppSession : IDisposable
         string? match = null;
         SpinWait.SpinUntil(() =>
         {
-            match = Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Text))
-                .Select(e => e.Name ?? string.Empty)
+            match = TextNames()
+                .Select(n => n ?? string.Empty)
                 .FirstOrDefault(n => n.Contains(fragment, StringComparison.OrdinalIgnoreCase));
             return match is not null;
         }, timeout ?? TimeSpan.FromSeconds(30));
@@ -80,7 +80,21 @@ internal sealed class AppSession : IDisposable
     }
 
     private string VisibleTexts() =>
-        string.Join(" | ", Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Text)).Select(e => e.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Take(60));
+        string.Join(" | ", TextNames().Where(n => !string.IsNullOrWhiteSpace(n)).Take(60));
+
+    // Nome UIA de cada texto. Alguns elementos não suportam a propriedade Name; nesse caso o nome vira nulo, sem derrubar a espera.
+    private IEnumerable<string?> TextNames() =>
+        Window.FindAllDescendants(cf => cf.ByControlType(ControlType.Text)).Select(e =>
+        {
+            try
+            {
+                return e.Name;
+            }
+            catch (FlaUI.Core.Exceptions.PropertyNotSupportedException)
+            {
+                return null;
+            }
+        });
 
     public void Dispose()
     {

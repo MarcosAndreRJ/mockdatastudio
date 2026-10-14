@@ -32,6 +32,22 @@ public sealed class TemplatesFlowTests
         session.WaitForText("Template 'UI_EDITADO' salvo", TimeSpan.FromSeconds(60));
         session.WaitForText("Editado pela UI", TimeSpan.FromSeconds(60));
 
+        // Edição do que já foi salvo: altera o nome e salva de novo (atualização no lugar).
+        session.SetText("Nome do template", "Editado de novo");
+        session.ClickButton("Salvar template");
+        session.WaitForText("Editado de novo", TimeSpan.FromSeconds(60));
+
+        // Código digitado em minúsculas e com espaço vira o código válido.
+        session.SetText("Código do template", "ui teste");
+        session.ClickButton("Salvar template");
+        session.WaitForText("Template 'UI_TESTE' salvo", TimeSpan.FromSeconds(60));
+
+        // Exemplo escalar: preenche o formulário e salva.
+        session.ClickButton("Exemplo escalar (lista de valores)");
+        session.WaitForText("Exemplo escalar carregado", TimeSpan.FromSeconds(60));
+        session.ClickButton("Salvar template");
+        session.WaitForText("Template 'EXEMPLO_STATUS_PEDIDO' salvo", TimeSpan.FromSeconds(60));
+
         // Importação: cola o script, analisa e importa.
         session.SetText("Script ou pack a importar", Script);
         session.ClickButton("Analisar");
