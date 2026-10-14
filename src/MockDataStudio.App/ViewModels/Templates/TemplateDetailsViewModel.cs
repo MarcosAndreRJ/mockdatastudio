@@ -4,6 +4,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MockDataStudio.App.Resources;
+using MockDataStudio.App.Services;
 using MockDataStudio.Application;
 using MockDataStudio.Catalog;
 using MockDataStudio.Catalog.Editing;
@@ -20,14 +21,18 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
     private readonly TemplateBrowser _browser;
     private readonly TemplateEditor _editor;
     private readonly CompositeTemplateEditor _composite;
+    private readonly ITemplateDeleteConfirmation _deleteConfirmation;
+    private IReadOnlyList<string> _allSamples = [];
     private string? _shownCode;
     private int _suppressDirty;
 
-    public TemplateDetailsViewModel(TemplateBrowser browser, TemplateEditor editor, CompositeTemplateEditor composite)
+    public TemplateDetailsViewModel(TemplateBrowser browser, TemplateEditor editor, CompositeTemplateEditor composite,
+        ITemplateDeleteConfirmation deleteConfirmation)
     {
         _browser = browser;
         _editor = editor;
         _composite = composite;
+        _deleteConfirmation = deleteConfirmation;
 
         NewTemplateCommand = new RelayCommand(NewTemplate);
         SaveTemplateCommand = new AsyncRelayCommand(async () => { await SaveTemplateAsync(); });
@@ -36,6 +41,8 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         DeleteTemplateCommand = new AsyncRelayCommand(DeleteTemplateAsync);
         UseScalarExampleCommand = new RelayCommand(UseScalarExample);
         UseCompositeExampleCommand = new RelayCommand(UseCompositeExample);
+        CopyCodeCommand = new RelayCommand(CopyCode);
+        CopySamplesCommand = new RelayCommand(CopySamples);
     }
 
     /// <summary>Disparado depois de salvar, copiar ou excluir; o argumento é o código a selecionar (nulo = manter).</summary>
@@ -48,6 +55,8 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
     public IAsyncRelayCommand DeleteTemplateCommand { get; }
     public IRelayCommand UseScalarExampleCommand { get; }
     public IRelayCommand UseCompositeExampleCommand { get; }
+    public IRelayCommand CopyCodeCommand { get; }
+    public IRelayCommand CopySamplesCommand { get; }
 
     public ObservableCollection<TemplateFieldInfo> Fields { get; } = [];
     public ObservableCollection<string> Aliases { get; } = [];
@@ -83,7 +92,38 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
     private string _tagsText = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanModify))]
     private bool _hasSelection;
+
+    [ObservableProperty]
+    private string _codeText = string.Empty;
+
+    [ObservableProperty]
+    private string _kindBadge = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanModify))]
+    [NotifyPropertyChangedFor(nameof(DuplicateText))]
+    [NotifyPropertyChangedFor(nameof(DuplicateAutomationName))]
+    private bool _isBuiltIn;
+
+    /// <summary>Editar e Excluir só valem para template do usuário selecionado (embutido é somente leitura).</summary>
+    public bool CanModify => HasSelection && !IsBuiltIn;
+
+    public string DuplicateText => IsBuiltIn ? TemplatesText.DetailsCloneToEdit : TemplatesText.DetailsDuplicate;
+
+    public string DuplicateAutomationName => IsBuiltIn ? TemplatesText.DetailsCloneToEdit : TemplatesText.DetailsDuplicateAuto;
+
+    /// <summary>Filtro da coluna de valores de exemplo.</summary>
+    [ObservableProperty]
+    private string _sampleFilter = string.Empty;
+
+    [ObservableProperty]
+    private string _samplesMessage = string.Empty;
+
+    /// <summary>Edição de template existente: o código fica travado (renomear = duplicar e excluir, D-08).</summary>
+    [ObservableProperty]
+    private bool _isCodeLocked;
 
     // ---------- Formulário (provisório até a Fase 3) ----------
 
@@ -121,6 +161,8 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isDirty;
 
+    partial void OnSampleFilterChanged(string value) => ApplySampleFilter();
+
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
@@ -153,12 +195,17 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
     {
         Fields.Clear();
         Aliases.Clear();
-        SampleValues.Clear();
+        _allSamples = [];
+        ApplySampleFilter();
         HasSelection = row is not null;
         _shownCode = row?.Code;
         if (row is null)
         {
             Title = TemplatesText.DetailsNoSelection;
+            Subtitle = string.Empty;
+            CodeText = string.Empty;
+            KindBadge = string.Empty;
+            IsBuiltIn = false;
             return;
         }
 
@@ -170,6 +217,9 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
 
         Title = details.Info.Name;
         Subtitle = details.Info.Code;
+        CodeText = details.Info.Code;
+        IsBuiltIn = details.Info.IsBuiltIn;
+        KindBadge = details.IsComposite ? TemplatesText.BadgeComposite : TemplatesText.BadgeScalar;
         Description = details.Info.Description ?? TemplatesText.DetailsNoDescription;
         KindText = details.IsComposite ? TemplatesText.KindComposite : TemplatesText.KindScalar;
         LogicalTypeText = details.Info.LogicalType?.ToString() ?? "—";
@@ -188,10 +238,44 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
             Aliases.Add(alias);
         }
 
-        foreach (var value in details.SampleValues)
+        _allSamples = details.SampleValues;
+        ApplySampleFilter();
+    }
+
+    // ---------- Valores de exemplo: filtro e cópia ----------
+
+    private void ApplySampleFilter()
+    {
+        var filter = SampleFilter.Trim();
+        SampleValues.Clear();
+        foreach (var value in _allSamples.Where(v => filter.Length == 0 || v.Contains(filter, StringComparison.CurrentCultureIgnoreCase)))
         {
             SampleValues.Add(value);
         }
+
+        SamplesMessage = _allSamples.Count > 0 && SampleValues.Count == 0 ? TemplatesText.SamplesNoMatch : string.Empty;
+    }
+
+    private void CopySamples()
+    {
+        if (SampleValues.Count == 0)
+        {
+            return;
+        }
+
+        System.Windows.Clipboard.SetText(string.Join(Environment.NewLine, SampleValues));
+        SamplesMessage = TemplatesText.SamplesCopied(SampleValues.Count);
+    }
+
+    private void CopyCode()
+    {
+        if (_shownCode is null)
+        {
+            return;
+        }
+
+        System.Windows.Clipboard.SetText(_shownCode);
+        FormStatus = TemplatesText.CodeCopied(_shownCode);
     }
 
     // ---------- Exemplos ----------
@@ -220,6 +304,7 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         FormCode = code;
         FormName = name;
         FormDescription = description ?? string.Empty;
+        IsCodeLocked = false;
         FormIsComposite = isComposite;
         if (!isComposite)
         {
@@ -240,6 +325,7 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
             FormLogicalType = "string";
             FormValues = string.Empty;
             FormAliases = string.Empty;
+            IsCodeLocked = false;
             FormIsComposite = false;
             FormFields = string.Empty;
             FormRecords = string.Empty;
@@ -331,6 +417,7 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         var form = loaded.Value!;
         Clean(() =>
         {
+            IsCodeLocked = true;
             FormIsComposite = false;
             FormCode = form.Code;
             FormName = form.Name;
@@ -354,6 +441,7 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         var form = loaded.Value!;
         Clean(() =>
         {
+            IsCodeLocked = true;
             FormIsComposite = true;
             FormCode = form.Code;
             FormName = form.Name;
@@ -365,6 +453,8 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         });
     }
 
+    // Duplicar (TC-202): a cópia recebe um código livre derivado do original (CODIGO_COPIA, CODIGO_COPIA_2…) e fica selecionada.
+    // Para embutido é o "Clonar para editar": a cópia é do usuário e pode ser editada.
     private async Task CloneTemplateAsync()
     {
         if (_shownCode is null)
@@ -373,14 +463,7 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
             return;
         }
 
-        var newCode = TemplateEditor.NormalizeCode(FormCode);
-        if (newCode.Length == 0)
-        {
-            FormStatus = TemplatesText.FormCloneNeedsCode;
-            return;
-        }
-
-        FormCode = newCode;
+        var newCode = await FreeCopyCodeAsync(_shownCode);
         var result = await _editor.CloneAsync(_shownCode, newCode, CancellationToken.None);
         FormStatus = result.IsSuccess ? TemplatesText.FormCloned(newCode) : result.Error.Message;
         if (result.IsSuccess)
@@ -389,6 +472,18 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         }
     }
 
+    private async Task<string> FreeCopyCodeAsync(string code)
+    {
+        var candidate = code + "_COPIA";
+        for (var n = 2; await _browser.GetDetailsAsync(candidate, CancellationToken.None) is not null && n < 100; n++)
+        {
+            candidate = $"{code}_COPIA_{n}";
+        }
+
+        return candidate;
+    }
+
+    // Excluir (TC-202): mostra o impacto (valores/registros e apelidos) e só apaga depois de confirmado; embutido nunca.
     private async Task DeleteTemplateAsync()
     {
         if (_shownCode is null)
@@ -398,6 +493,25 @@ public sealed partial class TemplateDetailsViewModel : ObservableObject
         }
 
         var code = _shownCode;
+        var impact = await _browser.GetDeletionImpactAsync(code, CancellationToken.None);
+        if (impact is null)
+        {
+            FormStatus = TemplatesText.FormNotFound;
+            return;
+        }
+
+        if (!impact.CanDelete)
+        {
+            FormStatus = TemplatesText.DeleteBuiltIn;
+            return;
+        }
+
+        if (!_deleteConfirmation.Confirm(impact))
+        {
+            FormStatus = TemplatesText.DeleteCancelled;
+            return;
+        }
+
         var result = await _editor.DeleteAsync(code, CancellationToken.None);
         FormStatus = result.IsSuccess && result.Value
             ? TemplatesText.FormDeleted(code)

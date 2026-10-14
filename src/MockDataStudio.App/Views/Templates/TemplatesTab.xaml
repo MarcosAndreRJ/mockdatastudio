@@ -5,7 +5,7 @@
              xmlns:res="clr-namespace:MockDataStudio.App.Resources">
 
     <!-- Aba Templates: lista (Catalog) | detalhes e edição (Details) | valores de exemplo. DataContext: TemplatesViewModel. -->
-    <Grid>
+    <Grid TextElement.Foreground="{StaticResource TextPrimaryBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="340" />
             <ColumnDefinition Width="14" />
@@ -41,6 +41,15 @@
                                 <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <Border Background="{Binding TintBg}" CornerRadius="4" Padding="6,1" Margin="0,0,6,0">
+                                            <TextBlock Text="{Binding KindText}" FontSize="11" FontWeight="Medium" Foreground="{Binding Tint}" />
+                                        </Border>
+                                        <Border Background="{StaticResource SuccessSoftBrush}" CornerRadius="4" Padding="6,1"
+                                                Visibility="{Binding IsBuiltIn, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Text="{x:Static res:TemplatesText.BadgeBuiltIn}" FontSize="11" FontWeight="Medium" Foreground="{StaticResource SuccessBrush}" />
+                                        </Border>
+                                    </StackPanel>
                                 </StackPanel>
                                 <TextBlock Grid.Column="2" Text="{Binding Count}" Style="{StaticResource MutedText}" VerticalAlignment="Center" />
                             </Grid>
@@ -53,6 +62,40 @@
         <!-- Edição e detalhes -->
         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
             <StackPanel>
+                <!-- Cabecalho do template selecionado: titulo, selos, codigo e acoes (TC-201/TC-202). -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Details.Title}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Border Background="{StaticResource AccentSoftBrush}" CornerRadius="4" Padding="8,2" Margin="0,0,6,0"
+                                    Visibility="{Binding Details.HasSelection, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding Details.KindBadge}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource AccentBrush}" />
+                            </Border>
+                            <Border Background="{StaticResource SuccessSoftBrush}" CornerRadius="4" Padding="8,2" Margin="0,0,10,0"
+                                    Visibility="{Binding Details.IsBuiltIn, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{x:Static res:TemplatesText.BadgeBuiltIn}" FontSize="12" FontWeight="Medium" Foreground="{StaticResource SuccessBrush}" />
+                            </Border>
+                            <TextBlock Text="{Binding Details.CodeText}" Style="{StaticResource MonoText}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Details.Description}" TextWrapping="Wrap" Margin="0,12,0,0" />
+                        <TextBlock Text="{x:Static res:TemplatesText.BuiltInReadOnly}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Visibility="{Binding Details.IsBuiltIn, Converter={StaticResource BoolToVisibility}}" />
+                        <WrapPanel Margin="0,12,0,0">
+                            <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,0" Command="{Binding Details.LoadTemplateCommand}"
+                                    Visibility="{Binding Details.CanModify, Converter={StaticResource BoolToVisibility}}"
+                                    Content="{x:Static res:TemplatesText.DetailsEdit}" AutomationProperties.Name="{x:Static res:TemplatesText.DetailsEditAuto}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,0" Command="{Binding Details.CloneTemplateCommand}"
+                                    IsEnabled="{Binding Details.HasSelection}"
+                                    Content="{Binding Details.DuplicateText}" AutomationProperties.Name="{Binding Details.DuplicateAutomationName}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,0" Command="{Binding Details.CopyCodeCommand}"
+                                    IsEnabled="{Binding Details.HasSelection}"
+                                    Content="{x:Static res:TemplatesText.DetailsCopyCode}" AutomationProperties.Name="{x:Static res:TemplatesText.DetailsCopyCodeAuto}" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Command="{Binding Details.DeleteTemplateCommand}"
+                                    Visibility="{Binding Details.CanModify, Converter={StaticResource BoolToVisibility}}"
+                                    Content="{x:Static res:TemplatesText.DetailsDelete}" AutomationProperties.Name="{x:Static res:TemplatesText.DetailsDeleteAuto}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
                 <!-- Criar e editar (provisório até o assistente da Fase 3). Fica no topo: ações e status aparecem sem rolar. Embutidos são somente leitura. -->
                 <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                     <StackPanel>
@@ -62,14 +105,8 @@
                         <WrapPanel Margin="0,0,0,6">
                             <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.NewTemplateCommand}"
                                     Content="{x:Static res:TemplatesText.ButtonNew}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonNew}" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.LoadTemplateCommand}"
-                                    Content="{x:Static res:TemplatesText.ButtonEdit}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonEdit}" />
                             <Button Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.SaveTemplateCommand}"
                                     Content="{x:Static res:TemplatesText.ButtonSave}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonSaveAuto}" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.CloneTemplateCommand}"
-                                    Content="{x:Static res:TemplatesText.ButtonClone}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonClone}" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,6" Command="{Binding Details.DeleteTemplateCommand}"
-                                    Content="{x:Static res:TemplatesText.ButtonDelete}" AutomationProperties.Name="{x:Static res:TemplatesText.ButtonDelete}" />
                         </WrapPanel>
                         <TextBlock Text="{Binding Details.FormStatus}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,10" />
 
@@ -85,7 +122,9 @@
                                   AutomationProperties.Name="{x:Static res:TemplatesText.AutoCompositeCheck}" />
                         <TextBlock Text="{x:Static res:TemplatesText.LabelCode}" Style="{StaticResource LabelText}" />
                         <TextBox Text="{Binding Details.FormCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
-                                 AutomationProperties.Name="{x:Static res:TemplatesText.AutoCode}" />
+                                 IsReadOnly="{Binding Details.IsCodeLocked}" AutomationProperties.Name="{x:Static res:TemplatesText.AutoCode}" />
+                        <TextBlock Text="{x:Static res:TemplatesText.CodeLockedHelp}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,-2,0,6"
+                                   Visibility="{Binding Details.IsCodeLocked, Converter={StaticResource BoolToVisibility}}" />
                         <TextBlock Text="{x:Static res:TemplatesText.LabelName}" Style="{StaticResource LabelText}" />
                         <TextBox Text="{Binding Details.FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6" Padding="6,4"
                                  AutomationProperties.Name="{x:Static res:TemplatesText.AutoName}" />
@@ -143,14 +182,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Detalhes do template selecionado. -->
-                <Border Style="{StaticResource Card}" Margin="0,0,0,14">
-                    <StackPanel>
-                        <TextBlock Text="{Binding Details.Title}" FontSize="22" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Details.Subtitle}" Style="{StaticResource MutedText}" />
-                        <TextBlock Text="{Binding Details.Description}" TextWrapping="Wrap" Margin="0,12,0,0" />
-                    </StackPanel>
-                </Border>
 
                 <Grid Margin="0,0,0,14">
                     <Grid.ColumnDefinitions>
@@ -212,6 +243,27 @@
                         </ItemsControl>
                     </StackPanel>
                 </Border>
+
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="{x:Static res:TemplatesText.HowToTitle}" Style="{StaticResource SectionTitle}" FontSize="14" Margin="0,0,0,8" />
+                            <TextBlock Text="{x:Static res:TemplatesText.HowTo1}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <TextBlock Text="{x:Static res:TemplatesText.HowTo2}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <TextBlock Text="{x:Static res:TemplatesText.HowTo3}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <TextBlock Text="{x:Static res:TemplatesText.HowTo4}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="{x:Static res:TemplatesText.ImportantTitle}" Style="{StaticResource SectionTitle}" FontSize="14" Margin="0,0,0,8" />
+                            <TextBlock Text="{x:Static res:TemplatesText.ImportantText}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </StackPanel>
         </ScrollViewer>
 
@@ -219,7 +271,17 @@
         <Border Grid.Column="4" Style="{StaticResource Card}" Padding="16">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.SamplesTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
-                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.SamplesHint}" Style="{StaticResource MutedText}" Margin="0,0,0,8" />
+                <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.SamplesHint}" Style="{StaticResource MutedText}" Margin="0,0,0,8" />                <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <controls:SearchField Placeholder="{x:Static res:TemplatesText.SamplesSearch}"
+                                          Text="{Binding Details.SampleFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          AutomationProperties.Name="{x:Static res:TemplatesText.SamplesSearchAuto}" />
+                    <Button Grid.Column="1" Style="{StaticResource GhostButton}" Margin="8,0,0,0" Padding="10,2" Command="{Binding Details.CopySamplesCommand}"
+                            Content="{x:Static res:TemplatesText.SamplesCopy}" AutomationProperties.Name="{x:Static res:TemplatesText.SamplesCopyAuto}" />
+                </Grid>
+                <TextBlock DockPanel.Dock="Bottom" Text="{Binding Details.SamplesMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0" />
                 <ListBox ItemsSource="{Binding Details.SampleValues}" BorderThickness="0" Background="Transparent" IsHitTestVisible="False" Focusable="False"
                          AutomationProperties.Name="{x:Static res:TemplatesText.SamplesAuto}">
                     <ListBox.ItemTemplate>

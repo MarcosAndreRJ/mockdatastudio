@@ -101,6 +101,7 @@ public static class ServiceRegistration
         builder.Services.AddSingleton<TemplatesViewModel>();
         builder.Services.AddSingleton<MockDataStudio.App.Services.IUnsavedChangesPrompt, MockDataStudio.App.Services.UnsavedChangesDialog>();
         builder.Services.AddSingleton<MockDataStudio.App.Services.NavigationGate>();
+        builder.Services.AddSingleton<MockDataStudio.App.Services.ITemplateDeleteConfirmation, MockDataStudio.App.Services.TemplateDeleteConfirmation>();
         builder.Services.AddSingleton<MappingViewModel>();
 
         return builder.Build();

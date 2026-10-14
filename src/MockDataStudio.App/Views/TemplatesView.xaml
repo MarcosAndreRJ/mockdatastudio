@@ -30,7 +30,7 @@
         </Grid>
 
         <TabControl Grid.Row="1" Style="{StaticResource UnderlineTabControl}" ItemContainerStyle="{StaticResource UnderlineTabItem}"
-                    Padding="0,14,0,0" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
+                    Padding="0,14,0,0" Foreground="{StaticResource TextPrimaryBrush}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
                     AutomationProperties.Name="{x:Static res:TemplatesText.TabsAuto}">
             <TabItem Header="{x:Static res:TemplatesText.TabTemplates}" AutomationProperties.Name="{x:Static res:TemplatesText.TabTemplatesAuto}">
                 <tpl:TemplatesTab />

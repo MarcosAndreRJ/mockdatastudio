@@ -4,7 +4,7 @@
              xmlns:res="clr-namespace:MockDataStudio.App.Resources">
 
     <!-- Aba Importar/Exportar (TC-102). DataContext: TemplateImportExportViewModel. A análise não altera o catálogo; só a importação altera. -->
-    <Grid>
+    <Grid TextElement.Foreground="{StaticResource TextPrimaryBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*" />
             <ColumnDefinition Width="14" />

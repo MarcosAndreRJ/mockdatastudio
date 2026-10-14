@@ -188,4 +188,39 @@
   <data name="Templates.TabImportExportAuto" xml:space="preserve"><value>Aba Importar/Exportar</value></data>
   <data name="Templates.TabPresetsAuto" xml:space="preserve"><value>Aba Presets de gerador</value></data>
   <data name="Templates.TabRulesAuto" xml:space="preserve"><value>Aba Regras aprendidas</value></data>
+  <data name="Templates.DetailsEdit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Templates.DetailsDuplicate" xml:space="preserve"><value>Duplicar</value></data>
+  <data name="Templates.DetailsCloneToEdit" xml:space="preserve"><value>Clonar para editar</value></data>
+  <data name="Templates.DetailsDelete" xml:space="preserve"><value>Excluir</value></data>
+  <data name="Templates.DetailsCopyCode" xml:space="preserve"><value>Copiar código</value></data>
+  <data name="Templates.DetailsEditAuto" xml:space="preserve"><value>Editar template selecionado</value></data>
+  <data name="Templates.DetailsDuplicateAuto" xml:space="preserve"><value>Duplicar template selecionado</value></data>
+  <data name="Templates.DetailsDeleteAuto" xml:space="preserve"><value>Excluir template selecionado</value></data>
+  <data name="Templates.DetailsCopyCodeAuto" xml:space="preserve"><value>Copiar código do template</value></data>
+  <data name="Templates.BadgeScalar" xml:space="preserve"><value>Escalar</value></data>
+  <data name="Templates.BadgeComposite" xml:space="preserve"><value>Composto</value></data>
+  <data name="Templates.BadgeBuiltIn" xml:space="preserve"><value>Embutido</value></data>
+  <data name="Templates.BuiltInReadOnly" xml:space="preserve"><value>Template embutido: somente leitura. Use "Clonar para editar" para criar uma cópia sua.</value></data>
+  <data name="Templates.ListCountValues" xml:space="preserve"><value>{0} valores</value></data>
+  <data name="Templates.ListCountRecords" xml:space="preserve"><value>{0} registros</value></data>
+  <data name="Templates.HowToTitle" xml:space="preserve"><value>Como usar</value></data>
+  <data name="Templates.HowTo1" xml:space="preserve"><value>1. Escolha ou crie um template.</value></data>
+  <data name="Templates.HowTo2" xml:space="preserve"><value>2. Revise os valores e os apelidos (aliases).</value></data>
+  <data name="Templates.HowTo3" xml:space="preserve"><value>3. No Mapeamento, associe uma coluna ao template.</value></data>
+  <data name="Templates.HowTo4" xml:space="preserve"><value>4. Gere os dados: cada linha sorteia um valor (ou um registro inteiro, no composto).</value></data>
+  <data name="Templates.ImportantTitle" xml:space="preserve"><value>Importante</value></data>
+  <data name="Templates.ImportantText" xml:space="preserve"><value>Templates embutidos não podem ser alterados nem excluídos. Excluir um template remove também seus valores e apelidos; mapeamentos que o usam deixam de funcionar.</value></data>
+  <data name="Templates.CodeLockedHelp" xml:space="preserve"><value>O código não pode ser alterado na edição. Para renomear, duplique o template e exclua o original.</value></data>
+  <data name="Templates.SamplesSearch" xml:space="preserve"><value>Filtrar valores...</value></data>
+  <data name="Templates.SamplesSearchAuto" xml:space="preserve"><value>Filtrar valores de exemplo</value></data>
+  <data name="Templates.SamplesCopy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="Templates.SamplesCopyAuto" xml:space="preserve"><value>Copiar valores de exemplo</value></data>
+  <data name="Templates.SamplesCopied" xml:space="preserve"><value>{0} valor(es) copiado(s).</value></data>
+  <data name="Templates.SamplesNoMatch" xml:space="preserve"><value>Nenhum valor corresponde ao filtro.</value></data>
+  <data name="Templates.CodeCopied" xml:space="preserve"><value>Código {0} copiado.</value></data>
+  <data name="Templates.DeleteTitle" xml:space="preserve"><value>Excluir template</value></data>
+  <data name="Templates.DeleteMessage" xml:space="preserve"><value>Excluir "{0}" ({1})? Isso remove {2} item(ns) de dados e {3} apelido(s). Não pode ser desfeito.</value></data>
+  <data name="Templates.DeleteButton" xml:space="preserve"><value>Excluir</value></data>
+  <data name="Templates.DeleteBuiltIn" xml:space="preserve"><value>Templates embutidos não podem ser excluídos.</value></data>
+  <data name="Templates.DeleteCancelled" xml:space="preserve"><value>Exclusão cancelada.</value></data>
 </root>

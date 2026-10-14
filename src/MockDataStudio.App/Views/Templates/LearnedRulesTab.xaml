@@ -5,7 +5,7 @@
              xmlns:res="clr-namespace:MockDataStudio.App.Resources">
 
     <!-- Aba Regras aprendidas (FR-064). DataContext: LearnedRulesViewModel. -->
-    <Border Style="{StaticResource Card}">
+    <Border Style="{StaticResource Card}" TextElement.Foreground="{StaticResource TextPrimaryBrush}">
         <DockPanel>
             <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.RulesTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
             <TextBlock DockPanel.Dock="Top" Text="{x:Static res:TemplatesText.RulesHelp}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />

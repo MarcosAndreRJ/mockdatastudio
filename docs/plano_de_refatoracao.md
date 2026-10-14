@@ -33,7 +33,7 @@ TC-001 [O] editores preservam draft completo · TC-002 [O] contagem de compostos
 TC-101 [x] fatiar `TemplatesViewModel` (+ projeto `App.Tests`) · TC-102 [x] 4 abas · TC-103 [x] estados · TC-104 [x] `INavigationGuard` · TC-105 [x] resx e automação.
 
 **Fase 2 — Detalhes/edição**
-TC-201 [O] `TemplateDetailsView` · TC-202 [O] ações (Editar/Duplicar/Excluir com impacto) · TC-203 [O] lista (badge, contagem, selo) · TC-204 [M] prévia de geração · TC-205 [O] edição via wizard (código não editável).
+TC-201 [x] `TemplateDetailsView` · TC-202 [x] ações (Editar/Duplicar/Excluir com impacto) · TC-203 [x] lista (badge, contagem, selo) · TC-204 [M] prévia de geração · TC-205 [x] edição via wizard (código não editável).
 
 **Fase 3 — Assistente**
 TC-301 [O] VM + stepper + draft em memória · TC-302 [O] passos 1–2 · TC-303 [O] revisão/salvar/salvar e criar outro · TC-304 [O] cancelar e não salvo · TC-305 [O] compat. com `TemplatesFlowTests`.
@@ -85,3 +85,12 @@ Ver `05-test-and-acceptance-plan.md` §4: 10 métricas (entender finalidade ≤3
 - TC-104: `INavigationGuard` + `NavigationGate` + `UnsavedChangesDialog`; o Shell devolve a seleção e só navega se a guarda liberar.
 - TC-105: textos em `Strings.resx` (`Templates.*`) via `TemplatesText`; todos os controles com `AutomationProperties.Name`.
 - Divergências: usa `CommunityToolkit.Mvvm` (não "RelayCommand próprios"); as ações de edição ficam em `TemplateDetailsViewModel`; a aba Importar/Exportar não entra na guarda (o texto colado é só rascunho).
+
+## Status da Fase 2 (detalhes/edição) — concluída, com ressalvas
+
+- TC-201: cabeçalho do template (título, selos Escalar/Composto/Embutido, código, descrição), cards de tipo/origem/campos/aliases, "Como usar" e "Importante"; coluna de valores com filtro e cópia.
+- TC-202: ações Editar (oculta para embutido), Duplicar ("Clonar para editar" para embutido; a cópia recebe `CODIGO_COPIA`, `_COPIA_2`…), Copiar código e Excluir com diálogo de impacto (`ITemplateDeleteConfirmation`; código digitado a partir de 100 itens, D-06). O serviço de impacto (TC-007) e a contagem de compostos/busca por alias (TC-002/009) já existiam no código.
+- TC-203: lista com selo de tipo, contagem ("N valores"/"N registros") e selo Embutido.
+- TC-205 (parcial): o código fica somente leitura ao editar um template existente (D-08), com explicação na UI; o assistente em modo `Edit` depende da Fase 3.
+- TC-204 [M] (prévia de geração) não feito.
+- Correção: o conteúdo das abas herdava a cor do cabeçalho da aba; o primeiro template selecionado na abertura não aparecia nos detalhes (evento assinado depois da primeira carga).

@@ -48,6 +48,10 @@ public sealed class TemplatesFlowTests
         session.ClickButton("Salvar template");
         session.WaitForText("Template 'EXEMPLO_STATUS_PEDIDO' salvo", TimeSpan.FromSeconds(60));
 
+        // Duplicar (TC-202): a cópia recebe código livre derivado do original e aparece na lista.
+        session.ClickButton("Duplicar template selecionado");
+        session.WaitForText("Cópia 'EXEMPLO_STATUS_PEDIDO_COPIA' criada", TimeSpan.FromSeconds(60));
+
         // Importação (aba Importar/Exportar): cola o script, analisa e importa; depois volta à aba Templates.
         session.ClickButton("Aba Importar/Exportar");
         session.SetText("Script ou pack a importar", Script);

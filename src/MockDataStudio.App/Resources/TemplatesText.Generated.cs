@@ -166,6 +166,42 @@ public static partial class TemplatesText
     public static string UnsavedDiscard => Get("Templates.UnsavedDiscard");
     public static string UnsavedStay => Get("Templates.UnsavedStay");
 
+    public static string DetailsEdit => Get("Templates.DetailsEdit");
+    public static string DetailsDuplicate => Get("Templates.DetailsDuplicate");
+    public static string DetailsCloneToEdit => Get("Templates.DetailsCloneToEdit");
+    public static string DetailsDelete => Get("Templates.DetailsDelete");
+    public static string DetailsCopyCode => Get("Templates.DetailsCopyCode");
+    public static string DetailsEditAuto => Get("Templates.DetailsEditAuto");
+    public static string DetailsDuplicateAuto => Get("Templates.DetailsDuplicateAuto");
+    public static string DetailsDeleteAuto => Get("Templates.DetailsDeleteAuto");
+    public static string DetailsCopyCodeAuto => Get("Templates.DetailsCopyCodeAuto");
+    public static string BadgeScalar => Get("Templates.BadgeScalar");
+    public static string BadgeComposite => Get("Templates.BadgeComposite");
+    public static string BadgeBuiltIn => Get("Templates.BadgeBuiltIn");
+    public static string BuiltInReadOnly => Get("Templates.BuiltInReadOnly");
+    public static string ListCountValues(object arg0) => Format("Templates.ListCountValues", arg0);
+    public static string ListCountRecords(object arg0) => Format("Templates.ListCountRecords", arg0);
+    public static string HowToTitle => Get("Templates.HowToTitle");
+    public static string HowTo1 => Get("Templates.HowTo1");
+    public static string HowTo2 => Get("Templates.HowTo2");
+    public static string HowTo3 => Get("Templates.HowTo3");
+    public static string HowTo4 => Get("Templates.HowTo4");
+    public static string ImportantTitle => Get("Templates.ImportantTitle");
+    public static string ImportantText => Get("Templates.ImportantText");
+    public static string CodeLockedHelp => Get("Templates.CodeLockedHelp");
+    public static string SamplesSearch => Get("Templates.SamplesSearch");
+    public static string SamplesSearchAuto => Get("Templates.SamplesSearchAuto");
+    public static string SamplesCopy => Get("Templates.SamplesCopy");
+    public static string SamplesCopyAuto => Get("Templates.SamplesCopyAuto");
+    public static string SamplesCopied(object arg0) => Format("Templates.SamplesCopied", arg0);
+    public static string SamplesNoMatch => Get("Templates.SamplesNoMatch");
+    public static string CodeCopied(object arg0) => Format("Templates.CodeCopied", arg0);
+    public static string DeleteTitle => Get("Templates.DeleteTitle");
+    public static string DeleteMessage(object arg0, object arg1, object arg2, object arg3) => Format("Templates.DeleteMessage", arg0, arg1, arg2, arg3);
+    public static string DeleteButton => Get("Templates.DeleteButton");
+    public static string DeleteBuiltIn => Get("Templates.DeleteBuiltIn");
+    public static string DeleteCancelled => Get("Templates.DeleteCancelled");
+
     private static string Get(string key) => Manager.GetString(key, CultureInfo.CurrentUICulture) ?? key;
 
     private static string Format(string key, params object[] args) => string.Format(CultureInfo.CurrentCulture, Get(key), args);

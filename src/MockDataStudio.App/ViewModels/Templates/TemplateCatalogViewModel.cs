@@ -10,7 +10,9 @@ using MockDataStudio.Core.Templates;
 
 namespace MockDataStudio.App.ViewModels.Templates;
 
-public sealed record TemplateRowItem(string Code, string Name, string Description, string Count, string Glyph, Brush Tint, Brush TintBg);
+public sealed record TemplateRowItem(
+    string Code, string Name, string Description, string Count, string Glyph, Brush Tint, Brush TintBg,
+    string KindText, bool IsBuiltIn);
 
 /// <summary>
 /// Lista de templates do catálogo (TC-101): carga, busca, seleção e estado visual. Não edita nada: quem precisa reagir à
@@ -94,10 +96,11 @@ public sealed partial class TemplateCatalogViewModel : ObservableObject, IDispos
                 var composite = info.Kind == TemplateKind.Composite;
                 Templates.Add(new TemplateRowItem(
                     info.Code, info.Name, info.Description ?? info.Locale,
-                    info.ValueCount.ToString("N0", CultureInfo.CurrentCulture),
+                    composite ? TemplatesText.ListCountRecords(info.ValueCount.ToString("N0", CultureInfo.CurrentCulture)) : TemplatesText.ListCountValues(info.ValueCount.ToString("N0", CultureInfo.CurrentCulture)),
                     composite ? "" : "",
                     Theme.Brush(composite ? "PurpleBrush" : "AccentBrush"),
-                    Theme.Brush(composite ? "PurpleSoftBrush" : "AccentSoftBrush")));
+                    Theme.Brush(composite ? "PurpleSoftBrush" : "AccentSoftBrush"),
+                    composite ? TemplatesText.BadgeComposite : TemplatesText.BadgeScalar, info.IsBuiltIn));
             }
 
             if (infos.Count == 0)

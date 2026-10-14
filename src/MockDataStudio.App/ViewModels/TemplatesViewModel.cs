@@ -25,6 +25,10 @@ public sealed partial class TemplatesViewModel : ObservableObject, INavigationGu
         RefreshCommand = new AsyncRelayCommand(RefreshAllAsync);
 
         Catalog.SelectionChanged += (_, row) => _ = Details.ShowAsync(row);
+        if (Catalog.SelectedTemplate is { } current)
+        {
+            _ = Details.ShowAsync(current); // a primeira carga pode ter terminado antes de assinarmos o evento
+        }
         Details.CatalogChanged += async (_, code) => await ReloadCatalogAsync(code);
         ImportExport.CatalogChanged += async (_, _) => await ReloadCatalogAsync(null);
     }

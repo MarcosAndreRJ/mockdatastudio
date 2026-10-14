@@ -5,7 +5,7 @@
              xmlns:res="clr-namespace:MockDataStudio.App.Resources">
 
     <!-- Aba Presets de gerador (FR-059). DataContext: GeneratorPresetsViewModel. -->
-    <Grid>
+    <Grid TextElement.Foreground="{StaticResource TextPrimaryBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="14" />
