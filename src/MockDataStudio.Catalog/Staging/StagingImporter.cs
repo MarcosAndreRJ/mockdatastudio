@@ -316,9 +316,20 @@ public sealed partial class StagingImporter(
             ValidateRule(rule, stagedTemplateKinds, fieldsByTemplate, presets.Select(p => p.Code), catalogTemplates.Keys, catalogFields, catalogPresets, issues);
         }
 
+        var templateSummaries = templates.DistinctBy(t => t.Code, StringComparer.Ordinal).Select(t =>
+        {
+            var k = string.Equals(t.Kind, "composite", StringComparison.OrdinalIgnoreCase) ? TemplateKind.Composite : TemplateKind.Scalar;
+            var count = k == TemplateKind.Composite
+                ? records.Count(r => string.Equals(r.TemplateCode, t.Code, StringComparison.Ordinal))
+                : values.Count(v => string.Equals(v.TemplateCode, t.Code, StringComparison.Ordinal));
+            var exists = catalogTemplates.ContainsKey(t.Code);
+            var hasConflict = issues.Any(i => string.Equals(i.Table, t.Code, StringComparison.Ordinal) && i.Severity == IssueSeverity.Error);
+            return new StagingTemplateSummary(t.Code, t.Name ?? t.Code, k, count, exists, hasConflict);
+        }).ToList();
+
         var canMerge = issues.All(i => i.Severity != IssueSeverity.Error);
         return new StagingAnalysis(templatesNew, templatesChanged, aliasesNew, valuesNew, valuesDuplicated, recordsNew,
-            issues.ToList(), canMerge, string.Empty);
+            issues.ToList(), canMerge, string.Empty, templateSummaries);
     }
 
     private static void ValidateRecord(StagingRecord record, List<StagingField> fields, List<ImportIssue> issues)

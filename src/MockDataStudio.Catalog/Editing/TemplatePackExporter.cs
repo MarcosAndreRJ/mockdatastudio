@@ -13,7 +13,7 @@ public sealed class TemplatePackExporter(ITemplateRepository templates, ITemplat
     public const string Format = "template-pack-1.0";
 
     public async Task<Result<string>> ExportAsync(string packCode, string packName, string author,
-        IReadOnlyList<string>? templateCodes, CancellationToken ct)
+        IReadOnlyList<string>? templateCodes, CancellationToken ct, string? license = "MIT", string? version = "1.0.0")
     {
         if (string.IsNullOrWhiteSpace(packCode) || !System.Text.RegularExpressions.Regex.IsMatch(packCode, "^[A-Z0-9_]{2,64}$"))
         {
@@ -33,8 +33,9 @@ public sealed class TemplatePackExporter(ITemplateRepository templates, ITemplat
             writer.WriteString("format", Format);
             writer.WriteString("code", packCode);
             writer.WriteString("name", string.IsNullOrWhiteSpace(packName) ? packCode : packName);
-            writer.WriteString("version", "1.0.0");
+            writer.WriteString("version", string.IsNullOrWhiteSpace(version) ? "1.0.0" : version);
             writer.WriteString("author", author ?? string.Empty);
+            writer.WriteString("license", string.IsNullOrWhiteSpace(license) ? "MIT" : license);
             writer.WriteStartArray("templates");
             foreach (var info in selected)
             {
@@ -130,6 +131,7 @@ public sealed class TemplatePackExporter(ITemplateRepository templates, ITemplat
                 writer.WriteNumber("maxLength", max);
             }
 
+            writer.WriteBoolean("required", field.Required);
             writer.WriteEndObject();
         }
 
@@ -140,6 +142,7 @@ public sealed class TemplatePackExporter(ITemplateRepository templates, ITemplat
         {
             writer.WriteStartObject();
             writer.WriteString("key", (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            writer.WriteNumber("weight", set.GetWeight(i));
             writer.WritePropertyName("data");
             writer.WriteStartObject();
             foreach (var field in fields)

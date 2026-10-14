@@ -10,7 +10,8 @@ namespace MockDataStudio.Catalog.Editing;
 public sealed record CompositeTemplateForm(
     string Code, string Name, string? Description,
     IReadOnlyList<DraftField> Fields, IReadOnlyList<string> Aliases,
-    IReadOnlyList<IReadOnlyDictionary<string, string?>> Records);
+    IReadOnlyList<IReadOnlyDictionary<string, string?>> Records,
+    TemplateDraft? OriginalDraft = null);
 
 public sealed class CompositeTemplateEditor(ITemplateRepository templates, ITemplateDataSource dataSource)
 {
@@ -108,15 +109,67 @@ public sealed class CompositeTemplateEditor(ITemplateRepository templates, ITemp
             return Task.FromResult(Result<long>.Fail(ErrorCodes.CatImpCode, "Informe ao menos um campo para o template composto."));
         }
 
+        var original = form.OriginalDraft;
+        var tags = original?.Tags ?? [];
+
+        // Aliases: preserva aliases por campo e atributos de aliases preservados
+        var aliases = new List<DraftAlias>();
+        if (original is not null)
+        {
+            var validFieldCodes = form.Fields.Select(f => f.FieldCode).ToHashSet(StringComparer.Ordinal);
+            aliases.AddRange(original.Aliases.Where(a => a.FieldCode is not null && validFieldCodes.Contains(a.FieldCode)));
+        }
+
+        var origTemplateAliases = original?.Aliases
+            .Where(a => a.FieldCode is null)
+            .GroupBy(a => a.Alias, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase)
+            ?? [];
+
+        foreach (var aliasText in form.Aliases)
+        {
+            if (origTemplateAliases.TryGetValue(aliasText, out var origAlias))
+            {
+                aliases.Add(origAlias);
+            }
+            else
+            {
+                aliases.Add(new DraftAlias(aliasText));
+            }
+        }
+
+        // Registros: mapeia com pesos e chaves originais quando a posição/registro coincidir
+        var records = new List<TemplateRecordRow>();
+        for (var i = 0; i < form.Records.Count; i++)
+        {
+            var r = form.Records[i];
+            var key = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            double weight = 1.0;
+
+            if (original is not null && i < original.Records.Count)
+            {
+                var origRec = original.Records[i];
+                key = origRec.RecordKey;
+                weight = origRec.Weight;
+            }
+
+            records.Add(new TemplateRecordRow(key, r, weight));
+        }
+
         var draft = new TemplateDraft(
             form.Code, form.Name, TemplateKind.Composite, null,
             string.IsNullOrWhiteSpace(form.Description) ? null : form.Description.Trim(),
-            [],
+            tags,
             form.Fields,
-            form.Aliases.Select(alias => new DraftAlias(alias)).ToList(),
+            aliases,
             [],
-            // Chave por posição: registros com a mesma chave colidiriam no catálogo.
-            form.Records.Select((r, i) => new TemplateRecordRow((i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture), r, 1.0)).ToList());
+            records);
+        return templates.SaveAsync(draft, ct);
+    }
+
+    public Task<Result<long>> SaveDraftAsync(TemplateDraft draft, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
         return templates.SaveAsync(draft, ct);
     }
 
@@ -139,13 +192,26 @@ public sealed class CompositeTemplateEditor(ITemplateRepository templates, ITemp
             return Result<CompositeTemplateForm>.Fail(ErrorCodes.CatImpCode, $"Template '{code}' não é composto.");
         }
 
+        var draft = await templates.GetDraftAsync(code, ct);
+        if (draft is not null)
+        {
+            var aliases = draft.Aliases
+                .Where(a => a.FieldCode is null)
+                .Select(a => a.Alias)
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+            var records = draft.Records.Select(r => r.Data).ToList();
+            return Result<CompositeTemplateForm>.Ok(new CompositeTemplateForm(
+                info.Code, info.Name, info.Description, draft.Fields, aliases, records, draft));
+        }
+
         var fields = (await templates.GetFieldsAsync(code, ct))
             .OrderBy(f => f.Ordinal)
             .Select(f => new DraftField(f.FieldCode, f.LogicalType, f.Ordinal, f.MaxLength, f.Required))
             .ToList();
 
         var set = await dataSource.LoadAsync(code, ct);
-        var records = new List<IReadOnlyDictionary<string, string?>>();
+        var fallbackRecords = new List<IReadOnlyDictionary<string, string?>>();
         for (var i = 0; i < set.Count; i++)
         {
             var row = new Dictionary<string, string?>(StringComparer.Ordinal);
@@ -154,16 +220,35 @@ public sealed class CompositeTemplateEditor(ITemplateRepository templates, ITemp
                 row[field.FieldCode] = set.GetField(i, field.FieldCode);
             }
 
-            records.Add(row);
+            fallbackRecords.Add(row);
         }
 
-        var aliases = (await templates.GetAllAliasesAsync(ct))
+        var fallbackAliases = (await templates.GetAllAliasesAsync(ct))
             .Where(a => a.TemplateCode == code && a.FieldCode is null)
             .Select(a => a.Alias)
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
         return Result<CompositeTemplateForm>.Ok(new CompositeTemplateForm(
-            info.Code, info.Name, info.Description, fields, aliases, records));
+            info.Code, info.Name, info.Description, fields, fallbackAliases, fallbackRecords));
+    }
+
+    public async Task<Result<TemplateDraft>> LoadDraftAsync(string code, CancellationToken ct)
+    {
+        var info = await templates.GetAsync(code, ct);
+        if (info is null)
+        {
+            return Result<TemplateDraft>.Fail(ErrorCodes.CatImpUnknownTemplate, $"Template '{code}' não existe.");
+        }
+
+        if (info.IsBuiltIn)
+        {
+            return Result<TemplateDraft>.Fail(ErrorCodes.CatBuiltinReadOnly, $"Template embutido '{code}' é somente leitura.");
+        }
+
+        var draft = await templates.GetDraftAsync(code, ct);
+        return draft is not null
+            ? Result<TemplateDraft>.Ok(draft)
+            : Result<TemplateDraft>.Fail(ErrorCodes.CatImpUnknownTemplate, $"Template '{code}' não existe.");
     }
 }

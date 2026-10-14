@@ -69,11 +69,13 @@ public sealed class BuiltInPackInstaller(CatalogDatabase database, IStagingImpor
             {
                 foreach (var field in fields.EnumerateArray())
                 {
+                    var req = !field.TryGetProperty("required", out var rq) || rq.GetBoolean() ? 1 : 0;
                     sb.Append("INSERT INTO template_field (template_code, field_code, logical_type, ordinal, max_length, required) VALUES (")
                       .Append(Lit(code)).Append(", ").Append(Lit(field.GetProperty("code").GetString()!)).Append(", ")
                       .Append(Lit(field.GetProperty("logicalType").GetString()!)).Append(", ")
                       .Append(field.GetProperty("ordinal").GetInt32().ToString(CultureInfo.InvariantCulture)).Append(", ")
-                      .Append(field.TryGetProperty("maxLength", out var ml) ? ml.GetInt32().ToString(CultureInfo.InvariantCulture) : "NULL").Append(", 1);\n");
+                      .Append(field.TryGetProperty("maxLength", out var ml) ? ml.GetInt32().ToString(CultureInfo.InvariantCulture) : "NULL").Append(", ")
+                      .Append(req.ToString(CultureInfo.InvariantCulture)).Append(");\n");
                 }
             }
 
@@ -105,9 +107,11 @@ public sealed class BuiltInPackInstaller(CatalogDatabase database, IStagingImpor
             {
                 foreach (var record in records.EnumerateArray())
                 {
-                    sb.Append("INSERT INTO template_record (template_code, record_key, data) VALUES (")
+                    var weight = record.TryGetProperty("weight", out var rw) ? rw.GetDouble() : 1.0;
+                    sb.Append("INSERT INTO template_record (template_code, record_key, data, weight) VALUES (")
                       .Append(Lit(code)).Append(", ").Append(Lit(record.GetProperty("key").GetString()!)).Append(", ")
-                      .Append(Lit(record.GetProperty("data").GetRawText())).Append(");\n");
+                      .Append(Lit(record.GetProperty("data").GetRawText())).Append(", ")
+                      .Append(weight.ToString(CultureInfo.InvariantCulture)).Append(");\n");
                 }
             }
         }

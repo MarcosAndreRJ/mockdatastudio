@@ -174,6 +174,7 @@ public sealed class ProjectServicesTests
             ]);
 
         public Task<TemplateInfo?> GetAsync(string code, CancellationToken ct) => throw new NotSupportedException();
+        public Task<TemplateDraft?> GetDraftAsync(string code, CancellationToken ct) => Task.FromResult<TemplateDraft?>(null);
 
         public Task<IReadOnlyList<TemplateFieldInfo>> GetFieldsAsync(string code, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<TemplateFieldInfo>>([]);

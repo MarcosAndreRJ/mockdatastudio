@@ -158,6 +158,84 @@ public sealed class EditingTests : IDisposable
     }
 
     [Fact]
+    [Trait("Category", "Contract")]
+    public async Task EditorPreservaTagsPesosEAliasesEmRoundTrip()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var editor = new TemplateEditor(_env.Templates, _env.DataSource);
+
+        var originalDraft = new TemplateDraft(
+            "TST_FISCAL",
+            "Template Fiscal",
+            TemplateKind.Scalar,
+            LogicalType.String,
+            "Descrição fiscal",
+            ["tributario", "brasil"],
+            [],
+            [new DraftAlias("imposto", null, 1.8, "cad_*")],
+            [new TemplateValueRow("ICMS", 5.0), new TemplateValueRow("ISS", 2.5)],
+            []);
+
+        var saveInit = await _env.Templates.SaveAsync(originalDraft, ct);
+        saveInit.IsSuccess.ShouldBeTrue();
+
+        var infoInitial = await _env.Templates.GetAsync("TST_FISCAL", ct);
+        infoInitial.ShouldNotBeNull();
+        var initialHash = infoInitial.ContentHash;
+
+        // Carrega via editor
+        var formResult = await editor.LoadScalarAsync("TST_FISCAL", ct);
+        formResult.IsSuccess.ShouldBeTrue();
+        var form = formResult.Value!;
+
+        // Salva novamente sem alterações no formulário
+        var saveAgain = await editor.SaveScalarAsync(form, ct);
+        saveAgain.IsSuccess.ShouldBeTrue();
+
+        var reloadedDraft = await _env.Templates.GetDraftAsync("TST_FISCAL", ct);
+        reloadedDraft.ShouldNotBeNull();
+        reloadedDraft.Tags.ShouldBe(["tributario", "brasil"]);
+        reloadedDraft.Aliases.Count.ShouldBe(1);
+        reloadedDraft.Aliases[0].Alias.ShouldBe("imposto");
+        reloadedDraft.Aliases[0].Weight.ShouldBe(1.8);
+        reloadedDraft.Aliases[0].ContextTablePattern.ShouldBe("cad_*");
+
+        var valIcms = reloadedDraft.Values.Single(v => v.Value == "ICMS");
+        valIcms.Weight.ShouldBe(5.0);
+        var valIss = reloadedDraft.Values.Single(v => v.Value == "ISS");
+        valIss.Weight.ShouldBe(2.5);
+
+        var infoAgain = await _env.Templates.GetAsync("TST_FISCAL", ct);
+        infoAgain!.ContentHash.ShouldBe(initialHash, "Hash deve ser idêntico ao re-salvar sem mudanças");
+    }
+
+    [Fact]
+    [Trait("Category", "Contract")]
+    public async Task ListAsync_BuscaPorTagEAlias()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var draft = new TemplateDraft(
+            "TST_BUSCA",
+            "Template Para Busca",
+            TemplateKind.Scalar,
+            LogicalType.String,
+            null,
+            ["tag_exclusiva"],
+            [],
+            [new DraftAlias("alias_exclusivo")],
+            [new TemplateValueRow("valor1", 1.0)],
+            []);
+
+        (await _env.Templates.SaveAsync(draft, ct)).IsSuccess.ShouldBeTrue();
+
+        var byTag = await _env.Templates.ListAsync(new TemplateQuery(Text: "tag_exclusiva"), ct);
+        byTag.Any(t => t.Code == "TST_BUSCA").ShouldBeTrue("deve encontrar pela tag");
+
+        var byAlias = await _env.Templates.ListAsync(new TemplateQuery(Text: "alias_exclusivo"), ct);
+        byAlias.Any(t => t.Code == "TST_BUSCA").ShouldBeTrue("deve encontrar pelo alias");
+    }
+
+    [Fact]
     [Trait("Category", "Unit")]
     public void ParseLines_RemoveVaziosEDuplicados()
     {

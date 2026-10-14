@@ -131,7 +131,12 @@ public sealed class GeneratorPresetRepository(CatalogDatabase database) : IGener
         command.Parameters.AddWithValue("$desc", (object?)preset.Description ?? DBNull.Value);
         command.Parameters.AddWithValue("$builtin", preset.IsBuiltIn ? 1 : 0);
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
-        command.ExecuteNonQuery();
+        var affected = command.ExecuteNonQuery();
+        if (affected == 0)
+        {
+            return Task.FromResult(Result<long>.Fail(ErrorCodes.CatBuiltinReadOnly,
+                $"Preset '{preset.Code}' é embutido e não pode ser alterado."));
+        }
 
         using var idCommand = connection.CreateCommand();
         idCommand.CommandText = "SELECT id FROM generator_preset WHERE code = $code";

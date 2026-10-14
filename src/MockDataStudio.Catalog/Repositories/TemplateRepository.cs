@@ -22,9 +22,17 @@ public sealed partial class TemplateRepository(CatalogDatabase database) : ITemp
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT t.id, t.code, t.name, t.kind, t.logical_type, t.locale, t.tags, t.description, p.code, t.is_builtin,
-                   (SELECT COUNT(*) FROM template_value v WHERE v.template_id = t.id), t.content_hash
+                   CASE WHEN t.kind = 'composite'
+                        THEN (SELECT COUNT(*) FROM template_record r WHERE r.template_id = t.id)
+                        ELSE (SELECT COUNT(*) FROM template_value v WHERE v.template_id = t.id)
+                   END,
+                   t.content_hash
             FROM template t JOIN template_pack p ON p.id = t.pack_id
-            WHERE ($text IS NULL OR t.code LIKE '%' || $text || '%' OR t.name LIKE '%' || $text || '%')
+            WHERE ($text IS NULL
+                   OR t.code LIKE '%' || $text || '%'
+                   OR t.name LIKE '%' || $text || '%'
+                   OR t.tags LIKE '%' || $text || '%'
+                   OR EXISTS (SELECT 1 FROM template_alias a WHERE a.template_id = t.id AND a.alias LIKE '%' || $text || '%'))
               AND ($kind IS NULL OR t.kind = $kind)
               AND ($pack IS NULL OR p.code = $pack)
             ORDER BY t.code
@@ -57,6 +65,13 @@ public sealed partial class TemplateRepository(CatalogDatabase database) : ITemp
     {
         var matches = ListAsync(new TemplateQuery(Text: code), ct).GetAwaiter().GetResult();
         return Task.FromResult(matches.FirstOrDefault(t => t.Code == code));
+    }
+
+    public Task<TemplateDraft?> GetDraftAsync(string code, CancellationToken ct)
+    {
+        using var connection = database.Open();
+        var draft = ReadDraft(connection, code);
+        return Task.FromResult(draft);
     }
 
     public Task<IReadOnlyList<TemplateFieldInfo>> GetFieldsAsync(string code, CancellationToken ct)
@@ -365,7 +380,7 @@ public sealed partial class TemplateRepository(CatalogDatabase database) : ITemp
 
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT value, weight FROM template_value WHERE template_id = $id";
+            command.CommandText = "SELECT value, weight FROM template_value WHERE template_id = $id ORDER BY id";
             command.Parameters.AddWithValue("$id", header.Value.Id);
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -376,7 +391,7 @@ public sealed partial class TemplateRepository(CatalogDatabase database) : ITemp
 
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT record_key, data, weight FROM template_record WHERE template_id = $id";
+            command.CommandText = "SELECT record_key, data, weight FROM template_record WHERE template_id = $id ORDER BY id";
             command.Parameters.AddWithValue("$id", header.Value.Id);
             using var reader = command.ExecuteReader();
             while (reader.Read())

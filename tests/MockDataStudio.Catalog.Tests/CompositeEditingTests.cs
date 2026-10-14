@@ -97,4 +97,97 @@ public sealed class CompositeEditingTests : IDisposable
 
         saved.IsSuccess.ShouldBeFalse();
     }
+
+    [Fact]
+    [Trait("Category", "Contract")]
+    public async Task CompostoPreservaTagsAliasesCamposEPesosEmRoundTrip()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var editor = new CompositeTemplateEditor(_env.Templates, _env.DataSource);
+
+        var originalDraft = new TemplateDraft(
+            "TST_COMP_RT",
+            "Composto Round Trip",
+            TemplateKind.Composite,
+            null,
+            "Descricao completa",
+            ["localizacao", "geo"],
+            [
+                new DraftField("cep", LogicalType.String, 1, 9, true),
+                new DraftField("cidade", LogicalType.String, 2, 60, true),
+                new DraftField("uf", LogicalType.String, 3, 2, false)
+            ],
+            [
+                new DraftAlias("endereco", null, 1.5, "cli_*"),
+                new DraftAlias("cod_postal", "cep", 1.9, null)
+            ],
+            [],
+            [
+                new TemplateRecordRow("rec_sp", new Dictionary<string, string?> { ["cep"] = "01001-000", ["cidade"] = "São Paulo", ["uf"] = "SP" }, 3.5),
+                new TemplateRecordRow("rec_rj", new Dictionary<string, string?> { ["cep"] = "20040-002", ["cidade"] = "Rio de Janeiro", ["uf"] = "RJ" }, 2.0)
+            ]);
+
+        var saveInit = await _env.Templates.SaveAsync(originalDraft, ct);
+        saveInit.IsSuccess.ShouldBeTrue();
+
+        var infoInitial = await _env.Templates.GetAsync("TST_COMP_RT", ct);
+        infoInitial.ShouldNotBeNull();
+        var initialHash = infoInitial.ContentHash;
+
+        // Carrega via editor
+        var formResult = await editor.LoadAsync("TST_COMP_RT", ct);
+        formResult.IsSuccess.ShouldBeTrue();
+        var form = formResult.Value!;
+
+        // Salva novamente sem alterações
+        var saveAgain = await editor.SaveAsync(form, ct);
+        saveAgain.IsSuccess.ShouldBeTrue();
+
+        var reloadedDraft = await _env.Templates.GetDraftAsync("TST_COMP_RT", ct);
+        reloadedDraft.ShouldNotBeNull();
+        reloadedDraft.Tags.ShouldBe(["localizacao", "geo"]);
+
+        // Preserva alias por campo e alias de template com seus pesos
+        reloadedDraft.Aliases.Count.ShouldBe(2);
+        var aliasEnd = reloadedDraft.Aliases.Single(a => a.Alias == "endereco");
+        aliasEnd.FieldCode.ShouldBeNull();
+        aliasEnd.Weight.ShouldBe(1.5);
+        aliasEnd.ContextTablePattern.ShouldBe("cli_*");
+
+        var aliasCep = reloadedDraft.Aliases.Single(a => a.Alias == "cod_postal");
+        aliasCep.FieldCode.ShouldBe("cep");
+        aliasCep.Weight.ShouldBe(1.9);
+
+        // Preserva registros com chaves e pesos
+        reloadedDraft.Records.Count.ShouldBe(2);
+        var recSp = reloadedDraft.Records[0];
+        recSp.RecordKey.ShouldBe("rec_sp");
+        recSp.Weight.ShouldBe(3.5);
+        recSp.Data["cidade"].ShouldBe("São Paulo");
+
+        var recRj = reloadedDraft.Records[1];
+        recRj.RecordKey.ShouldBe("rec_rj");
+        recRj.Weight.ShouldBe(2.0);
+
+        var infoAgain = await _env.Templates.GetAsync("TST_COMP_RT", ct);
+        infoAgain!.ContentHash.ShouldBe(initialHash, "Hash deve ser idêntico ao re-salvar composto sem mudanças");
+    }
+
+    [Fact]
+    [Trait("Category", "Contract")]
+    public async Task CompostoContaRegistrosEmListAsync()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var fields = CompositeTemplateEditor.ParseFields("c1 | string | 10 | sim\nc2 | string | 10 | sim").Value!;
+        var records = CompositeTemplateEditor.ParseRecords("a | b\nc | d\ne | f", fields).Value!;
+        var editor = new CompositeTemplateEditor(_env.Templates, _env.DataSource);
+
+        var saved = await editor.SaveAsync(new CompositeTemplateForm("TST_CONTAGEM_COMP", "Contagem", null,
+            fields, [], records), ct);
+        saved.IsSuccess.ShouldBeTrue();
+
+        var info = await _env.Templates.GetAsync("TST_CONTAGEM_COMP", ct);
+        info.ShouldNotBeNull();
+        info.ValueCount.ShouldBe(3, "ValueCount deve refletir a contagem de registros para templates compostos");
+    }
 }

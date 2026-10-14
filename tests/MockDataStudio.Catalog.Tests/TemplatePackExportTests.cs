@@ -90,6 +90,8 @@ public sealed class TemplatePackExportTests : IDisposable
         end.Value!.Records.Count.ShouldBe(2);
         end.Value.Records.Select(r => r["rua"]).OrderBy(v => v, StringComparer.Ordinal).ShouldBe(["Rua A", "Rua B"]);
         end.Value.Fields.Select(f => f.FieldCode).ShouldBe(["rua", "numero"]);
+        end.Value.Fields.Single(f => f.FieldCode == "rua").Required.ShouldBeTrue();
+        end.Value.Fields.Single(f => f.FieldCode == "numero").Required.ShouldBeFalse();
     }
 
     [Fact]

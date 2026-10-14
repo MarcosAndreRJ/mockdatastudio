@@ -34,6 +34,7 @@ public interface ITemplateRepository
 {
     Task<IReadOnlyList<TemplateInfo>> ListAsync(TemplateQuery query, CancellationToken ct);
     Task<TemplateInfo?> GetAsync(string code, CancellationToken ct);
+    Task<TemplateDraft?> GetDraftAsync(string code, CancellationToken ct);
     Task<IReadOnlyList<TemplateFieldInfo>> GetFieldsAsync(string code, CancellationToken ct);
     Task<IReadOnlyList<TemplateAliasInfo>> GetAllAliasesAsync(CancellationToken ct);
     Task<Result<long>> SaveAsync(TemplateDraft draft, CancellationToken ct);
@@ -134,9 +135,14 @@ public enum MergeMode
 
 public sealed record StagingImportRequest(string SqlScript, MergeMode Mode, string? TargetPackCode);
 
+public sealed record StagingTemplateSummary(
+    string Code, string Name, TemplateKind Kind, int ItemCount, bool ExistsInCatalog, bool HasConflict);
+
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "Compatibilidade com schema e contratos")]
 public sealed record StagingAnalysis(
     int TemplatesNew, int TemplatesChanged, int AliasesNew, int ValuesNew, int ValuesDuplicated,
-    int RecordsNew, IReadOnlyList<ImportIssue> Issues, bool CanMerge, string StagingSessionId);
+    int RecordsNew, IReadOnlyList<ImportIssue> Issues, bool CanMerge, string StagingSessionId,
+    IReadOnlyList<StagingTemplateSummary>? Templates = null);
 
 public enum IssueSeverity
 {

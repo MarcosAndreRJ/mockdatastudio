@@ -41,4 +41,19 @@ public sealed class TemplateBrowser(ITemplateRepository repository, ITemplateDat
 
         return new TemplateDetails(info, fields, aliases, sample, set.Kind == TemplateKind.Composite);
     }
+
+    public async Task<TemplateDeletionImpact?> GetDeletionImpactAsync(string code, CancellationToken ct)
+    {
+        var info = await repository.GetAsync(code, ct);
+        if (info is null)
+        {
+            return null;
+        }
+
+        var aliases = (await repository.GetAllAliasesAsync(ct)).Count(a => a.TemplateCode == code);
+        return new TemplateDeletionImpact(info.Code, info.Name, info.IsBuiltIn, (int)info.ValueCount, aliases, !info.IsBuiltIn);
+    }
 }
+
+public sealed record TemplateDeletionImpact(
+    string Code, string Name, bool IsBuiltIn, int ValueOrRecordCount, int AliasCount, bool CanDelete);

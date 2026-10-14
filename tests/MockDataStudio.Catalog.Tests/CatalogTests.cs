@@ -362,4 +362,48 @@ public sealed class CatalogTests
         runs[0].RowsTotal.ShouldBe(1000);
         runs[0].ReportJson.ShouldBe("{\"ok\":true}");
     }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task GeneratorPreset_UpsertFalhaAoTentarAlterarEmbutido()
+    {
+        using var env = new CatalogTestEnv();
+        var ct = CancellationToken.None;
+
+        // Insere preset embutido
+        var builtInPreset = new GeneratorPresetInfo(0, "PRESET_BUILTIN", "Builtin", "core.dummy", 1, "{}", null, true);
+        var res1 = await env.Presets.UpsertAsync(builtInPreset, ct);
+        res1.IsSuccess.ShouldBeTrue();
+
+        // Tenta alterar o preset embutido
+        var attemptUpdate = new GeneratorPresetInfo(0, "PRESET_BUILTIN", "Alterado", "core.dummy", 2, "{\"x\":1}", null, false);
+        var res2 = await env.Presets.UpsertAsync(attemptUpdate, ct);
+
+        res2.IsSuccess.ShouldBeFalse("não deve permitir alterar preset embutido");
+        res2.Error.Code.ShouldBe(ErrorCodes.CatBuiltinReadOnly);
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    public async Task Staging_AnaliseGeraListaDeTemplatesComConflitos()
+    {
+        using var env = new CatalogTestEnv();
+        var ct = CancellationToken.None;
+
+        var script = """
+            INSERT INTO template (code, name, kind, logical_type, locale, description) VALUES ('TST_STG_1', 'Staging 1', 'scalar', 'string', 'pt-BR', 'Desc');
+            INSERT INTO template_value (template_code, value, weight) VALUES ('TST_STG_1', 'val1', 1.0);
+            """;
+
+        var analysis = await env.Importer.AnalyzeAsync(new StagingImportRequest(script, MergeMode.Upsert, null), null, ct);
+        analysis.IsSuccess.ShouldBeTrue();
+        analysis.Value.Templates.ShouldNotBeNull();
+        analysis.Value.Templates.Count.ShouldBe(1);
+
+        var t1 = analysis.Value.Templates[0];
+        t1.Code.ShouldBe("TST_STG_1");
+        t1.ItemCount.ShouldBe(1);
+        t1.ExistsInCatalog.ShouldBeFalse();
+        t1.HasConflict.ShouldBeFalse();
+    }
 }
