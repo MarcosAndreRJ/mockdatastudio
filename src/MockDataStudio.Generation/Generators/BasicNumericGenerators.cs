@@ -76,16 +76,7 @@ internal sealed class UuidV4Generator : IValueGenerator
 
     public IReadOnlyList<string> DependsOnColumns { get; } = [];
 
-    public object? Generate(ref GenerationCell cell)
-    {
-        Span<byte> bytes = stackalloc byte[16];
-        BitConverter.TryWriteBytes(bytes[..8], cell.Rng.NextUInt64());
-        BitConverter.TryWriteBytes(bytes[8..], cell.Rng.NextUInt64());
-        // Guid grava o terceiro grupo em ordem little-endian: o nibble de versão está no byte 7, não no 6.
-        bytes[7] = (byte)((bytes[7] & 0x0F) | 0x40);
-        bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80);
-        return new Guid(bytes);
-    }
+    public object? Generate(ref GenerationCell cell) => UuidV4.Create(ref cell.Rng);
 }
 
 internal sealed class BytesGenerator(int length) : IValueGenerator
